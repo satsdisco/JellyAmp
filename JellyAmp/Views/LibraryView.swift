@@ -880,10 +880,6 @@ struct ArtistCard: View {
                         .font(.jellyAmpBody)
                         .foregroundColor(.white)
                         .lineLimit(1)
-
-                    Text("\(artist.albumCount) albums")
-                        .font(.jellyAmpCaption)
-                        .foregroundColor(.secondary)
                 }
             }
             .scaleEffect(isPressed ? 0.95 : 1.0)
@@ -948,10 +944,6 @@ struct ArtistListRow: View {
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(.white)
                         .lineLimit(1)
-
-                    Text("\(artist.albumCount) album\(artist.albumCount == 1 ? "" : "s")")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondary.opacity(0.9))
                 }
 
                 Spacer()
