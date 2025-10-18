@@ -1,0 +1,462 @@
+//
+//  SearchView.swift
+//  JellyAmp
+//
+//  Search across artists, albums, and tracks - Cypherpunk theme
+//
+
+import SwiftUI
+
+struct SearchView: View {
+    @ObservedObject var jellyfinService = JellyfinService.shared
+    @ObservedObject var playerManager = PlayerManager.shared
+
+    @State private var searchText = ""
+    @State private var searchResults: [BaseItemDto] = []
+    @State private var isSearching = false
+    @State private var selectedFilter: SearchFilter = .all
+    @State private var selectedAlbum: Album?
+    @State private var selectedArtist: Artist?
+
+    enum SearchFilter: String, CaseIterable {
+        case all = "All"
+        case artists = "Artists"
+        case albums = "Albums"
+        case tracks = "Tracks"
+    }
+
+    var body: some View {
+        ZStack {
+            // Background
+            LinearGradient(
+                colors: [
+                    Color.darkBackground,
+                    Color.darkMid,
+                    Color.darkBackground
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Header
+                searchHeader
+
+                // Search Bar
+                searchBar
+
+                // Filter Tabs
+                filterTabs
+
+                // Results
+                if searchText.isEmpty {
+                    emptySearchView
+                } else if isSearching {
+                    loadingView
+                } else if filteredResults.isEmpty {
+                    noResultsView
+                } else {
+                    searchResultsList
+                }
+            }
+        }
+        .sheet(item: $selectedAlbum) { album in
+            AlbumDetailView(album: album)
+        }
+        .sheet(item: $selectedArtist) { artist in
+            ArtistDetailView(artist: artist)
+        }
+    }
+
+    // MARK: - Header
+    private var searchHeader: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Search")
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .neonGlow(color: .neonCyan, radius: 12)
+
+                if !searchResults.isEmpty {
+                    Text("\(filteredResults.count) result\(filteredResults.count == 1 ? "" : "s")")
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(.leading, 20)
+
+            Spacer()
+        }
+        .padding(.top, 60)
+        .padding(.bottom, 20)
+    }
+
+    // MARK: - Search Bar
+    private var searchBar: some View {
+        HStack(spacing: 12) {
+            // Search Icon
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.neonCyan)
+
+            // Text Field
+            TextField("Search artists, albums, tracks...", text: $searchText)
+                .font(.system(size: 17))
+                .foregroundColor(.white)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .onChange(of: searchText) { _, newValue in
+                    performSearch(query: newValue)
+                }
+
+            // Clear Button
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                    searchResults = []
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.darkMid.opacity(0.6))
+                .glassEffect(.regular)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
+        )
+        .padding(.horizontal, 16)
+    }
+
+    // MARK: - Filter Tabs
+    private var filterTabs: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(SearchFilter.allCases, id: \.self) { filter in
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selectedFilter = filter
+                        }
+                    } label: {
+                        Text(filter.rawValue)
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundColor(selectedFilter == filter ? .black : .neonCyan)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(
+                                Capsule()
+                                    .fill(selectedFilter == filter ? Color.neonCyan : Color.neonCyan.opacity(0.15))
+                            )
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
+                            )
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+        .padding(.vertical, 16)
+    }
+
+    // MARK: - Results List
+    private var searchResultsList: some View {
+        ScrollView {
+            VStack(spacing: 8) {
+                ForEach(filteredResults, id: \.id) { item in
+                    SearchResultRow(
+                        item: item,
+                        baseURL: jellyfinService.baseURL,
+                        onTap: {
+                            handleItemTap(item)
+                        }
+                    )
+                }
+
+                // Bottom padding
+                Color.clear.frame(height: 100)
+            }
+            .padding(.top, 8)
+        }
+    }
+
+    // MARK: - Empty State
+    private var emptySearchView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 64))
+                .foregroundColor(.neonCyan.opacity(0.5))
+
+            Text("Search Your Library")
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+
+            Text("Find artists, albums, and tracks")
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Loading State
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .tint(.neonCyan)
+                .scaleEffect(1.5)
+
+            Text("Searching...")
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - No Results State
+    private var noResultsView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "music.note.list")
+                .font(.system(size: 64))
+                .foregroundColor(.secondary.opacity(0.5))
+
+            Text("No Results")
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+
+            Text("Try a different search term")
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Computed Properties
+    private var filteredResults: [BaseItemDto] {
+        switch selectedFilter {
+        case .all:
+            return searchResults
+        case .artists:
+            return searchResults.filter { $0.type == "MusicArtist" }
+        case .albums:
+            return searchResults.filter { $0.type == "MusicAlbum" }
+        case .tracks:
+            return searchResults.filter { $0.type == "Audio" }
+        }
+    }
+
+    // MARK: - Actions
+    private func performSearch(query: String) {
+        guard !query.isEmpty else {
+            searchResults = []
+            return
+        }
+
+        // Debounce search
+        Task {
+            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+
+            // Check if query is still the same
+            guard searchText == query else { return }
+
+            await MainActor.run {
+                isSearching = true
+            }
+
+            do {
+                let results = try await jellyfinService.searchMusic(query: query)
+
+                await MainActor.run {
+                    searchResults = results
+                    isSearching = false
+                }
+            } catch {
+                print("Search error: \(error)")
+                await MainActor.run {
+                    searchResults = []
+                    isSearching = false
+                }
+            }
+        }
+    }
+
+    private func handleItemTap(_ item: BaseItemDto) {
+        let baseURL = jellyfinService.baseURL
+
+        switch item.type {
+        case "MusicArtist":
+            let artist = Artist(from: item, baseURL: baseURL)
+            selectedArtist = artist
+
+        case "MusicAlbum":
+            let album = Album(from: item, baseURL: baseURL)
+            selectedAlbum = album
+
+        case "Audio":
+            // Play track
+            let track = Track(from: item, baseURL: baseURL)
+            playerManager.play(tracks: [track])
+
+        default:
+            break
+        }
+    }
+}
+
+// MARK: - Search Result Row
+struct SearchResultRow: View {
+    let item: BaseItemDto
+    let baseURL: String
+    let onTap: () -> Void
+
+    @State private var isPressed = false
+
+    var body: some View {
+        Button {
+            isPressed = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isPressed = false
+                onTap()
+            }
+        } label: {
+            HStack(spacing: 16) {
+                // Artwork/Icon
+                if let imageTags = item.imageTags,
+                   let primaryTag = imageTags["Primary"] {
+                    let itemId = item.id
+                    let imageURL = "\(baseURL)/Items/\(itemId)/Images/Primary?fillHeight=80&fillWidth=80&quality=90&tag=\(primaryTag)"
+
+                    AsyncImage(url: URL(string: imageURL)) { phase in
+                        switch phase {
+                        case .empty:
+                            placeholderImage
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 60, height: 60)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        case .failure:
+                            placeholderImage
+                        @unknown default:
+                            placeholderImage
+                        }
+                    }
+                    .frame(width: 60, height: 60)
+                } else {
+                    placeholderImage
+                }
+
+                // Item Info
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(item.name ?? "Unknown")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+
+                    HStack(spacing: 8) {
+                        // Type Badge
+                        Text(itemTypeLabel)
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundColor(itemTypeColor)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(
+                                Capsule()
+                                    .fill(itemTypeColor.opacity(0.2))
+                            )
+
+                        // Additional Info based on type
+                        if item.type == "MusicArtist" {
+                            // Show album count for artists
+                            if let albumCount = item.AlbumCount {
+                                Text("\(albumCount) album\(albumCount == 1 ? "" : "s")")
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
+                        } else if let artist = item.artists?.first {
+                            // Show artist name for albums/tracks
+                            Text(artist)
+                                .font(.system(size: 15))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+
+                Spacer()
+
+                // Chevron
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.darkMid.opacity(isPressed ? 0.5 : 0.3))
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+    }
+
+    private var placeholderImage: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.neonCyan.opacity(0.3), Color.neonPurple.opacity(0.3)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 60, height: 60)
+
+            Image(systemName: itemTypeIcon)
+                .font(.system(size: 24))
+                .foregroundColor(.white.opacity(0.6))
+        }
+    }
+
+    private var itemTypeLabel: String {
+        switch item.type {
+        case "MusicArtist": return "ARTIST"
+        case "MusicAlbum": return "ALBUM"
+        case "Audio": return "TRACK"
+        default: return item.type
+        }
+    }
+
+    private var itemTypeColor: Color {
+        switch item.type {
+        case "MusicArtist": return .neonCyan
+        case "MusicAlbum": return .neonPink
+        case "Audio": return .neonPurple
+        default: return .neonCyan
+        }
+    }
+
+    private var itemTypeIcon: String {
+        switch item.type {
+        case "MusicArtist": return "person.circle.fill"
+        case "MusicAlbum": return "square.stack.fill"
+        case "Audio": return "music.note"
+        default: return "music.note"
+        }
+    }
+}
+
+// MARK: - Preview
+#Preview {
+    SearchView()
+}

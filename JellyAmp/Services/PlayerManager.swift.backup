@@ -1,0 +1,748 @@
+//
+//  PlayerManager.swift
+//  JellyAmp
+//
+//  World-class audio player with gapless playback, queue management,
+//  and full iOS media controls integration
+//
+
+import Foundation
+import AVFoundation
+import Combine
+import MediaPlayer
+import UIKit
+import os.log
+
+/// Main player manager for audio playback
+/// Handles gapless playback, queue management, and iOS media integration
+class PlayerManager: ObservableObject {
+    static let shared = PlayerManager()
+
+    private let logger = Logger(subsystem: "com.jellyamp.app", category: "PlayerManager")
+    private let jellyfinService = JellyfinService.shared
+
+    // MARK: - Published Properties
+    @Published var currentTrack: Track?
+    @Published var isPlaying = false
+    @Published var currentTime: Double = 0
+    @Published var duration: Double = 0
+    @Published var queue: [Track] = []
+    @Published var currentIndex: Int = 0
+    @Published var shuffleEnabled = false
+    @Published var repeatMode: RepeatMode = .off
+
+    // MARK: - Player Components
+    private var player: AVQueuePlayer?
+    private var playerItems: [AVPlayerItem] = []
+    private var timeObserver: Any?
+    private var cancellables = Set<AnyCancellable>()
+
+    // Queue management
+    private var originalQueue: [Track] = [] // For shuffle/unshuffle
+    private var playbackHistory: [Track] = []
+
+    enum RepeatMode {
+        case off
+        case all
+        case one
+    }
+
+    // MARK: - Initialization
+    private init() {
+        setupAudioSession()
+        setupRemoteCommandCenter()
+        setupNotifications()
+    }
+
+    // MARK: - Audio Session Setup
+    private func setupAudioSession() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+
+            // CRITICAL: Configure for playback with background audio
+            // Use .allowAirPlay and .allowBluetoothA2DP for proper routing
+            try audioSession.setCategory(
+                .playback,
+                mode: .default,
+                options: [.allowAirPlay, .allowBluetoothA2DP]
+            )
+
+            // Activate the session with .notifyOthersOnDeactivation
+            // This option is CRITICAL for proper background audio
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+
+            // Configure for remote control
+            UIApplication.shared.beginReceivingRemoteControlEvents()
+
+            logger.info("✅ Audio session configured: category=\(audioSession.category.rawValue), mode=\(audioSession.mode.rawValue)")
+            logger.info("✅ Audio session active and ready for background playback with AirPlay/Bluetooth support")
+        } catch let error as NSError {
+            logger.error("❌ CRITICAL: Failed to setup audio session: \(error.localizedDescription) (code: \(error.code))")
+        }
+    }
+
+    // MARK: - Ensure Audio Session Active
+    /// Call this before playing to ensure session is active (especially after interruptions)
+    private func activateAudioSessionIfNeeded() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+
+            // Always try to activate with .notifyOthersOnDeactivation option
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+
+            logger.info("✅ Audio session reactivated successfully")
+        } catch let error as NSError {
+            logger.error("❌ Failed to reactivate audio session: \(error.localizedDescription) (code: \(error.code))")
+
+            // Try to re-setup the entire session as a fallback
+            setupAudioSession()
+        }
+    }
+
+    // MARK: - Remote Command Center (Lock Screen Controls)
+    private func setupRemoteCommandCenter() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        // Play command
+        commandCenter.playCommand.isEnabled = true
+        commandCenter.playCommand.addTarget { [weak self] _ in
+            self?.play()
+            return .success
+        }
+
+        // Pause command
+        commandCenter.pauseCommand.isEnabled = true
+        commandCenter.pauseCommand.addTarget { [weak self] _ in
+            self?.pause()
+            return .success
+        }
+
+        // Next track
+        commandCenter.nextTrackCommand.isEnabled = true
+        commandCenter.nextTrackCommand.addTarget { [weak self] _ in
+            self?.playNext()
+            return .success
+        }
+
+        // Previous track
+        commandCenter.previousTrackCommand.isEnabled = true
+        commandCenter.previousTrackCommand.addTarget { [weak self] _ in
+            self?.playPrevious()
+            return .success
+        }
+
+        // Seek forward/backward
+        commandCenter.skipForwardCommand.isEnabled = true
+        commandCenter.skipForwardCommand.preferredIntervals = [15]
+        commandCenter.skipForwardCommand.addTarget { [weak self] event in
+            guard let self = self,
+                  let command = event as? MPSkipIntervalCommandEvent else {
+                return .commandFailed
+            }
+            self.seek(to: self.currentTime + command.interval)
+            return .success
+        }
+
+        commandCenter.skipBackwardCommand.isEnabled = true
+        commandCenter.skipBackwardCommand.preferredIntervals = [15]
+        commandCenter.skipBackwardCommand.addTarget { [weak self] event in
+            guard let self = self,
+                  let command = event as? MPSkipIntervalCommandEvent else {
+                return .commandFailed
+            }
+            self.seek(to: max(0, self.currentTime - command.interval))
+            return .success
+        }
+
+        // Scrubbing
+        commandCenter.changePlaybackPositionCommand.isEnabled = true
+        commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
+            guard let self = self,
+                  let command = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            self.seek(to: command.positionTime)
+            return .success
+        }
+
+        logger.info("Remote command center configured")
+    }
+
+    // MARK: - Notifications Setup
+    private func setupNotifications() {
+        // Handle audio interruptions (phone calls, etc.)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance()
+        )
+
+        // Handle route changes (headphones plugged/unplugged)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleRouteChange),
+            name: AVAudioSession.routeChangeNotification,
+            object: AVAudioSession.sharedInstance()
+        )
+
+        // Handle app backgrounding - CRITICAL for maintaining playback
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppDidEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleAppDidEnterBackground() {
+        logger.info("🔵 PlayerManager: App entered background")
+
+        // Ensure playback continues in background
+        if isPlaying, let player = player {
+            logger.info("🔵 Ensuring playback continues: current rate = \(player.rate)")
+
+            // Re-activate audio session
+            activateAudioSessionIfNeeded()
+
+            // Ensure player is playing
+            if player.rate == 0 {
+                logger.warning("⚠️ Player rate is 0 in background, restarting playback")
+                player.play()
+            }
+
+            // Update Now Playing info to keep iOS engaged
+            updateNowPlayingInfo()
+        }
+    }
+
+    @objc private func handleInterruption(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+
+        switch type {
+        case .began:
+            // Interruption began (phone call, etc.)
+            pause()
+        case .ended:
+            // Interruption ended
+            guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else {
+                return
+            }
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            if options.contains(.shouldResume) {
+                play()
+            }
+        @unknown default:
+            break
+        }
+    }
+
+    @objc private func handleRouteChange(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
+            return
+        }
+
+        // Pause when headphones are unplugged
+        if reason == .oldDeviceUnavailable {
+            pause()
+        }
+    }
+
+    // MARK: - Playback Control
+
+    /// Start playing a queue of tracks
+    func play(tracks: [Track], startingAt index: Int = 0) {
+        guard !tracks.isEmpty, index < tracks.count else {
+            logger.error("Invalid track queue or index")
+            return
+        }
+
+        // Store queue
+        self.queue = tracks
+        self.originalQueue = tracks
+        self.currentIndex = index
+        self.playbackHistory = []
+
+        // Apply shuffle if enabled
+        if shuffleEnabled {
+            shuffleQueue(keepCurrentTrack: true)
+        }
+
+        // Setup player with gapless queue
+        setupPlayerQueue(startingAt: currentIndex)
+
+        // Start playback
+        play()
+    }
+
+    /// Resume or start playback
+    func play() {
+        guard let player = player else {
+            logger.error("❌ Cannot play - player is nil")
+            return
+        }
+
+        // CRITICAL: Ensure audio session is active before playing
+        // This is essential for background playback to work
+        activateAudioSessionIfNeeded()
+
+        // Set Now Playing info BEFORE starting playback
+        // iOS needs this to enable background audio
+        updateNowPlayingInfo()
+
+        // Start playback
+        player.play()
+        isPlaying = true
+
+        // Update Now Playing info again to reflect playing state
+        updateNowPlayingInfo()
+
+        // Log detailed player state for debugging
+        logger.info("▶️ Playback started - Rate: \(player.rate), TimeControlStatus: \(player.timeControlStatus.rawValue)")
+
+        // Verify player is actually playing
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self, let player = self.player else { return }
+            self.logger.info("🔍 Player check after 0.5s - Rate: \(player.rate), Status: \(player.timeControlStatus.rawValue), CurrentTime: \(player.currentTime().seconds)")
+
+            if player.rate == 0 {
+                self.logger.error("⚠️ WARNING: Player rate is 0 - playback may not have started!")
+            }
+        }
+    }
+
+    /// Pause playback
+    func pause() {
+        player?.pause()
+        isPlaying = false
+        updateNowPlayingInfo()
+        logger.info("Playback paused")
+    }
+
+    /// Toggle play/pause
+    func togglePlayPause() {
+        if isPlaying {
+            pause()
+        } else {
+            play()
+        }
+    }
+
+    /// Play next track in queue
+    func playNext() {
+        guard currentIndex < queue.count - 1 else {
+            // End of queue
+            if repeatMode == .all {
+                // Restart from beginning
+                play(tracks: queue, startingAt: 0)
+            } else {
+                // Stop playback
+                pause()
+                currentTime = 0
+            }
+            return
+        }
+
+        // Add current track to history
+        if let current = currentTrack {
+            playbackHistory.append(current)
+        }
+
+        currentIndex += 1
+        advanceToNextItem()
+        updateNowPlayingInfo()
+    }
+
+    /// Play previous track
+    func playPrevious() {
+        // If more than 3 seconds into song, restart it
+        if currentTime > 3.0 {
+            seek(to: 0)
+            return
+        }
+
+        // Go to previous track
+        if currentIndex > 0 {
+            currentIndex -= 1
+            setupPlayerQueue(startingAt: currentIndex)
+            play()
+        } else if !playbackHistory.isEmpty {
+            // Use history if at beginning of queue
+            let previousTrack = playbackHistory.removeLast()
+            queue.insert(previousTrack, at: 0)
+            currentIndex = 0
+            setupPlayerQueue(startingAt: 0)
+            play()
+        } else {
+            // Restart current track
+            seek(to: 0)
+        }
+    }
+
+    /// Seek to specific time
+    func seek(to time: Double) {
+        let cmTime = CMTime(seconds: time, preferredTimescale: 600)
+        player?.seek(to: cmTime, toleranceBefore: .zero, toleranceAfter: .zero)
+        currentTime = time
+        updateNowPlayingInfo()
+    }
+
+    // MARK: - Queue Management
+
+    /// Toggle shuffle mode
+    func toggleShuffle() {
+        shuffleEnabled.toggle()
+
+        if shuffleEnabled {
+            shuffleQueue(keepCurrentTrack: true)
+        } else {
+            // Restore original order
+            if let currentTrack = currentTrack,
+               let originalIndex = originalQueue.firstIndex(where: { $0.id == currentTrack.id }) {
+                queue = originalQueue
+                currentIndex = originalIndex
+            }
+        }
+    }
+
+    /// Shuffle the queue
+    private func shuffleQueue(keepCurrentTrack: Bool) {
+        guard !queue.isEmpty else { return }
+
+        if keepCurrentTrack, let currentTrack = currentTrack {
+            // Keep current track at front, shuffle the rest
+            var remainingTracks = queue.filter { $0.id != currentTrack.id }
+            remainingTracks.shuffle()
+            queue = [currentTrack] + remainingTracks
+            currentIndex = 0
+        } else {
+            queue.shuffle()
+            currentIndex = 0
+        }
+    }
+
+    /// Cycle through repeat modes
+    func toggleRepeatMode() {
+        switch repeatMode {
+        case .off:
+            repeatMode = .all
+        case .all:
+            repeatMode = .one
+        case .one:
+            repeatMode = .off
+        }
+    }
+
+    /// Remove track from queue at index
+    func removeFromQueue(at index: Int) {
+        guard index >= 0 && index < queue.count else { return }
+
+        // Don't allow removing the currently playing track
+        guard index != currentIndex else {
+            logger.warning("Cannot remove currently playing track")
+            return
+        }
+
+        queue.remove(at: index)
+
+        // Adjust current index if needed
+        if index < currentIndex {
+            currentIndex -= 1
+        }
+
+        // Rebuild player queue if needed
+        if isPlaying {
+            setupPlayerQueue(startingAt: currentIndex)
+        }
+
+        logger.info("Removed track at index \(index)")
+    }
+
+    /// Move track in queue
+    func moveInQueue(from source: Int, to destination: Int) {
+        guard source >= 0 && source < queue.count,
+              destination >= 0 && destination < queue.count,
+              source != destination else { return }
+
+        let track = queue.remove(at: source)
+        queue.insert(track, at: destination)
+
+        // Update current index
+        if source == currentIndex {
+            currentIndex = destination
+        } else if source < currentIndex && destination >= currentIndex {
+            currentIndex -= 1
+        } else if source > currentIndex && destination <= currentIndex {
+            currentIndex += 1
+        }
+
+        // Rebuild player queue if needed
+        if isPlaying {
+            setupPlayerQueue(startingAt: currentIndex)
+        }
+
+        logger.info("Moved track from \(source) to \(destination)")
+    }
+
+    /// Clear the queue
+    func clearQueue() {
+        pause()
+        queue.removeAll()
+        currentIndex = 0
+        currentTrack = nil
+        player = nil
+        logger.info("Queue cleared")
+    }
+
+    /// Jump to track at index in queue
+    func jumpToTrack(at index: Int) {
+        guard index >= 0 && index < queue.count else { return }
+        currentIndex = index
+        setupPlayerQueue(startingAt: index)
+        play()
+        logger.info("Jumped to track at index \(index)")
+    }
+
+    // MARK: - Player Setup
+
+    /// Setup AVQueuePlayer for gapless playback
+    private func setupPlayerQueue(startingAt index: Int) {
+        // Remove old observers
+        removeTimeObserver()
+        removeItemObservers()
+
+        // Clear old player
+        player?.pause()
+        player = nil
+        playerItems = []
+
+        // Create player items for gapless playback
+        // We'll load current + next 2 tracks for smooth transitions
+        let tracksToLoad = Array(queue[index...].prefix(3))
+
+        for track in tracksToLoad {
+            guard let streamURL = jellyfinService.getStreamingURL(for: track.id) else {
+                logger.error("Failed to get streaming URL for track: \(track.name)")
+                continue
+            }
+
+            let playerItem = AVPlayerItem(url: streamURL)
+
+            // Configure for gapless playback
+            playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = true
+            playerItem.preferredForwardBufferDuration = 5.0
+
+            // Observe status
+            playerItem.publisher(for: \.status)
+                .sink { [weak self] status in
+                    self?.handlePlayerItemStatus(status, for: playerItem)
+                }
+                .store(in: &cancellables)
+
+            playerItems.append(playerItem)
+        }
+
+        // Create queue player
+        player = AVQueuePlayer(items: playerItems)
+        player?.automaticallyWaitsToMinimizeStalling = true
+
+        // Set current track
+        if index < queue.count {
+            currentTrack = queue[index]
+        }
+
+        // Setup time observer
+        setupTimeObserver()
+
+        // Observe when items finish
+        NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
+            .sink { [weak self] notification in
+                self?.handleTrackFinished(notification)
+            }
+            .store(in: &cancellables)
+
+        logger.info("Player queue setup with \(self.playerItems.count) items starting at index \(index)")
+    }
+
+    /// Setup time observer for progress tracking
+    private func setupTimeObserver() {
+        guard let player = player else { return }
+
+        let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
+        timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
+            guard let self = self else { return }
+
+            // Validate time values before setting
+            let seconds = time.seconds
+            if !seconds.isNaN && !seconds.isInfinite && seconds >= 0 {
+                self.currentTime = seconds
+            }
+
+            if let currentItem = player.currentItem {
+                let itemDuration = currentItem.duration.seconds
+                if !itemDuration.isNaN && !itemDuration.isInfinite && itemDuration >= 0 {
+                    self.duration = itemDuration
+                }
+            }
+        }
+    }
+
+    /// Remove time observer
+    private func removeTimeObserver() {
+        if let observer = timeObserver {
+            player?.removeTimeObserver(observer)
+            timeObserver = nil
+        }
+    }
+
+    /// Remove item observers
+    private func removeItemObservers() {
+        cancellables.removeAll()
+    }
+
+    /// Handle player item status changes
+    private func handlePlayerItemStatus(_ status: AVPlayerItem.Status, for item: AVPlayerItem) {
+        switch status {
+        case .readyToPlay:
+            logger.info("✅ Player item ready to play - Duration: \(item.duration.seconds)s")
+
+            // If this is the current item and we're supposed to be playing, ensure playback
+            if let currentItem = player?.currentItem, currentItem == item, isPlaying {
+                player?.play()
+                logger.info("🎵 Resumed playback for ready item")
+            }
+        case .failed:
+            if let error = item.error {
+                logger.error("❌ Player item failed: \(error.localizedDescription)")
+            }
+        case .unknown:
+            logger.info("⚠️ Player item status unknown")
+        @unknown default:
+            break
+        }
+    }
+
+    /// Handle track finishing
+    private func handleTrackFinished(_ notification: Notification) {
+        guard repeatMode != .one else {
+            // Repeat current track
+            seek(to: 0)
+            play()
+            return
+        }
+
+        // Advance to next track
+        playNext()
+    }
+
+    /// Advance to next item in queue
+    private func advanceToNextItem() {
+        guard let player = player else { return }
+
+        // Remove finished item
+        if !playerItems.isEmpty {
+            playerItems.removeFirst()
+        }
+
+        // Update current track
+        if currentIndex < queue.count {
+            currentTrack = queue[currentIndex]
+        }
+
+        // Load next item if available (for gapless playback)
+        let nextIndex = currentIndex + playerItems.count
+        if nextIndex < queue.count {
+            let nextTrack = queue[nextIndex]
+
+            guard let streamURL = jellyfinService.getStreamingURL(for: nextTrack.id) else {
+                return
+            }
+
+            let playerItem = AVPlayerItem(url: streamURL)
+            playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = true
+            playerItem.preferredForwardBufferDuration = 5.0
+
+            player.insert(playerItem, after: nil)
+            playerItems.append(playerItem)
+
+            logger.info("Preloaded next track for gapless playback: \(nextTrack.name)")
+        }
+
+        // Advance player if not already done
+        player.advanceToNextItem()
+
+        updateNowPlayingInfo()
+    }
+
+    // MARK: - Now Playing Info (Lock Screen)
+
+    /// Update Now Playing info for lock screen/control center
+    /// This is CRITICAL for background audio - iOS needs this info to keep audio playing
+    private func updateNowPlayingInfo() {
+        guard let track = currentTrack else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            logger.info("🎵 Cleared Now Playing info (no track)")
+            return
+        }
+
+        // Ensure duration and currentTime are valid numbers (not NaN or infinite)
+        let safeDuration = duration.isNaN || duration.isInfinite ? 0.0 : duration
+        let safeCurrentTime = currentTime.isNaN || currentTime.isInfinite ? 0.0 : currentTime
+
+        var nowPlayingInfo: [String: Any] = [
+            MPMediaItemPropertyTitle: track.name,
+            MPMediaItemPropertyArtist: track.artistName,
+            MPMediaItemPropertyAlbumTitle: track.albumName,
+            MPMediaItemPropertyPlaybackDuration: safeDuration,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: safeCurrentTime,
+            MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0
+        ]
+
+        // Set Now Playing info IMMEDIATELY (don't wait for artwork)
+        // This is critical for background audio to work
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+
+        logger.info("🎵 Now Playing updated: \(track.name) by \(track.artistName) [playing: \(self.isPlaying)]")
+
+        // Load artwork asynchronously and update when ready
+        if let artworkURLString = track.artworkURL,
+           let artworkURL = URL(string: artworkURLString) {
+            Task {
+                await loadArtwork(from: artworkURL, for: &nowPlayingInfo)
+            }
+        }
+    }
+
+    /// Load artwork for Now Playing info
+    private func loadArtwork(from url: URL, for nowPlayingInfo: inout [String: Any]) async {
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+
+            if let image = UIImage(data: data) {
+                let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+
+                await MainActor.run {
+                    var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? nowPlayingInfo
+                    info[MPMediaItemPropertyArtwork] = artwork
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+                }
+            }
+        } catch {
+            logger.error("Failed to load artwork: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Cleanup
+
+    deinit {
+        removeTimeObserver()
+        removeItemObservers()
+        NotificationCenter.default.removeObserver(self)
+    }
+}

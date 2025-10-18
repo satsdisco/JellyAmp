@@ -2,20 +2,25 @@
 //  ContentView.swift
 //  JellyAmp
 //
-//  Created by Grafton on 10/17/25.
+//  Root view that shows onboarding or main app based on authentication
 //
 
 import SwiftUI
 
 struct ContentView: View {
+    @ObservedObject var jellyfinService = JellyfinService.shared
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        Group {
+            if jellyfinService.isAuthenticated {
+                // User is authenticated - show main app
+                MainTabView()
+            } else {
+                // User not authenticated - show onboarding
+                OnboardingView()
+            }
         }
-        .padding()
+        .preferredColorScheme(.dark)
     }
 }
 

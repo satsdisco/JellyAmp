@@ -1,30 +1,21 @@
 {
   "images" : [
     {
-      "idiom" : "universal",
-      "platform" : "ios",
-      "size" : "1024x1024"
+      "filename" : "iPhone_2x_120x120.png",
+      "idiom" : "iphone",
+      "scale" : "2x",
+      "size" : "60x60"
     },
     {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "dark"
-        }
-      ],
-      "idiom" : "universal",
-      "platform" : "ios",
-      "size" : "1024x1024"
+      "filename" : "iPhone_3x_180x180.png",
+      "idiom" : "iphone",
+      "scale" : "3x",
+      "size" : "60x60"
     },
     {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "tinted"
-        }
-      ],
-      "idiom" : "universal",
-      "platform" : "ios",
+      "filename" : "AppStore_1024x1024.png",
+      "idiom" : "ios-marketing",
+      "scale" : "1x",
       "size" : "1024x1024"
     }
   ],
