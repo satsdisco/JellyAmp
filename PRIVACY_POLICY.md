@@ -81,7 +81,7 @@ Since JellyAmp stores all data locally on your device and does not collect or tr
 
 If you have questions about this privacy policy, please open an issue on our GitHub repository:
 
-https://github.com/[your-username]/JellyAmp
+https://github.com/satsdisco/JellyAmp
 
 ---
 
