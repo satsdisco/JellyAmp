@@ -1098,7 +1098,6 @@
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "JellyAmp-Watch-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "JellyAmp Watch";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = jellyampos.Jellywatch.JellyAmp;
@@ -1132,7 +1131,6 @@
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "JellyAmp-Watch-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "JellyAmp Watch";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = jellyampos.Jellywatch.JellyAmp;
