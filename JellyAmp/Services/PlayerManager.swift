@@ -402,10 +402,36 @@ class PlayerManager: NSObject, ObservableObject {
             currentIndex += 1
         }
 
-        // IMPORTANT: Don't rebuild the player queue during reordering
-        // The queue array has been updated, and the gapless system will pick up
-        // the changes naturally as tracks finish. Rebuilding would restart playback.
-        // The only thing we need to update is the Now Playing info to reflect queue changes
+        // If we're currently playing, we need to sync the AVQueuePlayer with the new order
+        // BUT we cannot restart the current track
+        if isPlaying && player != nil {
+            // Remove all preloaded items (keep only the currently playing one)
+            while playerItems.count > 1 {
+                playerItems.removeLast()
+                // Remove from AVQueuePlayer (can't remove specific items, so we rely on them being at the end)
+            }
+
+            // Now preload the next tracks based on the NEW queue order
+            for offset in 1...2 {
+                let nextIndex = currentIndex + offset
+                guard nextIndex < queue.count else { break }
+
+                let nextTrack = queue[nextIndex]
+                guard let streamURL = jellyfinService.getStreamingURL(for: nextTrack.id) else {
+                    logger.error("❌ Failed to preload track at index \(nextIndex): \(nextTrack.name)")
+                    continue
+                }
+
+                let playerItem = AVPlayerItem(url: streamURL)
+                playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = true
+                playerItem.preferredForwardBufferDuration = 30.0
+
+                player?.insert(playerItem, after: nil)
+                playerItems.append(playerItem)
+                logger.info("✅ Reloaded track \(offset) after reorder: \(nextTrack.name)")
+            }
+        }
+
         updateNowPlayingInfo()
     }
 
@@ -546,18 +572,18 @@ class PlayerManager: NSObject, ObservableObject {
             return
         }
 
-        // CRITICAL: Only process if this item is actually in our queue
-        guard playerItems.contains(finishedItem) else {
-            logger.info("⏭️ Finished item not in our queue, ignoring (likely old item)")
+        // CRITICAL: Only process if this is the FIRST item in our queue
+        // By the time this notification fires, AVQueuePlayer has already advanced to the next item
+        // So we check if the finished item WAS the first item (the one that should have been playing)
+        guard let firstItem = playerItems.first, finishedItem == firstItem else {
+            // This is either a preloaded item finishing early (shouldn't happen) or an old item
+            logger.info("⏭️ Non-first item finished, ignoring (not our current track)")
             return
         }
 
-        // CRITICAL: Only process if this is the first item AND it's still the player's current item
-        // This prevents race conditions where notifications arrive out of order
-        guard let firstItem = playerItems.first,
-              finishedItem == firstItem,
-              player?.currentItem == finishedItem || player?.currentItem == nil else {
-            logger.info("⏭️ Non-current item finished, ignoring (index in queue: \(self.playerItems.firstIndex(of: finishedItem) ?? -1))")
+        // Additional safety: only process if we're actually in a playing state
+        guard isPlaying || player?.rate != 0 else {
+            logger.info("⏭️ Track finished but not playing, ignoring")
             return
         }
 
@@ -603,16 +629,14 @@ class PlayerManager: NSObject, ObservableObject {
             break
         }
 
-        // Update current track
+        // Update current track and metadata
         if currentIndex < queue.count {
             let newTrack = queue[currentIndex]
             let previousTrack = currentTrack
             currentTrack = newTrack
 
-            // Reset current time for new track
-            currentTime = 0
-
             // Set duration from track metadata (not from stream)
+            // The time observer will update currentTime automatically from the player
             duration = newTrack.duration
             logger.info("📏 Track changed: '\(previousTrack?.name ?? "none")' → '\(newTrack.name)' (index: \(self.currentIndex), duration: \(newTrack.duration)s)")
         } else {
@@ -663,6 +687,12 @@ class PlayerManager: NSObject, ObservableObject {
 
             // Update current time from player
             self.currentTime = time.seconds
+
+            // Ensure duration matches current track (safeguard against race conditions)
+            if let currentTrack = self.currentTrack, self.duration != currentTrack.duration {
+                self.duration = currentTrack.duration
+                self.logger.info("📏 Duration sync: Updated to \(currentTrack.duration)s for '\(currentTrack.name)'")
+            }
 
             // Duration comes from Track metadata, not from stream
             // HTTP transcoded streams report isIndefinite, so we use Jellyfin API metadata
