@@ -58,8 +58,10 @@ class PlayerManager: NSObject, ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var playerItemCancellables = Set<AnyCancellable>() // Separate for player item observers
     private let jellyfinService = JellyfinService.shared
+    private let downloadManager = DownloadManager.shared
     private var originalQueue: [Track] = []
     private var originalIndex: Int = 0
+    private var lastValidPlaybackTime: Double = 0.0  // Track last known position to detect unexpected restarts
 
     // MARK: - Initialization
 
@@ -252,6 +254,11 @@ class PlayerManager: NSObject, ObservableObject {
             return
         }
 
+        // Log seeks to beginning to help debug restarts
+        if time == 0 {
+            logger.info("🔄 Seeking to beginning of track: \(self.currentTrack?.name ?? "unknown")")
+        }
+
         // Check if current item is ready to seek
         guard currentItem.status == .readyToPlay else {
             logger.warning("⚠️ Cannot seek - item not ready (status: \(currentItem.status.rawValue))")
@@ -424,7 +431,8 @@ class PlayerManager: NSObject, ObservableObject {
 
                 let playerItem = AVPlayerItem(url: streamURL)
                 playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = true
-                playerItem.preferredForwardBufferDuration = 30.0
+                playerItem.preferredForwardBufferDuration = 60.0  // Large buffer for stability
+                // Note: No bitrate limit - using direct file streaming
 
                 player?.insert(playerItem, after: nil)
                 playerItems.append(playerItem)
@@ -539,19 +547,36 @@ class PlayerManager: NSObject, ObservableObject {
         logger.info("🎵 Setting up gapless queue starting at index \(index)")
 
         for (offset, track) in tracksToLoad.enumerated() {
-            guard let streamURL = jellyfinService.getStreamingURL(for: track.id) else {
-                logger.error("❌ Failed to get streaming URL for track at index \(index + offset): \(track.name)")
+            // Check if track is downloaded for offline playback
+            let playbackURL: URL?
+            let isOffline: Bool
+
+            if let localURL = downloadManager.getLocalURL(for: track.id) {
+                playbackURL = localURL
+                isOffline = true
+                logger.info("  [\(offset)] Using offline file: \(track.name)")
+            } else {
+                playbackURL = jellyfinService.getStreamingURL(for: track.id)
+                isOffline = false
+                logger.info("  [\(offset)] Streaming: \(track.name)")
+            }
+
+            guard let url = playbackURL else {
+                logger.error("❌ Failed to get playback URL for track at index \(index + offset): \(track.name)")
                 continue
             }
 
-            let playerItem = AVPlayerItem(url: streamURL)
+            let playerItem = AVPlayerItem(url: url)
 
-            // Configure for gapless playback
-            playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = true
-            playerItem.preferredForwardBufferDuration = 30.0
+            // Configure for reliable playback
+            if !isOffline {
+                // Streaming configuration
+                playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = true
+                playerItem.preferredForwardBufferDuration = 60.0  // Large buffer for stability
+                playerItem.preferredPeakBitRate = 128000  // Match our max streaming bitrate
+            }
 
             playerItems.append(playerItem)
-            logger.info("  [\(offset)] Loaded: \(track.name)")
         }
 
         // Create AVQueuePlayer with preloaded items
@@ -587,7 +612,22 @@ class PlayerManager: NSObject, ObservableObject {
             return
         }
 
-        logger.info("✅ Current track finished playing: \(self.currentTrack?.name ?? "unknown")")
+        // CRITICAL FIX: Verify we're actually near the end of the track
+        // Sometimes AVPlayerItemDidPlayToEndTime fires incorrectly mid-song
+        guard let currentTrack = currentTrack else {
+            logger.warning("⚠️ Track finished but currentTrack is nil, ignoring")
+            return
+        }
+
+        let timeRemaining = currentTrack.duration - self.currentTime
+        if timeRemaining > 5.0 {
+            // We're more than 5 seconds from the end - this is a false notification
+            logger.warning("⚠️ IGNORING false 'track finished' notification - still \(timeRemaining)s remaining in '\(currentTrack.name)'")
+            logger.warning("   Current time: \(self.currentTime)s, Duration: \(currentTrack.duration)s")
+            return
+        }
+
+        logger.info("✅ Current track finished playing: \(currentTrack.name) (time: \(self.currentTime)s, duration: \(currentTrack.duration)s)")
 
         guard repeatMode != .one else {
             // Repeat current track
@@ -633,12 +673,12 @@ class PlayerManager: NSObject, ObservableObject {
         if currentIndex < queue.count {
             let newTrack = queue[currentIndex]
             let previousTrack = currentTrack
-            currentTrack = newTrack
+            self.currentTrack = newTrack
 
             // Set duration from track metadata (not from stream)
             // The time observer will update currentTime automatically from the player
             duration = newTrack.duration
-            logger.info("📏 Track changed: '\(previousTrack?.name ?? "none")' → '\(newTrack.name)' (index: \(self.currentIndex), duration: \(newTrack.duration)s)")
+            logger.info("📏 Track changed: '\(previousTrack.name)' → '\(newTrack.name)' (index: \(self.currentIndex), duration: \(newTrack.duration)s)")
         } else {
             logger.error("❌ currentIndex \(self.currentIndex) out of bounds for queue size \(self.queue.count)")
         }
@@ -658,7 +698,8 @@ class PlayerManager: NSObject, ObservableObject {
 
             let playerItem = AVPlayerItem(url: streamURL)
             playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = true
-            playerItem.preferredForwardBufferDuration = 30.0
+            playerItem.preferredForwardBufferDuration = 60.0  // Large buffer for stability
+            playerItem.preferredPeakBitRate = 128000  // Match our max streaming bitrate
 
             player?.insert(playerItem, after: nil)
             playerItems.append(playerItem)
@@ -681,12 +722,41 @@ class PlayerManager: NSObject, ObservableObject {
 
         // Observe playback time - tracks current item automatically
         let interval = CMTime(seconds: 0.5, preferredTimescale: 1000)
+        var lastValidTime: Double = 0.0
+        var lastTrackedTrackId: String? = nil
+
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             guard let self = self else { return }
             guard time.isValid && time.isNumeric else { return }
 
+            let newTime = time.seconds
+
+            // CRITICAL: Reset time tracking when track changes
+            // This prevents false "restart" detection when AVQueuePlayer advances to next track
+            if let currentTrackId = self.currentTrack?.id, currentTrackId != lastTrackedTrackId {
+                self.logger.info("🔄 Track changed in time observer, resetting time tracking (was: \(lastTrackedTrackId ?? "nil"), now: \(currentTrackId))")
+                lastValidTime = 0.0
+                lastTrackedTrackId = currentTrackId
+            }
+
+            // CRITICAL: Detect unexpected restarts WITHIN THE SAME TRACK
+            // If time jumps backward by more than 2 seconds (not a normal seek), the stream restarted
+            // Only check if we've been playing for at least 10 seconds AND we're still on the same track
+            if newTime < lastValidTime - 2.0 && lastValidTime > 10.0 && lastTrackedTrackId == self.currentTrack?.id {
+                self.logger.error("🚨 UNEXPECTED RESTART DETECTED: Time jumped from \(lastValidTime)s to \(newTime)s")
+                self.logger.error("   Track: '\(self.currentTrack?.name ?? "unknown")'")
+                self.logger.error("   This indicates the AVPlayer stream restarted on its own")
+
+                // Attempt recovery: seek back to where we were
+                if self.isPlaying {
+                    self.logger.info("🔧 Attempting to recover playback position...")
+                    self.seek(to: lastValidTime)
+                }
+            }
+
             // Update current time from player
-            self.currentTime = time.seconds
+            self.currentTime = newTime
+            lastValidTime = newTime
 
             // Ensure duration matches current track (safeguard against race conditions)
             if let currentTrack = self.currentTrack, self.duration != currentTrack.duration {
@@ -736,6 +806,34 @@ class PlayerManager: NSObject, ObservableObject {
                     // Only update buffering state if this is the current item
                     if playerItem == self.player?.currentItem {
                         self.isBuffering = isEmpty
+                        if isEmpty {
+                            self.logger.warning("⏸️ Buffer empty - playback may stall")
+                        }
+                    }
+                }
+                .store(in: &playerItemCancellables)
+
+            // Observe likely to keep up
+            playerItem.publisher(for: \.isPlaybackLikelyToKeepUp)
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] isLikely in
+                    guard let self = self else { return }
+                    if playerItem == self.player?.currentItem {
+                        if isLikely && self.isBuffering {
+                            self.logger.info("▶️ Buffer recovered - playback can resume")
+                            self.isBuffering = false
+                        }
+                    }
+                }
+                .store(in: &playerItemCancellables)
+
+            // Observe playback stalls
+            playerItem.publisher(for: \.isPlaybackBufferFull)
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] isFull in
+                    guard let self = self else { return }
+                    if playerItem == self.player?.currentItem && isFull {
+                        self.logger.info("📦 Playback buffer is full - good streaming health")
                     }
                 }
                 .store(in: &playerItemCancellables)

@@ -9,76 +9,80 @@ import SwiftUI
 
 struct NowPlayingView: View {
     @ObservedObject var playerManager = WatchPlayerManager.shared
+    @ObservedObject var jellyfinService = WatchJellyfinService.shared
+    @State private var isFavorite = false
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                // Track info
-                if let track = playerManager.currentTrack {
-                    trackInfo(track)
-                } else {
-                    placeholderView
-                }
-
-                // Progress
-                if playerManager.duration > 0 {
-                    progressView
-                }
-
-                // Playback controls
-                controlsView
-
-                // Queue info
-                if playerManager.queue.count > 0 {
-                    queueInfo
-                }
+        VStack(spacing: 6) {
+            // Track info
+            if let track = playerManager.currentTrack {
+                trackInfo(track)
+            } else {
+                placeholderView
             }
-            .padding(.vertical, 8)
+
+            // Progress
+            if playerManager.duration > 0 {
+                progressView
+            }
+
+            // Playback controls
+            controlsView
+        }
+        .padding(.vertical, 4)
+        .onAppear {
+            syncFavoriteState()
+        }
+        .onChange(of: playerManager.currentTrack?.id) { _, _ in
+            syncFavoriteState()
         }
     }
 
     // MARK: - Track Info
 
     private func trackInfo(_ track: WatchTrack) -> some View {
-        VStack(spacing: 4) {
-            // Album art placeholder
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.cyan.opacity(0.3), Color.pink.opacity(0.3)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(height: 120)
+        VStack(spacing: 3) {
+            // Album artwork with favorite button
+            ZStack(alignment: .topTrailing) {
+                AlbumArtworkView(
+                    albumId: track.albumId,
+                    baseURL: jellyfinService.baseURL,
+                    size: 85
+                )
+                .frame(width: 85, height: 85)
+                .cornerRadius(8)
 
-                Image(systemName: "music.note")
-                    .font(.system(size: 40))
-                    .foregroundColor(.white.opacity(0.6))
+                // Favorite button
+                Button {
+                    toggleFavorite(track: track)
+                } label: {
+                    Image(systemName: isFavorite ? "heart.fill" : "heart")
+                        .font(.system(size: 14))
+                        .foregroundColor(.pink)
+                        .padding(6)
+                        .background(
+                            Circle()
+                                .fill(Color.black.opacity(0.6))
+                                .frame(width: 26, height: 26)
+                        )
+                }
+                .buttonStyle(.plain)
+                .offset(x: 4, y: -4)
             }
-            .padding(.horizontal, 4)
 
             // Track name
             Text(track.name)
-                .font(.headline)
-                .fontWeight(.bold)
-                .lineLimit(2)
+                .font(.system(size: 13, weight: .semibold))
+                .lineLimit(1)
                 .multilineTextAlignment(.center)
 
             // Artist
             Text(track.artist)
-                .font(.caption)
+                .font(.system(size: 11))
                 .foregroundColor(.secondary)
                 .lineLimit(1)
-
-            // Album
-            Text(track.album)
-                .font(.caption2)
-                .foregroundColor(.secondary.opacity(0.7))
-                .lineLimit(1)
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 4)
     }
 
     // MARK: - Placeholder
@@ -104,7 +108,7 @@ struct NowPlayingView: View {
     // MARK: - Progress
 
     private var progressView: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 1) {
             // Progress bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
@@ -124,24 +128,24 @@ struct NowPlayingView: View {
                         .frame(width: geometry.size.width * progress)
                 }
             }
-            .frame(height: 4)
+            .frame(height: 2.5)
 
             // Time labels
             HStack {
                 Text(formatTime(playerManager.currentTime))
-                    .font(.caption2)
+                    .font(.system(size: 9))
                     .monospacedDigit()
                     .foregroundColor(.cyan)
 
                 Spacer()
 
                 Text(formatTime(playerManager.duration))
-                    .font(.caption2)
+                    .font(.system(size: 9))
                     .monospacedDigit()
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 6)
     }
 
     private var progress: Double {
@@ -152,17 +156,18 @@ struct NowPlayingView: View {
     // MARK: - Controls
 
     private var controlsView: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 24) {
             // Previous
             Button {
                 playerManager.playPrevious()
             } label: {
                 Image(systemName: "backward.fill")
-                    .font(.title3)
+                    .font(.system(size: 20))
+                    .frame(width: 40, height: 40)
             }
             .buttonStyle(.plain)
 
-            // Play/Pause
+            // Play/Pause - Large tap target for running
             Button {
                 playerManager.togglePlayPause()
             } label: {
@@ -175,10 +180,10 @@ struct NowPlayingView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 50, height: 50)
+                        .frame(width: 48, height: 48)
 
                     Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.title3)
+                        .font(.system(size: 20))
                         .foregroundColor(.black)
                 }
             }
@@ -189,12 +194,13 @@ struct NowPlayingView: View {
                 playerManager.playNext()
             } label: {
                 Image(systemName: "forward.fill")
-                    .font(.title3)
+                    .font(.system(size: 20))
+                    .frame(width: 40, height: 40)
             }
             .buttonStyle(.plain)
         }
         .foregroundColor(.white)
-        .padding(.vertical, 8)
+        .padding(.vertical, 2)
     }
 
     // MARK: - Queue Info
@@ -209,12 +215,42 @@ struct NowPlayingView: View {
         .foregroundColor(.secondary)
     }
 
-    // MARK: - Helper
+    // MARK: - Helpers
 
     private func formatTime(_ time: Double) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    private func syncFavoriteState() {
+        guard let track = playerManager.currentTrack else {
+            isFavorite = false
+            return
+        }
+        isFavorite = track.isFavorite
+    }
+
+    private func toggleFavorite(track: WatchTrack) {
+        Task {
+            do {
+                // Optimistically update UI
+                isFavorite.toggle()
+
+                // Update on server
+                if isFavorite {
+                    try await jellyfinService.markFavorite(itemId: track.id)
+                } else {
+                    try await jellyfinService.unmarkFavorite(itemId: track.id)
+                }
+
+                print("✅ Favorite toggled: \(track.name) - isFavorite: \(isFavorite)")
+            } catch {
+                // Revert on failure
+                isFavorite.toggle()
+                print("❌ Failed to toggle favorite: \(error.localizedDescription)")
+            }
+        }
     }
 }
 

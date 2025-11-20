@@ -11,6 +11,7 @@ import AVKit
 struct NowPlayingView: View {
     @ObservedObject var playerManager = PlayerManager.shared
     @ObservedObject var jellyfinService = JellyfinService.shared
+    @ObservedObject var themeManager = ThemeManager.shared
     @Environment(\.dismiss) var dismiss
     @State private var isDraggingSlider = false
     @State private var sliderValue: Double = 0
@@ -22,9 +23,9 @@ struct NowPlayingView: View {
             // Background with gradient
             LinearGradient(
                 colors: [
-                    Color.darkBackground,
-                    Color.darkMid,
-                    Color.darkBackground
+                    Color.jellyAmpBackground,
+                    Color.jellyAmpMidBackground,
+                    Color.jellyAmpBackground
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -79,7 +80,7 @@ struct NowPlayingView: View {
             } label: {
                 Image(systemName: "chevron.down")
                     .font(.title3)
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
                     .frame(width: 44, height: 44)
             }
 
@@ -101,7 +102,7 @@ struct NowPlayingView: View {
             } label: {
                 Image(systemName: "list.bullet")
                     .font(.title3)
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
                     .frame(width: 44, height: 44)
             }
         }
@@ -131,8 +132,8 @@ struct NowPlayingView: View {
                                     .stroke(
                                         LinearGradient(
                                             colors: [
-                                                Color.neonCyan.opacity(0.8),
-                                                Color.neonPink.opacity(0.8)
+                                                Color.jellyAmpAccent.opacity(0.8),
+                                                Color.jellyAmpSecondary.opacity(0.8)
                                             ],
                                             startPoint: .topLeading,
                                             endPoint: .bottomTrailing
@@ -160,8 +161,8 @@ struct NowPlayingView: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.neonCyan.opacity(0.6),
-                            Color.neonPink.opacity(0.6),
+                            Color.jellyAmpAccent.opacity(0.6),
+                            Color.jellyAmpSecondary.opacity(0.6),
                             Color.neonPurple.opacity(0.6)
                         ],
                         startPoint: .topLeading,
@@ -169,14 +170,13 @@ struct NowPlayingView: View {
                     )
                 )
                 .frame(width: 320, height: 320)
-                .glassEffect(.regular)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24)
                         .stroke(
                             LinearGradient(
                                 colors: [
-                                    Color.neonCyan.opacity(0.8),
-                                    Color.neonPink.opacity(0.8)
+                                    Color.jellyAmpAccent.opacity(0.8),
+                                    Color.jellyAmpSecondary.opacity(0.8)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -199,7 +199,7 @@ struct NowPlayingView: View {
             if let track = playerManager.currentTrack {
                 Text(track.name)
                     .font(.jellyAmpTitle)
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
                     .neonGlow(color: .neonCyan, radius: 10)
 
                 Text(track.artistName)
@@ -227,13 +227,12 @@ struct NowPlayingView: View {
                     // Track background
                     Capsule()
                         .fill(Color.white.opacity(0.1))
-                        .glassEffect(.regular)
 
                     // Progress fill
                     Capsule()
                         .fill(
                             LinearGradient(
-                                colors: [Color.neonCyan, Color.neonPink],
+                                colors: [Color.jellyAmpAccent, Color.jellyAmpSecondary],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -287,7 +286,7 @@ struct NowPlayingView: View {
             } label: {
                 Image(systemName: "backward.fill")
                     .font(.system(size: 32))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
             }
 
             // Play/Pause (prominent)
@@ -298,7 +297,7 @@ struct NowPlayingView: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.neonCyan, Color.neonPink],
+                                colors: [Color.jellyAmpAccent, Color.jellyAmpSecondary],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -318,7 +317,7 @@ struct NowPlayingView: View {
             } label: {
                 Image(systemName: "forward.fill")
                     .font(.system(size: 32))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
             }
         }
         .padding(.top, 30)
@@ -353,7 +352,7 @@ struct NowPlayingView: View {
             } label: {
                 Image(systemName: "list.bullet")
                     .font(.title3)
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
             }
 
             // Repeat
@@ -432,7 +431,7 @@ struct AirPlayButton: UIViewRepresentable {
     func makeUIView(context: Context) -> UIView {
         let routePickerView = AVRoutePickerView()
         routePickerView.backgroundColor = .clear
-        routePickerView.activeTintColor = UIColor(Color.neonCyan)
+        routePickerView.activeTintColor = UIColor(Color.jellyAmpAccent)
         routePickerView.tintColor = UIColor(.white)
 
         // Make the button larger and centered

@@ -11,156 +11,388 @@ struct MainTabView: View {
     @State private var selectedTab = 0
     @State private var showNowPlaying = false
     @ObservedObject var playerManager = PlayerManager.shared
+    @ObservedObject var themeManager = ThemeManager.shared
 
     var body: some View {
         VStack(spacing: 0) {
-            // Tab View
-            TabView(selection: $selectedTab) {
-                LibraryView()
-                    .tag(0)
-                    .tabItem {
-                        Label("Library", systemImage: "music.note.list")
-                    }
-
-                SearchView()
-                    .tag(1)
-                    .tabItem {
-                        Label("Search", systemImage: "magnifyingglass")
-                    }
-
-                FavoritesView()
-                    .tag(2)
-                    .tabItem {
-                        Label("Favorites", systemImage: "heart.fill")
-                    }
-
-                DownloadsTabPlaceholder()
-                    .tag(3)
-                    .tabItem {
-                        Label("Downloads", systemImage: "arrow.down.circle.fill")
-                    }
-
-                SettingsView()
-                    .tag(4)
-                    .tabItem {
-                        Label("Settings", systemImage: "gearshape.fill")
-                    }
+            // Content Area (Tab Views)
+            Group {
+                switch selectedTab {
+                case 0:
+                    LibraryView()
+                case 1:
+                    SearchView()
+                case 2:
+                    FavoritesView()
+                case 3:
+                    DownloadsView()
+                case 4:
+                    SettingsView()
+                default:
+                    LibraryView()
+                }
             }
-            .tint(.neonCyan)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // CNN-Style Ticker Mini Player (always visible above tab bar)
-            if let currentTrack = playerManager.currentTrack {
-                tickerMiniPlayer(track: currentTrack)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            // Mini Player (sits above tab bar)
+            if playerManager.currentTrack != nil {
+                MiniPlayerView(showNowPlaying: $showNowPlaying)
             }
+
+            // Custom Tab Bar (always at bottom)
+            CustomTabBar(selectedTab: $selectedTab)
         }
+        .ignoresSafeArea(.keyboard)
         .fullScreenCover(isPresented: $showNowPlaying) {
             NowPlayingView()
         }
     }
-
-    // MARK: - CNN-Style Ticker Mini Player
-    @ViewBuilder
-    private func tickerMiniPlayer(track: Track) -> some View {
-        Button {
-            showNowPlaying = true
-        } label: {
-            HStack(spacing: 0) {
-                // Animated scrolling text (CNN-style ticker)
-                GeometryReader { geometry in
-                    ScrollingText(
-                        text: "\(track.name) • \(track.artistName) • \(track.albumName)",
-                        isPlaying: playerManager.isPlaying,
-                        geometry: geometry
-                    )
-                }
-                .frame(height: 32)
-
-                // Play/Pause button (compact)
-                Button {
-                    playerManager.togglePlayPause()
-                } label: {
-                    Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 44, height: 32)
-                }
-            }
-            .foregroundColor(.white)
-            .frame(height: 32)
-            .background(
-                Rectangle()
-                    .fill(Color.darkMid)
-                    .overlay(
-                        // Top gradient line
-                        LinearGradient(
-                            colors: [
-                                Color.neonCyan.opacity(0.5),
-                                Color.neonPink.opacity(0.5)
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                        .frame(height: 2),
-                        alignment: .top
-                    )
-            )
-        }
-        .buttonStyle(.plain)
-    }
 }
 
-// MARK: - Scrolling Text Component (CNN-Style Ticker)
-struct ScrollingText: View {
-    let text: String
-    let isPlaying: Bool
-    let geometry: GeometryProxy
-
-    @State private var offset: CGFloat = 0
+// MARK: - Custom Tab Bar
+struct CustomTabBar: View {
+    @Binding var selectedTab: Int
 
     var body: some View {
-        HStack(spacing: 0) {
-            Text(text)
-                .font(.system(size: 13, weight: .medium, design: .monospaced))
-                .foregroundColor(.white)
-                .fixedSize()
+        HStack(spacing: 8) {
+            TabBarButton(
+                icon: "music.note.list",
+                label: "Library",
+                isSelected: selectedTab == 0
+            ) {
+                selectedTab = 0
+            }
 
-            Text("  ▸  ")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundColor(.neonCyan)
+            TabBarButton(
+                icon: "magnifyingglass",
+                label: "Search",
+                isSelected: selectedTab == 1
+            ) {
+                selectedTab = 1
+            }
 
-            Text(text)
-                .font(.system(size: 13, weight: .medium, design: .monospaced))
-                .foregroundColor(.white)
-                .fixedSize()
-        }
-        .offset(x: offset)
-        .onAppear {
-            startScrolling()
-        }
-        .onChange(of: isPlaying) { _, newValue in
-            if newValue {
-                startScrolling()
+            TabBarButton(
+                icon: "heart.fill",
+                label: "Favorites",
+                isSelected: selectedTab == 2
+            ) {
+                selectedTab = 2
+            }
+
+            TabBarButton(
+                icon: "arrow.down.circle.fill",
+                label: "Downloads",
+                isSelected: selectedTab == 3
+            ) {
+                selectedTab = 3
+            }
+
+            TabBarButton(
+                icon: "gearshape.fill",
+                label: "Settings",
+                isSelected: selectedTab == 4
+            ) {
+                selectedTab = 4
             }
         }
-    }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .background(
+            ZStack {
+                // Base glass layer with ultra thin material
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(.ultraThinMaterial)
 
-    private func startScrolling() {
-        let textWidth = text.widthOfString(usingFont: UIFont.monospacedSystemFont(ofSize: 13, weight: .medium))
-        let totalWidth = textWidth + 50 // Add separator width
+                // Dark tinted overlay for depth
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.black.opacity(0.4),
+                                Color.black.opacity(0.5),
+                                Color.black.opacity(0.6)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .opacity(0.8)
 
-        withAnimation(.linear(duration: Double(totalWidth) / 30).repeatForever(autoreverses: false)) {
-            offset = -totalWidth
-        }
+                // Inner shadow for depth
+                RoundedRectangle(cornerRadius: 28)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.black.opacity(0.5),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
+                    .blur(radius: 1)
+
+                // Glass highlight on top edge
+                RoundedRectangle(cornerRadius: 28)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.25),
+                                Color.white.opacity(0.1),
+                                Color.white.opacity(0.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1.5
+                    )
+
+                // Shimmer effect
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.08),
+                                Color.clear,
+                                Color.white.opacity(0.05)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
+        )
+        .padding(.horizontal, 8)
+        .padding(.bottom, 8)
+        .shadow(color: Color.black.opacity(0.5), radius: 25, x: 0, y: -15)
+        .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: -5)
     }
 }
 
-// Helper extension to calculate text width
-extension String {
-    func widthOfString(usingFont font: UIFont) -> CGFloat {
-        let fontAttributes = [NSAttributedString.Key.font: font]
-        let size = self.size(withAttributes: fontAttributes)
-        return size.width
+// MARK: - Tab Bar Button
+struct TabBarButton: View {
+    let icon: String
+    let label: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundColor(isSelected ? .jellyAmpAccent : .white.opacity(0.6))
+
+                Text(label)
+                    .font(.system(size: 10, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? .jellyAmpAccent : .white.opacity(0.6))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .background(
+                // Liquid glass pill for selected state
+                Group {
+                    if isSelected {
+                        ZStack {
+                            // Base glass material
+                            RoundedRectangle(cornerRadius: 18)
+                                .fill(.thinMaterial)
+
+                            // Dark tinted overlay
+                            RoundedRectangle(cornerRadius: 18)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.black.opacity(0.5),
+                                            Color.black.opacity(0.6)
+                                        ],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                                .opacity(0.85)
+
+                            // Accent glow border
+                            RoundedRectangle(cornerRadius: 18)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.jellyAmpAccent.opacity(0.4),
+                                            Color.jellyAmpAccent.opacity(0.2)
+                                        ],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    ),
+                                    lineWidth: 1.5
+                                )
+
+                            // Glass highlight
+                            RoundedRectangle(cornerRadius: 18)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.white.opacity(0.15),
+                                            Color.clear
+                                        ],
+                                        startPoint: .top,
+                                        endPoint: .center
+                                    ),
+                                    lineWidth: 1
+                                )
+                        }
+                        .shadow(color: Color.jellyAmpAccent.opacity(0.2), radius: 8, x: 0, y: 0)
+                    } else {
+                        Color.clear
+                    }
+                }
+            )
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)
+        }
+        .buttonStyle(.plain)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+    }
+}
+
+// MARK: - Static Tab Bar (for detail views)
+struct StaticTabBar: View {
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        HStack(spacing: 8) {
+            StaticTabButton(icon: "music.note.list", label: "Library") {
+                dismiss()
+            }
+
+            StaticTabButton(icon: "magnifyingglass", label: "Search") {
+                dismiss()
+            }
+
+            StaticTabButton(icon: "heart.fill", label: "Favorites") {
+                dismiss()
+            }
+
+            StaticTabButton(icon: "arrow.down.circle.fill", label: "Downloads") {
+                dismiss()
+            }
+
+            StaticTabButton(icon: "gearshape.fill", label: "Settings") {
+                dismiss()
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .background(
+            ZStack {
+                // Base glass layer with ultra thin material
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(.ultraThinMaterial)
+
+                // Dark tinted overlay for depth
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.black.opacity(0.4),
+                                Color.black.opacity(0.5),
+                                Color.black.opacity(0.6)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .opacity(0.8)
+
+                // Inner shadow for depth
+                RoundedRectangle(cornerRadius: 28)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.black.opacity(0.5),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
+                    .blur(radius: 1)
+
+                // Glass highlight on top edge
+                RoundedRectangle(cornerRadius: 28)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.25),
+                                Color.white.opacity(0.1),
+                                Color.white.opacity(0.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1.5
+                    )
+
+                // Shimmer effect
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.08),
+                                Color.clear,
+                                Color.white.opacity(0.05)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
+        )
+        .padding(.horizontal, 8)
+        .padding(.bottom, 8)
+        .shadow(color: Color.black.opacity(0.5), radius: 25, x: 0, y: -15)
+        .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: -5)
+    }
+}
+
+// MARK: - Static Tab Button (non-highlighted)
+struct StaticTabButton: View {
+    let icon: String
+    let label: String
+    let action: () -> Void
+
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundColor(.white.opacity(0.6))
+
+                Text(label)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.6))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        }
+        .buttonStyle(.plain)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 }
 
@@ -212,19 +444,21 @@ struct FavoritesTabPlaceholder: View {
 }
 
 struct DownloadsTabPlaceholder: View {
+    @ObservedObject var themeManager = ThemeManager.shared
+
     var body: some View {
         ZStack {
-            Color.darkBackground.ignoresSafeArea()
+            Color.jellyAmpBackground.ignoresSafeArea()
 
             VStack(spacing: 16) {
                 Image(systemName: "arrow.down.circle.fill")
                     .font(.system(size: 60))
-                    .foregroundColor(.neonGreen)
-                    .neonGlow(color: .neonGreen, radius: 20)
+                    .foregroundColor(.jellyAmpSuccess)
+                    .neonGlow(color: .jellyAmpSuccess, radius: 20)
 
                 Text("Downloads")
                     .font(.jellyAmpTitle)
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
 
                 Text("Coming soon...")
                     .font(.jellyAmpBody)

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SearchView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
+    @ObservedObject var themeManager = ThemeManager.shared
     @ObservedObject var playerManager = PlayerManager.shared
 
     @State private var searchText = ""
@@ -30,9 +31,9 @@ struct SearchView: View {
             // Background
             LinearGradient(
                 colors: [
-                    Color.darkBackground,
-                    Color.darkMid,
-                    Color.darkBackground
+                    Color.jellyAmpBackground,
+                    Color.jellyAmpMidBackground,
+                    Color.jellyAmpBackground
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -75,8 +76,8 @@ struct SearchView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Search")
                     .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .neonGlow(color: .neonCyan, radius: 12)
+                    .foregroundColor(Color.jellyAmpText)
+                    .neonGlow(color: .jellyAmpAccent, radius: 12)
 
                 if !searchResults.isEmpty {
                     Text("\(filteredResults.count) result\(filteredResults.count == 1 ? "" : "s")")
@@ -103,7 +104,7 @@ struct SearchView: View {
             // Text Field
             TextField("Search artists, albums, tracks...", text: $searchText)
                 .font(.system(size: 17))
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
                 .onChange(of: searchText) { _, newValue in
@@ -126,12 +127,11 @@ struct SearchView: View {
         .padding(.vertical, 14)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.darkMid.opacity(0.6))
-                .glassEffect(.regular)
+                .fill(Color.jellyAmpMidBackground.opacity(0.6))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
+                .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
         )
         .padding(.horizontal, 16)
     }
@@ -153,11 +153,11 @@ struct SearchView: View {
                             .padding(.vertical, 10)
                             .background(
                                 Capsule()
-                                    .fill(selectedFilter == filter ? Color.neonCyan : Color.neonCyan.opacity(0.15))
+                                    .fill(selectedFilter == filter ? Color.jellyAmpAccent : Color.jellyAmpAccent.opacity(0.15))
                             )
                             .overlay(
                                 Capsule()
-                                    .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
+                                    .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
                             )
                     }
                 }
@@ -197,7 +197,7 @@ struct SearchView: View {
 
             Text("Search Your Library")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
 
             Text("Find artists, albums, and tracks")
                 .font(.system(size: 16))
@@ -210,7 +210,7 @@ struct SearchView: View {
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
-                .tint(.neonCyan)
+                .tint(.jellyAmpAccent)
                 .scaleEffect(1.5)
 
             Text("Searching...")
@@ -229,7 +229,7 @@ struct SearchView: View {
 
             Text("No Results")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
 
             Text("Try a different search term")
                 .font(.system(size: 16))
@@ -358,7 +358,7 @@ struct SearchResultRow: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(item.name ?? "Unknown")
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
 
                     HStack(spacing: 8) {
@@ -403,7 +403,7 @@ struct SearchResultRow: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.darkMid.opacity(isPressed ? 0.5 : 0.3))
+                    .fill(Color.jellyAmpMidBackground.opacity(isPressed ? 0.5 : 0.3))
             )
         }
         .buttonStyle(.plain)
@@ -415,7 +415,7 @@ struct SearchResultRow: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(
                     LinearGradient(
-                        colors: [Color.neonCyan.opacity(0.3), Color.neonPurple.opacity(0.3)],
+                        colors: [Color.jellyAmpAccent.opacity(0.3), Color.jellyAmpTertiary.opacity(0.3)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )

@@ -7,7 +7,7 @@
 
 import Foundation
 
-// MARK: - Simple Track Model (for now)
+// MARK: - Track Model
 struct Track: Identifiable {
     let id: String
     let name: String
@@ -16,10 +16,36 @@ struct Track: Identifiable {
     let duration: TimeInterval
     let artworkURL: String?
 
+    // Metadata for proper organization
+    let trackNumber: Int?
+    let discNumber: Int?
+    let albumId: String?
+    let artistId: String?
+    let productionYear: Int?
+
     var durationFormatted: String {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    // Initializer with defaults for optional metadata
+    init(id: String, name: String, artistName: String, albumName: String,
+         duration: TimeInterval, artworkURL: String?,
+         trackNumber: Int? = nil, discNumber: Int? = nil,
+         albumId: String? = nil, artistId: String? = nil,
+         productionYear: Int? = nil) {
+        self.id = id
+        self.name = name
+        self.artistName = artistName
+        self.albumName = albumName
+        self.duration = duration
+        self.artworkURL = artworkURL
+        self.trackNumber = trackNumber
+        self.discNumber = discNumber
+        self.albumId = albumId
+        self.artistId = artistId
+        self.productionYear = productionYear
     }
 }
 
@@ -62,6 +88,16 @@ struct Album: Identifiable {
     let artistName: String
     let year: Int?
     let artworkURL: String?
+}
+
+// MARK: - Playlist Model
+struct Playlist: Identifiable, Codable {
+    let id: String
+    let name: String
+    var trackCount: Int
+    let artworkURL: String?
+    let dateCreated: Date?
+    var isFavorite: Bool
 }
 
 extension Album {

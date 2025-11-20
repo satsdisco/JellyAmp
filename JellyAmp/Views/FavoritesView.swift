@@ -10,6 +10,7 @@ import SwiftUI
 struct FavoritesView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
     @ObservedObject var playerManager = PlayerManager.shared
+    @ObservedObject var themeManager = ThemeManager.shared
 
     @State private var favoriteTracks: [Track] = []
     @State private var favoriteAlbums: [Album] = []
@@ -25,9 +26,9 @@ struct FavoritesView: View {
             // Background
             LinearGradient(
                 colors: [
-                    Color.darkBackground,
-                    Color.darkMid,
-                    Color.darkBackground
+                    Color.jellyAmpBackground,
+                    Color.jellyAmpMidBackground,
+                    Color.jellyAmpBackground
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -52,7 +53,7 @@ struct FavoritesView: View {
                         .foregroundColor(.neonPink)
                     Text("Error Loading Favorites")
                         .font(.jellyAmpHeadline)
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.jellyAmpText)
                     Text(error)
                         .font(.jellyAmpBody)
                         .foregroundColor(.secondary)
@@ -68,9 +69,9 @@ struct FavoritesView: View {
                     .padding(.vertical, 12)
                     .background(
                         Capsule()
-                            .fill(Color.neonPink)
+                            .fill(Color.jellyAmpSecondary)
                     )
-                    .neonGlow(color: .neonPink, radius: 8)
+                    .neonGlow(color: .jellyAmpSecondary, radius: 8)
                 }
             } else if favoriteTracks.isEmpty && favoriteAlbums.isEmpty && favoriteArtists.isEmpty {
                 // Empty state
@@ -127,8 +128,8 @@ struct FavoritesView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Favorites")
                     .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .neonGlow(color: .neonPink, radius: 12)
+                    .foregroundColor(Color.jellyAmpText)
+                    .neonGlow(color: .jellyAmpSecondary, radius: 12)
 
                 let totalCount = favoriteTracks.count + favoriteAlbums.count + favoriteArtists.count
                 if totalCount > 0 {
@@ -151,11 +152,11 @@ struct FavoritesView: View {
             Image(systemName: "heart.slash")
                 .font(.system(size: 70))
                 .foregroundColor(.neonPink.opacity(0.5))
-                .neonGlow(color: .neonPink, radius: 20)
+                .neonGlow(color: .jellyAmpSecondary, radius: 20)
 
             Text("No Favorites Yet")
                 .font(.system(size: 26, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
 
             Text("Tap the heart icon on tracks, albums, and artists to add them to your favorites")
                 .font(.system(size: 16))
@@ -171,7 +172,7 @@ struct FavoritesView: View {
             HStack {
                 Text("Favorite Tracks")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
 
                 Text("\(favoriteTracks.count)")
                     .font(.system(size: 16, weight: .bold, design: .monospaced))
@@ -180,7 +181,7 @@ struct FavoritesView: View {
                     .padding(.vertical, 4)
                     .background(
                         Capsule()
-                            .fill(Color.neonPink.opacity(0.2))
+                            .fill(Color.jellyAmpSecondary.opacity(0.2))
                     )
 
                 Spacer()
@@ -201,9 +202,9 @@ struct FavoritesView: View {
                     .padding(.vertical, 8)
                     .background(
                         Capsule()
-                            .fill(Color.neonPink)
+                            .fill(Color.jellyAmpSecondary)
                     )
-                    .neonGlow(color: .neonPink, radius: 6)
+                    .neonGlow(color: .jellyAmpSecondary, radius: 6)
                 }
             }
             .padding(.horizontal, 20)
@@ -227,10 +228,9 @@ struct FavoritesView: View {
             .background(
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.white.opacity(0.05))
-                    .glassEffect(.regular)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.neonPink.opacity(0.2), lineWidth: 1)
+                            .stroke(Color.jellyAmpSecondary.opacity(0.2), lineWidth: 1)
                     )
             )
             .padding(.horizontal, 20)
@@ -250,7 +250,7 @@ struct FavoritesView: View {
             HStack {
                 Text("Favorite Albums")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
 
                 Text("\(favoriteAlbums.count)")
                     .font(.system(size: 16, weight: .bold, design: .monospaced))
@@ -259,7 +259,7 @@ struct FavoritesView: View {
                     .padding(.vertical, 4)
                     .background(
                         Capsule()
-                            .fill(Color.neonCyan.opacity(0.2))
+                            .fill(Color.jellyAmpAccent.opacity(0.2))
                     )
             }
             .padding(.horizontal, 20)
@@ -283,7 +283,7 @@ struct FavoritesView: View {
             HStack {
                 Text("Favorite Artists")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
 
                 Text("\(favoriteArtists.count)")
                     .font(.system(size: 16, weight: .bold, design: .monospaced))
@@ -292,7 +292,7 @@ struct FavoritesView: View {
                     .padding(.vertical, 4)
                     .background(
                         Capsule()
-                            .fill(Color.neonPurple.opacity(0.2))
+                            .fill(Color.jellyAmpTertiary.opacity(0.2))
                     )
             }
             .padding(.horizontal, 20)
@@ -391,7 +391,7 @@ struct FavoriteTrackRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(track.name)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
 
                     HStack(spacing: 4) {
@@ -432,7 +432,7 @@ struct FavoriteTrackRow: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(
                     LinearGradient(
-                        colors: [Color.neonPink.opacity(0.3), Color.neonPurple.opacity(0.3)],
+                        colors: [Color.jellyAmpSecondary.opacity(0.3), Color.jellyAmpTertiary.opacity(0.3)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -473,7 +473,7 @@ struct FavoriteAlbumCard: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.neonCyan.opacity(0.4), lineWidth: 1.5)
+                                        .stroke(Color.jellyAmpAccent.opacity(0.4), lineWidth: 1.5)
                                 )
                         default:
                             placeholderArtwork
@@ -488,7 +488,7 @@ struct FavoriteAlbumCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(album.name)
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
 
                     Text(album.artistName)
@@ -508,7 +508,7 @@ struct FavoriteAlbumCard: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(
                     LinearGradient(
-                        colors: [Color.neonCyan.opacity(0.4), Color.neonPurple.opacity(0.4)],
+                        colors: [Color.jellyAmpAccent.opacity(0.4), Color.jellyAmpTertiary.opacity(0.4)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -516,7 +516,7 @@ struct FavoriteAlbumCard: View {
                 .frame(width: 140, height: 140)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.neonCyan.opacity(0.4), lineWidth: 1.5)
+                        .stroke(Color.jellyAmpAccent.opacity(0.4), lineWidth: 1.5)
                 )
 
             Image(systemName: "music.note")
@@ -546,7 +546,7 @@ struct FavoriteArtistCard: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.neonPurple.opacity(0.5), Color.neonPink.opacity(0.5)],
+                                colors: [Color.jellyAmpTertiary.opacity(0.5), Color.jellyAmpSecondary.opacity(0.5)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -554,7 +554,7 @@ struct FavoriteArtistCard: View {
                         .frame(width: 120, height: 120)
                         .overlay(
                             Circle()
-                                .stroke(Color.neonPurple.opacity(0.5), lineWidth: 2)
+                                .stroke(Color.jellyAmpTertiary.opacity(0.5), lineWidth: 2)
                         )
 
                     Image(systemName: "person.circle.fill")
@@ -565,7 +565,7 @@ struct FavoriteArtistCard: View {
                 // Artist name
                 Text(artist.name)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
                     .lineLimit(1)
                     .frame(width: 120)
             }

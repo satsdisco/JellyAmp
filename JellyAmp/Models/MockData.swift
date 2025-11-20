@@ -16,6 +16,11 @@ struct Track: Identifiable, Codable, Equatable {
     let duration: TimeInterval
     let artworkURL: String?
     var isFavorite: Bool
+    let indexNumber: Int?        // Track number
+    let parentIndexNumber: Int?  // Disc number
+    let albumId: String?         // For grouping tracks by album
+    let artistId: String?        // For artist identification
+    let productionYear: Int?     // Album release year
 
     var durationFormatted: String {
         let minutes = Int(duration) / 60
@@ -25,7 +30,7 @@ struct Track: Identifiable, Codable, Equatable {
 
     // Codable conformance - exclude computed properties
     enum CodingKeys: String, CodingKey {
-        case id, name, artistName, albumName, duration, artworkURL, isFavorite
+        case id, name, artistName, albumName, duration, artworkURL, isFavorite, indexNumber, parentIndexNumber, albumId, artistId, productionYear
     }
 
     // Initialize from Jellyfin BaseItemDto
@@ -37,10 +42,15 @@ struct Track: Identifiable, Codable, Equatable {
         self.duration = item.durationSeconds ?? 0
         self.artworkURL = item.albumArtworkURL(baseURL: baseURL)?.absoluteString
         self.isFavorite = item.UserData?.IsFavorite ?? false
+        self.indexNumber = item.IndexNumber
+        self.parentIndexNumber = item.ParentIndexNumber
+        self.albumId = item.AlbumId
+        self.artistId = item.Artists?.first != nil ? item.Id : nil  // Artist ID not directly available for tracks
+        self.productionYear = item.ProductionYear
     }
 
     // Manual initializer for mock data
-    init(id: String, name: String, artistName: String, albumName: String, duration: TimeInterval, artworkURL: String?, isFavorite: Bool = false) {
+    init(id: String, name: String, artistName: String, albumName: String, duration: TimeInterval, artworkURL: String?, isFavorite: Bool = false, indexNumber: Int? = nil, parentIndexNumber: Int? = nil, albumId: String? = nil, artistId: String? = nil, productionYear: Int? = nil) {
         self.id = id
         self.name = name
         self.artistName = artistName
@@ -48,6 +58,11 @@ struct Track: Identifiable, Codable, Equatable {
         self.duration = duration
         self.artworkURL = artworkURL
         self.isFavorite = isFavorite
+        self.indexNumber = indexNumber
+        self.parentIndexNumber = parentIndexNumber
+        self.albumId = albumId
+        self.artistId = artistId
+        self.productionYear = productionYear
     }
 }
 
@@ -182,4 +197,42 @@ extension Artist {
         Artist(id: "artist5", name: "Wave Riders", bio: "Dreamwave specialists creating ethereal soundscapes perfect for late-night drives.", albumCount: 1, artworkURL: nil),
         Artist(id: "artist6", name: "Digital Souls", bio: "Cyberpunk-inspired electronic artists painting dystopian futures through sound.", albumCount: 1, artworkURL: nil)
     ]
+}
+
+// MARK: - Playlist Model
+struct Playlist: Identifiable, Codable {
+    let id: String
+    let name: String
+    var trackCount: Int
+    let artworkURL: String?
+    let dateCreated: Date?
+    var isFavorite: Bool
+
+    // Initialize from Jellyfin BaseItemDto
+    init(from item: BaseItemDto, baseURL: String) {
+        self.id = item.Id
+        self.name = item.Name
+        self.trackCount = item.ChildCount ?? 0
+        self.artworkURL = item.albumArtworkURL(baseURL: baseURL)?.absoluteString
+
+        // Parse ISO8601 date string to Date
+        if let dateString = item.DateCreated {
+            let formatter = ISO8601DateFormatter()
+            self.dateCreated = formatter.date(from: dateString)
+        } else {
+            self.dateCreated = nil
+        }
+
+        self.isFavorite = item.UserData?.IsFavorite ?? false
+    }
+
+    // Manual initializer
+    init(id: String, name: String, trackCount: Int, artworkURL: String?, dateCreated: Date?, isFavorite: Bool = false) {
+        self.id = id
+        self.name = name
+        self.trackCount = trackCount
+        self.artworkURL = artworkURL
+        self.dateCreated = dateCreated
+        self.isFavorite = isFavorite
+    }
 }

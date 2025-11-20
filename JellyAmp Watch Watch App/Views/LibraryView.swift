@@ -18,63 +18,62 @@ struct LibraryView: View {
     private let tabs = ["Artists", "Albums"]
 
     var body: some View {
-        Group {
+        VStack(spacing: 0) {
             if !jellyfinService.isAuthenticated {
                 notAuthenticatedView
             } else {
-                VStack(spacing: 0) {
-                    // Tab selector
-                    if !artists.isEmpty || !albums.isEmpty {
-                        HStack(spacing: 8) {
-                            ForEach(0..<tabs.count, id: \.self) { index in
-                                Button(action: {
-                                    selectedTab = index
-                                }) {
-                                    Text(tabs[index])
-                                        .font(.caption)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 4)
-                                                .fill(selectedTab == index ? Color.cyan.opacity(0.2) : Color.gray.opacity(0.2))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 4)
-                                                        .stroke(selectedTab == index ? Color.cyan : Color.clear, lineWidth: 1)
-                                                )
-                                        )
-                                        .foregroundColor(selectedTab == index ? .cyan : .secondary)
-                                }
-                                .buttonStyle(PlainButtonStyle())
+                // Tab selector
+                if !artists.isEmpty || !albums.isEmpty {
+                    HStack(spacing: 8) {
+                        ForEach(0..<tabs.count, id: \.self) { index in
+                            Button(action: {
+                                selectedTab = index
+                            }) {
+                                Text(tabs[index])
+                                    .font(.caption)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(selectedTab == index ? Color.cyan.opacity(0.2) : Color.gray.opacity(0.2))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 4)
+                                                    .stroke(selectedTab == index ? Color.cyan : Color.clear, lineWidth: 1)
+                                            )
+                                    )
+                                    .foregroundColor(selectedTab == index ? .cyan : .secondary)
                             }
+                            .buttonStyle(PlainButtonStyle())
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
                     }
+                    .padding(.horizontal, 4)
+                    .padding(.top, 4)
+                }
 
-                    // Content
-                    if isLoading {
-                        Spacer()
-                        ProgressView("Loading...")
-                        Spacer()
-                    } else if let error = errorMessage {
-                        errorView(error)
-                    } else if selectedTab == 0 {
-                        if artists.isEmpty {
-                            emptyView(type: "Artists")
-                        } else {
-                            artistsList
-                        }
+                // Content
+                if isLoading {
+                    Spacer()
+                    ProgressView("Loading...")
+                    Spacer()
+                } else if let error = errorMessage {
+                    errorView(error)
+                } else if selectedTab == 0 {
+                    if artists.isEmpty {
+                        emptyView(type: "Artists")
                     } else {
-                        if albums.isEmpty {
-                            emptyView(type: "Albums")
-                        } else {
-                            albumsList
-                        }
+                        artistsList
+                    }
+                } else {
+                    if albums.isEmpty {
+                        emptyView(type: "Albums")
+                    } else {
+                        albumsList
                     }
                 }
             }
         }
         .navigationTitle("Library")
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             await loadLibrary()
         }

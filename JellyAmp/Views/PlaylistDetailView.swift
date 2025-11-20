@@ -1,56 +1,32 @@
 //
-//  AlbumDetailView.swift
+//  PlaylistDetailView.swift
 //  JellyAmp
 //
-//  Album detail page with track listing - iOS 26 Liquid Glass + Cypherpunk
+//  Playlist detail page with track listing and management
 //
 
 import SwiftUI
 
-struct AlbumDetailView: View {
-    let album: Album
+struct PlaylistDetailView: View {
+    let playlist: Playlist
     @ObservedObject var jellyfinService = JellyfinService.shared
     @ObservedObject var playerManager = PlayerManager.shared
-    @ObservedObject var downloadManager = DownloadManager.shared
     @ObservedObject var themeManager = ThemeManager.shared
     @Environment(\.dismiss) var dismiss
     @State private var isFavorite: Bool
-    @State private var albumTracks: [Track] = []
+    @State private var playlistTracks: [Track] = []
     @State private var isLoadingTracks = true
     @State private var showNowPlaying = false
     @State private var showAddToPlaylist = false
     @State private var selectedTrackIds: [String] = []
 
-    init(album: Album) {
-        self.album = album
-        _isFavorite = State(initialValue: album.isFavorite)
-    }
-
-    // Calculate download state for album
-    private var albumDownloadState: DownloadState {
-        guard !albumTracks.isEmpty else { return .notDownloaded }
-
-        let downloadedCount = albumTracks.filter { downloadManager.isDownloaded(trackId: $0.id) }.count
-        let totalCount = albumTracks.count
-
-        if downloadedCount == totalCount {
-            return .downloaded
-        } else if downloadedCount > 0 {
-            let progress = Double(downloadedCount) / Double(totalCount)
-            return .downloading(progress: progress)
-        } else {
-            // Check if any are actively downloading
-            for track in albumTracks {
-                if case .downloading = downloadManager.downloadStates[track.id] {
-                    return .downloading(progress: 0)
-                }
-            }
-            return .notDownloaded
-        }
+    init(playlist: Playlist) {
+        self.playlist = playlist
+        _isFavorite = State(initialValue: playlist.isFavorite)
     }
 
     var totalDuration: String {
-        let total = albumTracks.reduce(0) { $0 + $1.duration }
+        let total = playlistTracks.reduce(0) { $0 + $1.duration }
         let minutes = Int(total) / 60
         return "\(minutes) min"
     }
@@ -73,14 +49,14 @@ struct AlbumDetailView: View {
 
                 ScrollView {
                     VStack(spacing: 0) {
-                        // Album Hero Section
-                        albumHeroSection
+                        // Playlist Hero Section
+                        playlistHeroSection
 
                         // Action Buttons
                         actionButtonsSection
 
-                        // Album Info
-                        albumInfoSection
+                        // Playlist Info
+                        playlistInfoSection
 
                         // Track Listing
                         trackListingSection
@@ -105,10 +81,10 @@ struct AlbumDetailView: View {
                                         .fill(Color.jellyAmpMidBackground)
                                         .overlay(
                                             Circle()
-                                                .stroke(Color.jellyAmpAccent.opacity(0.5), lineWidth: 1)
+                                                .stroke(Color.neonPink.opacity(0.5), lineWidth: 1)
                                         )
                                 )
-                                .neonGlow(color: .jellyAmpAccent, radius: 8)
+                                .neonGlow(color: .neonPink, radius: 8)
                         }
                         .padding(.leading, 20)
                         .padding(.top, 60)
@@ -128,7 +104,7 @@ struct AlbumDetailView: View {
         .ignoresSafeArea(.keyboard)
         .onAppear {
             Task {
-                await fetchAlbumTracks()
+                await fetchPlaylistTracks()
             }
         }
         .sheet(isPresented: $showNowPlaying) {
@@ -142,26 +118,17 @@ struct AlbumDetailView: View {
         }
     }
 
-    // MARK: - Fetch Album Tracks
-    private func fetchAlbumTracks() async {
+    // MARK: - Fetch Playlist Tracks
+    private func fetchPlaylistTracks() async {
         isLoadingTracks = true
 
         do {
-            let tracks = try await jellyfinService.getAlbumTracks(albumId: album.id)
+            let tracks = try await jellyfinService.fetchTracks(parentId: playlist.id)
             let baseURL = jellyfinService.baseURL
 
-            // Map and sort tracks by disc number then track number
+            // Map and sort tracks by index number to preserve playlist order
             let mappedTracks = tracks.map { Track(from: $0, baseURL: baseURL) }
-            self.albumTracks = mappedTracks.sorted { track1, track2 in
-                // Sort by disc number first (ParentIndexNumber)
-                let disc1 = track1.parentIndexNumber ?? 0
-                let disc2 = track2.parentIndexNumber ?? 0
-
-                if disc1 != disc2 {
-                    return disc1 < disc2
-                }
-
-                // Then by track number (IndexNumber)
+            self.playlistTracks = mappedTracks.sorted { track1, track2 in
                 let index1 = track1.indexNumber ?? 0
                 let index2 = track2.indexNumber ?? 0
                 return index1 < index2
@@ -169,7 +136,7 @@ struct AlbumDetailView: View {
 
             isLoadingTracks = false
         } catch {
-            print("Error fetching album tracks: \(error)")
+            print("Error fetching playlist tracks: \(error)")
             isLoadingTracks = false
         }
     }
@@ -185,9 +152,9 @@ struct AlbumDetailView: View {
         Task {
             do {
                 if isFavorite {
-                    try await jellyfinService.markFavorite(itemId: album.id)
+                    try await jellyfinService.markFavorite(itemId: playlist.id)
                 } else {
-                    try await jellyfinService.unmarkFavorite(itemId: album.id)
+                    try await jellyfinService.unmarkFavorite(itemId: playlist.id)
                 }
             } catch {
                 // Revert on failure
@@ -201,72 +168,25 @@ struct AlbumDetailView: View {
         }
     }
 
-    // MARK: - Download Management
-    private func toggleDownload() {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-            if albumDownloadState.isDownloaded {
-                // Delete all downloaded tracks
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.warning)
-
-                for track in albumTracks {
-                    downloadManager.deleteDownload(trackId: track.id)
-                }
-            } else {
-                // Download all tracks
-                let generator = UIImpactFeedbackGenerator(style: .medium)
-                generator.impactOccurred()
-
-                downloadManager.downloadAlbum(tracks: albumTracks)
-            }
-        }
-    }
-
-    private var downloadIconName: String {
-        switch albumDownloadState {
-        case .notDownloaded:
-            return "arrow.down.circle"
-        case .downloading:
-            return "arrow.down.circle.fill"
-        case .downloaded:
-            return "checkmark.circle.fill"
-        case .failed:
-            return "exclamationmark.circle"
-        }
-    }
-
-    private var downloadIconColor: Color {
-        switch albumDownloadState {
-        case .notDownloaded:
-            return Color.jellyAmpText
-        case .downloading:
-            return .jellyAmpAccent
-        case .downloaded:
-            return .jellyAmpSuccess
-        case .failed:
-            return .red
-        }
-    }
-
-    // MARK: - Album Hero Section
-    private var albumHeroSection: some View {
+    // MARK: - Playlist Hero Section
+    private var playlistHeroSection: some View {
         VStack(spacing: 0) {
-            // Album Artwork
+            // Playlist Artwork
             ZStack {
                 // Gradient background
                 LinearGradient(
                     colors: [
-                        Color.jellyAmpAccent.opacity(0.6),
+                        Color.neonPink.opacity(0.6),
                         Color.jellyAmpSecondary.opacity(0.6),
-                        Color.jellyAmpTertiary.opacity(0.7)
+                        Color.neonPurple.opacity(0.7)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
-                .frame(maxWidth: .infinity, maxHeight: 380)
+                .frame(height: 380)
 
-                // Album artwork
-                if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
+                // Playlist artwork
+                if let artworkURL = playlist.artworkURL, let url = URL(string: artworkURL) {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
@@ -276,14 +196,13 @@ struct AlbumDetailView: View {
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 260, height: 260)
-                                .clipped()
                                 .clipShape(RoundedRectangle(cornerRadius: 20))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 20)
                                         .stroke(
                                             LinearGradient(
                                                 colors: [
-                                                    Color.jellyAmpAccent.opacity(0.8),
+                                                    Color.neonPink.opacity(0.8),
                                                     Color.jellyAmpSecondary.opacity(0.8)
                                                 ],
                                                 startPoint: .topLeading,
@@ -292,7 +211,7 @@ struct AlbumDetailView: View {
                                             lineWidth: 2
                                         )
                                 )
-                                .neonGlow(color: .jellyAmpSecondary, radius: 20)
+                                .neonGlow(color: .neonPink, radius: 20)
                         case .failure:
                             placeholderArtwork
                         @unknown default:
@@ -304,8 +223,6 @@ struct AlbumDetailView: View {
                     placeholderArtwork
                 }
             }
-            .frame(height: 380)
-            .clipped()
             .overlay(
                 LinearGradient(
                     colors: [
@@ -317,19 +234,19 @@ struct AlbumDetailView: View {
                 )
             )
 
-            // Album Title & Artist
+            // Playlist Title
             VStack(spacing: 8) {
-                Text(album.name)
+                Text(playlist.name)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundColor(Color.jellyAmpText)
-                    .neonGlow(color: .jellyAmpAccent, radius: 10)
+                    .neonGlow(color: .neonPink, radius: 10)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 20)
 
-                Text(album.artistName)
+                Text("Playlist")
                     .font(.jellyAmpHeadline)
                     .foregroundColor(.neonPink)
-                    .neonGlow(color: .jellyAmpSecondary, radius: 6)
+                    .neonGlow(color: .neonPink, radius: 6)
             }
             .padding(.top, -40)
             .padding(.bottom, 20)
@@ -342,8 +259,9 @@ struct AlbumDetailView: View {
             .fill(
                 LinearGradient(
                     colors: [
+                        Color.neonPink.opacity(0.5),
                         Color.jellyAmpSecondary.opacity(0.5),
-                        Color.jellyAmpTertiary.opacity(0.5)
+                        Color.neonPurple.opacity(0.5)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -355,7 +273,7 @@ struct AlbumDetailView: View {
                     .stroke(
                         LinearGradient(
                             colors: [
-                                Color.jellyAmpAccent.opacity(0.8),
+                                Color.neonPink.opacity(0.8),
                                 Color.jellyAmpSecondary.opacity(0.8)
                             ],
                             startPoint: .topLeading,
@@ -364,9 +282,9 @@ struct AlbumDetailView: View {
                         lineWidth: 2
                     )
             )
-            .neonGlow(color: .jellyAmpSecondary, radius: 20)
+            .neonGlow(color: .neonPink, radius: 20)
             .overlay(
-                Image(systemName: "music.note")
+                Image(systemName: "music.note.list")
                     .font(.system(size: 80))
                     .foregroundColor(.white.opacity(0.3))
             )
@@ -377,8 +295,8 @@ struct AlbumDetailView: View {
         HStack(spacing: 12) {
             // Play All Button
             Button {
-                guard !albumTracks.isEmpty else { return }
-                playerManager.play(tracks: albumTracks, startingAt: 0)
+                guard !playlistTracks.isEmpty else { return }
+                playerManager.play(tracks: playlistTracks, startingAt: 0)
                 showNowPlaying = true
             } label: {
                 HStack(spacing: 8) {
@@ -393,17 +311,17 @@ struct AlbumDetailView: View {
                 .padding(.vertical, 14)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(albumTracks.isEmpty ? Color.gray : Color.jellyAmpAccent)
+                        .fill(playlistTracks.isEmpty ? Color.gray : Color.neonPink)
                 )
-                .neonGlow(color: albumTracks.isEmpty ? .clear : .neonCyan, radius: 12)
+                .neonGlow(color: playlistTracks.isEmpty ? .clear : .neonPink, radius: 12)
             }
-            .disabled(albumTracks.isEmpty)
+            .disabled(playlistTracks.isEmpty)
 
             // Shuffle Button
             Button {
-                guard !albumTracks.isEmpty else { return }
+                guard !playlistTracks.isEmpty else { return }
                 playerManager.shuffleEnabled = true
-                playerManager.play(tracks: albumTracks, startingAt: 0)
+                playerManager.play(tracks: playlistTracks, startingAt: 0)
                 showNowPlaying = true
             } label: {
                 Image(systemName: "shuffle")
@@ -415,12 +333,12 @@ struct AlbumDetailView: View {
                             .fill(Color.white.opacity(0.1))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.jellyAmpTertiary.opacity(0.5), lineWidth: 1)
+                                    .stroke(Color.neonPurple.opacity(0.5), lineWidth: 1)
                             )
                     )
-                    .neonGlow(color: .jellyAmpTertiary, radius: 8)
+                    .neonGlow(color: .neonPurple, radius: 8)
             }
-            .disabled(albumTracks.isEmpty)
+            .disabled(playlistTracks.isEmpty)
 
             // Favorite Button
             Button {
@@ -435,65 +353,24 @@ struct AlbumDetailView: View {
                             .fill(Color.white.opacity(0.1))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.jellyAmpSecondary.opacity(isFavorite ? 0.8 : 0.5), lineWidth: 1)
+                                    .stroke(Color.neonPink.opacity(isFavorite ? 0.8 : 0.5), lineWidth: 1)
                             )
                     )
-                    .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 12 : 8)
+                    .neonGlow(color: .neonPink, radius: isFavorite ? 12 : 8)
             }
-
-            // Download Button
-            Button {
-                toggleDownload()
-            } label: {
-                ZStack {
-                    // Background
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.white.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(downloadIconColor.opacity(0.5), lineWidth: 1)
-                        )
-                        .frame(width: 56, height: 56)
-
-                    // Icon or Progress
-                    if case .downloading(let progress) = albumDownloadState {
-                        // Show progress ring
-                        ZStack {
-                            Circle()
-                                .stroke(Color.white.opacity(0.2), lineWidth: 3)
-
-                            Circle()
-                                .trim(from: 0, to: progress)
-                                .stroke(downloadIconColor, lineWidth: 3)
-                                .rotationEffect(.degrees(-90))
-
-                            Text("\(Int(progress * 100))%")
-                                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                .foregroundColor(downloadIconColor)
-                        }
-                        .frame(width: 36, height: 36)
-                    } else {
-                        Image(systemName: downloadIconName)
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(downloadIconColor)
-                    }
-                }
-                .neonGlow(color: downloadIconColor, radius: albumDownloadState.isDownloaded ? 12 : 8)
-            }
-            .disabled(albumTracks.isEmpty)
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 24)
     }
 
-    // MARK: - Album Info Section
-    private var albumInfoSection: some View {
+    // MARK: - Playlist Info Section
+    private var playlistInfoSection: some View {
         HStack(spacing: 30) {
-            if let year = album.year {
-                InfoBadge(icon: "calendar", value: String(year))
+            if let dateCreated = playlist.dateCreated {
+                InfoBadge(icon: "calendar", value: dateCreated.formatted(date: .abbreviated, time: .omitted))
             }
 
-            InfoBadge(icon: "music.note.list", value: "\(albumTracks.count) tracks")
+            InfoBadge(icon: "music.note.list", value: "\(playlistTracks.count) tracks")
 
             InfoBadge(icon: "clock", value: totalDuration)
         }
@@ -513,7 +390,7 @@ struct AlbumDetailView: View {
                 HStack {
                     Spacer()
                     ProgressView()
-                        .tint(.jellyAmpAccent)
+                        .tint(.neonPink)
                     Text("Loading tracks...")
                         .font(.jellyAmpCaption)
                         .foregroundColor(.secondary)
@@ -521,30 +398,35 @@ struct AlbumDetailView: View {
                     Spacer()
                 }
                 .padding(.vertical, 40)
-            } else if albumTracks.isEmpty {
+            } else if playlistTracks.isEmpty {
                 HStack {
                     Spacer()
-                    Text("No tracks found")
-                        .font(.jellyAmpBody)
-                        .foregroundColor(.secondary)
+                    VStack(spacing: 12) {
+                        Image(systemName: "music.note.list")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary.opacity(0.5))
+                        Text("No tracks in playlist")
+                            .font(.jellyAmpBody)
+                            .foregroundColor(.secondary)
+                    }
                     Spacer()
                 }
                 .padding(.vertical, 40)
             } else {
                 VStack(spacing: 0) {
-                    ForEach(Array(albumTracks.enumerated()), id: \.element.id) { index, track in
-                        AlbumTrackRow(track: track, trackNumber: index + 1) {
+                    ForEach(Array(playlistTracks.enumerated()), id: \.element.id) { index, track in
+                        PlaylistTrackRow(track: track, trackNumber: index + 1) {
                             // Play from this track
-                            playerManager.play(tracks: albumTracks, startingAt: index)
+                            playerManager.play(tracks: playlistTracks, startingAt: index)
                             showNowPlaying = true
                         } onAddToPlaylist: {
-                            // Add track to playlist
+                            // Add track to another playlist
                             selectedTrackIds = [track.id]
                             showAddToPlaylist = true
                         }
                         .padding(.horizontal, 20)
 
-                        if index < albumTracks.count - 1 {
+                        if index < playlistTracks.count - 1 {
                             Divider()
                                 .background(Color.white.opacity(0.1))
                                 .padding(.horizontal, 20)
@@ -557,7 +439,7 @@ struct AlbumDetailView: View {
                         .fill(Color.white.opacity(0.05))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.jellyAmpAccent.opacity(0.2), lineWidth: 1)
+                                .stroke(Color.neonPink.opacity(0.2), lineWidth: 1)
                         )
                 )
                 .padding(.horizontal, 20)
@@ -567,36 +449,8 @@ struct AlbumDetailView: View {
     }
 }
 
-// MARK: - Info Badge Component
-struct InfoBadge: View {
-    let icon: String
-    let value: String
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundColor(.neonCyan)
-
-            Text(value)
-                .font(.system(size: 13, weight: .medium, design: .monospaced))
-                .foregroundColor(Color.jellyAmpText)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(
-            Capsule()
-                .fill(Color.white.opacity(0.1))
-        )
-        .overlay(
-            Capsule()
-                .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
-        )
-    }
-}
-
-// MARK: - Album Track Row Component
-struct AlbumTrackRow: View {
+// MARK: - Playlist Track Row Component
+struct PlaylistTrackRow: View {
     let track: Track
     let trackNumber: Int
     let action: () -> Void
@@ -616,7 +470,7 @@ struct AlbumTrackRow: View {
                 // Track number
                 Text("\(trackNumber)")
                     .font(.system(size: 16, weight: .bold, design: .monospaced))
-                    .foregroundColor(.neonCyan)
+                    .foregroundColor(.neonPink)
                     .frame(width: 28, alignment: .trailing)
 
                 // Track info
@@ -626,9 +480,19 @@ struct AlbumTrackRow: View {
                         .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
 
-                    Text(track.durationFormatted)
-                        .font(.jellyAmpCaption)
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 8) {
+                        Text(track.artistName)
+                            .font(.jellyAmpCaption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+
+                        Text("•")
+                            .foregroundColor(.secondary)
+
+                        Text(track.durationFormatted)
+                            .font(.jellyAmpCaption)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 Spacer()
@@ -636,7 +500,7 @@ struct AlbumTrackRow: View {
                 // Play button
                 Image(systemName: "play.circle.fill")
                     .font(.title2)
-                    .foregroundColor(.neonCyan)
+                    .foregroundColor(.neonPink)
             }
             .padding(.vertical, 12)
             .contentShape(Rectangle())
@@ -673,5 +537,5 @@ struct AlbumTrackRow: View {
 
 // MARK: - Preview
 #Preview {
-    AlbumDetailView(album: Album.mockAlbums[0])
+    PlaylistDetailView(playlist: Playlist(id: "1", name: "My Playlist", trackCount: 10, artworkURL: nil, dateCreated: Date(), isFavorite: false))
 }

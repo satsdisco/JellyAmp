@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ServerSetupView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
+    @ObservedObject var themeManager = ThemeManager.shared
     @State private var serverURL = ""
     @State private var isValidating = false
     @State private var errorMessage = ""
@@ -21,9 +22,9 @@ struct ServerSetupView: View {
             // Background
             LinearGradient(
                 colors: [
-                    Color.darkBackground,
-                    Color.darkMid,
-                    Color.darkBackground
+                    Color.jellyAmpBackground,
+                    Color.jellyAmpMidBackground,
+                    Color.jellyAmpBackground
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -69,22 +70,21 @@ struct ServerSetupView: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.neonCyan.opacity(0.3),
-                            Color.neonPink.opacity(0.3)
+                            Color.jellyAmpAccent.opacity(0.3),
+                            Color.jellyAmpSecondary.opacity(0.3)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
                 .frame(width: 120, height: 120)
-                .glassEffect(.regular)
                 .overlay(
                     Circle()
                         .stroke(
                             LinearGradient(
                                 colors: [
-                                    Color.neonCyan.opacity(0.8),
-                                    Color.neonPink.opacity(0.8)
+                                    Color.jellyAmpAccent.opacity(0.8),
+                                    Color.jellyAmpSecondary.opacity(0.8)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -92,11 +92,11 @@ struct ServerSetupView: View {
                             lineWidth: 2
                         )
                 )
-                .neonGlow(color: .neonCyan, radius: 20)
+                .neonGlow(color: .jellyAmpAccent, radius: 20)
 
             Image(systemName: "waveform")
                 .font(.system(size: 50))
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
         }
         .padding(.bottom, 40)
     }
@@ -106,8 +106,8 @@ struct ServerSetupView: View {
         VStack(spacing: 12) {
             Text("Welcome to JellyAmp")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
-                .neonGlow(color: .neonCyan, radius: 10)
+                .foregroundColor(Color.jellyAmpText)
+                .neonGlow(color: .jellyAmpAccent, radius: 10)
 
             Text("Connect to your Jellyfin server")
                 .font(.jellyAmpBody)
@@ -131,11 +131,11 @@ struct ServerSetupView: View {
                     .font(.title3)
 
                 TextField("https://jellyfin.example.com", text: $serverURL)
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .keyboardType(.URL)
-                    .tint(.neonCyan)
+                    .tint(.jellyAmpAccent)
 
                 if !serverURL.isEmpty {
                     Button {
@@ -150,10 +150,9 @@ struct ServerSetupView: View {
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.white.opacity(0.1))
-                    .glassEffect(.regular)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
+                            .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
                     )
             )
         }
@@ -185,7 +184,7 @@ struct ServerSetupView: View {
             .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(serverURL.isEmpty ? Color.gray : Color.neonCyan)
+                    .fill(serverURL.isEmpty ? Color.gray : Color.jellyAmpAccent)
             )
             .neonGlow(color: serverURL.isEmpty ? .clear : .neonCyan, radius: 12)
         }
@@ -210,7 +209,6 @@ struct ServerSetupView: View {
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color.white.opacity(0.05))
-                    .glassEffect(.regular)
             )
         }
     }

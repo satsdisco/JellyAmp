@@ -9,6 +9,7 @@ import SwiftUI
 
 struct QuickConnectView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
+    @ObservedObject var themeManager = ThemeManager.shared
     @State private var quickConnectCode = ""
     @State private var quickConnectSecret = ""
     @State private var isLoading = true
@@ -25,9 +26,9 @@ struct QuickConnectView: View {
             // Background
             LinearGradient(
                 colors: [
-                    Color.darkBackground,
-                    Color.darkMid,
-                    Color.darkBackground
+                    Color.jellyAmpBackground,
+                    Color.jellyAmpMidBackground,
+                    Color.jellyAmpBackground
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -49,18 +50,17 @@ struct QuickConnectView: View {
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.title3)
-                            .foregroundColor(.white)
+                            .foregroundColor(Color.jellyAmpText)
                             .frame(width: 44, height: 44)
                             .background(
                                 Circle()
-                                    .fill(Color.darkMid)
-                                    .glassEffect(.regular)
+                                    .fill(Color.jellyAmpMidBackground)
                                     .overlay(
                                         Circle()
-                                            .stroke(Color.neonCyan.opacity(0.5), lineWidth: 1)
+                                            .stroke(Color.jellyAmpAccent.opacity(0.5), lineWidth: 1)
                                     )
                             )
-                            .neonGlow(color: .neonCyan, radius: 8)
+                            .neonGlow(color: .jellyAmpAccent, radius: 8)
                     }
                     .padding(.leading, 20)
                     .padding(.top, 60)
@@ -98,7 +98,7 @@ struct QuickConnectView: View {
     private var loadingView: some View {
         VStack(spacing: 20) {
             ProgressView()
-                .tint(.neonCyan)
+                .tint(.jellyAmpAccent)
                 .scaleEffect(1.5)
 
             Text("Initiating Quick Connect...")
@@ -142,22 +142,21 @@ struct QuickConnectView: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.neonPurple.opacity(0.3),
-                            Color.neonPink.opacity(0.3)
+                            Color.jellyAmpTertiary.opacity(0.3),
+                            Color.jellyAmpSecondary.opacity(0.3)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
                 .frame(width: 100, height: 100)
-                .glassEffect(.regular)
                 .overlay(
                     Circle()
                         .stroke(
                             LinearGradient(
                                 colors: [
-                                    Color.neonPurple.opacity(0.8),
-                                    Color.neonPink.opacity(0.8)
+                                    Color.jellyAmpTertiary.opacity(0.8),
+                                    Color.jellyAmpSecondary.opacity(0.8)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -165,11 +164,11 @@ struct QuickConnectView: View {
                             lineWidth: 2
                         )
                 )
-                .neonGlow(color: .neonPurple, radius: 20)
+                .neonGlow(color: .jellyAmpTertiary, radius: 20)
 
             Image(systemName: "qrcode")
                 .font(.system(size: 40))
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
         }
         .padding(.bottom, 30)
     }
@@ -179,8 +178,8 @@ struct QuickConnectView: View {
         VStack(spacing: 12) {
             Text("Quick Connect")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
-                .neonGlow(color: .neonPink, radius: 10)
+                .foregroundColor(Color.jellyAmpText)
+                .neonGlow(color: .jellyAmpSecondary, radius: 10)
 
             Text("Enter this code on your Jellyfin server")
                 .font(.jellyAmpBody)
@@ -198,20 +197,19 @@ struct QuickConnectView: View {
                 .font(.system(size: 56, weight: .bold, design: .monospaced))
                 .foregroundColor(.neonCyan)
                 .tracking(8)
-                .neonGlow(color: .neonCyan, radius: 15)
+                .neonGlow(color: .jellyAmpAccent, radius: 15)
                 .padding(.vertical, 30)
                 .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 20)
                         .fill(Color.white.opacity(0.05))
-                        .glassEffect(.regular)
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
                                 .stroke(
                                     LinearGradient(
                                         colors: [
-                                            Color.neonCyan.opacity(0.6),
-                                            Color.neonPurple.opacity(0.6)
+                                            Color.jellyAmpAccent.opacity(0.6),
+                                            Color.jellyAmpTertiary.opacity(0.6)
                                         ],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
@@ -237,11 +235,10 @@ struct QuickConnectView: View {
                 .background(
                     Capsule()
                         .fill(Color.white.opacity(0.1))
-                        .glassEffect(.regular)
                 )
                 .overlay(
                     Capsule()
-                        .stroke(Color.neonPurple.opacity(0.4), lineWidth: 1)
+                        .stroke(Color.jellyAmpTertiary.opacity(0.4), lineWidth: 1)
                 )
             }
         }
@@ -261,10 +258,9 @@ struct QuickConnectView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.05))
-                .glassEffect(.regular)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.neonPink.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.jellyAmpSecondary.opacity(0.2), lineWidth: 1)
                 )
         )
         .padding(.bottom, 30)
@@ -278,12 +274,12 @@ struct QuickConnectView: View {
                 .frame(width: 32, height: 32)
                 .background(
                     Circle()
-                        .fill(Color.neonPink.opacity(0.2))
+                        .fill(Color.jellyAmpSecondary.opacity(0.2))
                 )
 
             Text(text)
                 .font(.system(size: 15))
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
         }
     }
 
@@ -291,7 +287,7 @@ struct QuickConnectView: View {
     private var statusSection: some View {
         HStack(spacing: 12) {
             ProgressView()
-                .tint(.neonCyan)
+                .tint(.jellyAmpAccent)
                 .scaleEffect(0.8)
 
             Text(isPolling ? "Waiting for authentication..." : "Checking status...")
@@ -303,7 +299,6 @@ struct QuickConnectView: View {
         .background(
             Capsule()
                 .fill(Color.white.opacity(0.05))
-                .glassEffect(.regular)
         )
     }
 

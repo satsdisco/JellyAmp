@@ -414,12 +414,14 @@ class JellyfinService: ObservableObject {
     // MARK: - Streaming
 
     /// Generates streaming URL for audio playback
-    /// Optimized for high quality with 320kbps bitrate (iOS 26)
+    /// Uses DIRECT streaming (no transcoding) for maximum reliability
+    /// Serves original audio files - AVPlayer handles all common formats natively
     func getStreamingURL(for itemId: String) -> URL? {
-        return getStreamingURL(for: itemId, bitrate: 320)
+        return getStreamingURL(for: itemId, bitrate: 128)
     }
 
-    /// Generates streaming URL with specific bitrate
+    /// Generates streaming URL with HTTP transcoding support (matches JellyJam's proven approach)
+    /// Uses /stream endpoint with transcoding parameters for maximum compatibility
     func getStreamingURL(for itemId: String, bitrate: Int) -> URL? {
         // Validate item ID
         guard !itemId.isEmpty else {
@@ -439,10 +441,10 @@ class JellyfinService: ObservableObject {
             return nil
         }
 
-        // Create URL with proper encoding
-        // Use universal audio endpoint for best compatibility
+        // Use /stream endpoint with transcoding parameters (same as JellyJam)
+        // This allows the server to transcode when needed while still being reliable
         let normalizedBaseURL = cleanBaseURL.hasSuffix("/") ? String(cleanBaseURL.dropLast()) : cleanBaseURL
-        let streamPath = "/Audio/\(itemId)/universal"
+        let streamPath = "/Audio/\(itemId)/stream"
         let fullURLString = normalizedBaseURL + streamPath
 
         guard var components = URLComponents(string: fullURLString) else {
@@ -450,34 +452,210 @@ class JellyfinService: ObservableObject {
             return nil
         }
 
-        guard let userId = UserDefaults.standard.string(forKey: "jellyfinUserId") else {
-            logger.error("No user ID found for streaming")
-            return nil
-        }
-
-        // Build query items for universal audio endpoint
-        // CRITICAL: Use "http" protocol instead of "hls" for background playback compatibility
-        // HLS requires continuous segment downloads which iOS suspends in background
+        // Build query items with proper encoding (matches JellyJam parameters)
         components.queryItems = [
-            URLQueryItem(name: "UserId", value: userId),
-            URLQueryItem(name: "DeviceId", value: "JellyAmp-iOS"),
-            URLQueryItem(name: "MaxStreamingBitrate", value: "\(bitrate * 1000)"),
-            URLQueryItem(name: "Container", value: "opus,mp3,aac,m4a,flac,webma,webm,wav,ogg"),
-            URLQueryItem(name: "TranscodingContainer", value: "aac"),
-            URLQueryItem(name: "TranscodingProtocol", value: "http"),  // Use HTTP for background compatibility
-            URLQueryItem(name: "AudioCodec", value: "aac"),
+            URLQueryItem(name: "static", value: "true"),
+            URLQueryItem(name: "mediaSourceId", value: itemId),
             URLQueryItem(name: "api_key", value: token),
-            URLQueryItem(name: "PlaySessionId", value: UUID().uuidString),
-            URLQueryItem(name: "StartTimeTicks", value: "0")
+            URLQueryItem(name: "MaxStreamingBitrate", value: "\(bitrate * 1000)"), // Convert kbps to bps
+            URLQueryItem(name: "AudioCodec", value: "mp3"),
+            URLQueryItem(name: "Container", value: "mp3,aac"),
+            URLQueryItem(name: "TranscodingContainer", value: "mp3"),
+            URLQueryItem(name: "TranscodingProtocol", value: "http")
         ]
+
+        // Ensure percent encoding is applied
+        components.percentEncodedQuery = components.percentEncodedQuery
 
         guard let url = components.url else {
             logger.error("Failed to generate final streaming URL")
             return nil
         }
 
-        logger.info("Generated streaming URL for item \(itemId): \(url.absoluteString)")
+        logger.info("Generated streaming URL for item \(itemId) at \(bitrate)kbps")
+        logger.info("  → Using /stream endpoint with HTTP transcoding support")
         return url
+    }
+
+    /// Generates download URL for offline storage
+    /// Returns the original file without transcoding for offline playback
+    func getDownloadURL(for itemId: String) -> URL? {
+        // Validate item ID
+        guard !itemId.isEmpty else {
+            logger.error("Empty item ID provided for download URL")
+            return nil
+        }
+
+        guard let token = KeychainService.shared.getAccessToken(), !token.isEmpty else {
+            logger.error("Failed to get download URL: No access token")
+            return nil
+        }
+
+        // Ensure base URL is valid
+        let cleanBaseURL = baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanBaseURL.isEmpty else {
+            logger.error("Base URL is empty")
+            return nil
+        }
+
+        // Use /Items/{itemId}/Download endpoint for original file
+        let normalizedBaseURL = cleanBaseURL.hasSuffix("/") ? String(cleanBaseURL.dropLast()) : cleanBaseURL
+        let downloadPath = "/Items/\(itemId)/Download"
+        let fullURLString = normalizedBaseURL + downloadPath
+
+        guard var components = URLComponents(string: fullURLString) else {
+            logger.error("Failed to create URL components for download: \(fullURLString)")
+            return nil
+        }
+
+        // Add API key for authentication
+        components.queryItems = [
+            URLQueryItem(name: "api_key", value: token)
+        ]
+
+        guard let url = components.url else {
+            logger.error("Failed to generate final download URL")
+            return nil
+        }
+
+        logger.info("Generated download URL for item \(itemId)")
+        logger.info("  → Using /Download endpoint for original file")
+        return url
+    }
+
+    // MARK: - Playlist Management
+
+    /// Create a new playlist
+    func createPlaylist(name: String, trackIds: [String] = []) async throws -> String {
+        guard let token = KeychainService.shared.getAccessToken(),
+              let userId = UserDefaults.standard.string(forKey: "jellyfinUserId") else {
+            throw JellyfinError.notAuthenticated
+        }
+
+        // Build URL with query parameters
+        var components = URLComponents(string: "\(baseURL)/Playlists")!
+        var queryItems = [
+            URLQueryItem(name: "Name", value: name),
+            URLQueryItem(name: "MediaType", value: "Audio"),
+            URLQueryItem(name: "UserId", value: userId)
+        ]
+
+        // Only add Ids if we have tracks to add
+        if !trackIds.isEmpty {
+            queryItems.append(URLQueryItem(name: "Ids", value: trackIds.joined(separator: ",")))
+        }
+
+        components.queryItems = queryItems
+
+        guard let url = components.url else {
+            throw JellyfinError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(generateAuthorizationHeader(token: token), forHTTPHeaderField: "X-Emby-Authorization")
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            logger.error("❌ Invalid HTTP response")
+            throw JellyfinError.invalidResponse
+        }
+
+        logger.info("📋 Playlist creation response: status=\(httpResponse.statusCode)")
+
+        // Log response body for debugging
+        if let responseString = String(data: data, encoding: .utf8) {
+            logger.info("📋 Response body: \(responseString)")
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            logger.error("❌ Unexpected status code: \(httpResponse.statusCode)")
+            throw JellyfinError.invalidResponse
+        }
+
+        // Parse response to get playlist ID
+        let result = try SafeJellyfinDecoder.decode(PlaylistCreationResult.self, from: data)
+        logger.info("✅ Created playlist: \(name) with ID: \(result.Id)")
+        return result.Id
+    }
+
+    /// Add tracks to a playlist
+    func addToPlaylist(playlistId: String, trackIds: [String]) async throws {
+        guard let token = KeychainService.shared.getAccessToken() else {
+            throw JellyfinError.notAuthenticated
+        }
+
+        var components = URLComponents(string: "\(baseURL)/Playlists/\(playlistId)/Items")!
+        components.queryItems = [
+            URLQueryItem(name: "Ids", value: trackIds.joined(separator: ","))
+        ]
+
+        guard let url = components.url else {
+            throw JellyfinError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(generateAuthorizationHeader(token: token), forHTTPHeaderField: "X-Emby-Authorization")
+
+        logger.info("📋 Adding \(trackIds.count) tracks to playlist \(playlistId)")
+        logger.info("📋 Request URL: \(url.absoluteString)")
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            logger.error("❌ Invalid HTTP response for addToPlaylist")
+            throw JellyfinError.invalidResponse
+        }
+
+        logger.info("📋 Add to playlist response: status=\(httpResponse.statusCode)")
+
+        // Log response body for debugging
+        if let responseString = String(data: data, encoding: .utf8), !responseString.isEmpty {
+            logger.info("📋 Response body: \(responseString)")
+        }
+
+        guard httpResponse.statusCode == 204 || httpResponse.statusCode == 200 else {
+            logger.error("❌ Unexpected status code when adding to playlist: \(httpResponse.statusCode)")
+            throw JellyfinError.invalidResponse
+        }
+
+        logger.info("✅ Added \(trackIds.count) tracks to playlist \(playlistId)")
+    }
+
+    /// Remove tracks from a playlist
+    func removeFromPlaylist(playlistId: String, entryIds: [String]) async throws {
+        guard let token = KeychainService.shared.getAccessToken() else {
+            throw JellyfinError.notAuthenticated
+        }
+
+        var components = URLComponents(string: "\(baseURL)/Playlists/\(playlistId)/Items")!
+        components.queryItems = [
+            URLQueryItem(name: "EntryIds", value: entryIds.joined(separator: ","))
+        ]
+
+        guard let url = components.url else {
+            throw JellyfinError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue(generateAuthorizationHeader(token: token), forHTTPHeaderField: "X-Emby-Authorization")
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 204 || httpResponse.statusCode == 200 else {
+            throw JellyfinError.invalidResponse
+        }
+
+        logger.info("✅ Removed \(entryIds.count) tracks from playlist \(playlistId)")
+    }
+
+    /// Fetch playlists for the authenticated user
+    func fetchPlaylists() async throws -> [BaseItemDto] {
+        return try await fetchMusicItems(includeItemTypes: "Playlist")
     }
 
     // MARK: - Favorites Management

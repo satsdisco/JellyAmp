@@ -17,6 +17,7 @@ struct ArtistDetailView: View {
     let artist: Artist
     @ObservedObject var jellyfinService = JellyfinService.shared
     @ObservedObject var playerManager = PlayerManager.shared
+    @ObservedObject var themeManager = ThemeManager.shared
     @Environment(\.dismiss) var dismiss
 
     @State private var albums: [Album] = []
@@ -25,69 +26,84 @@ struct ArtistDetailView: View {
     @State private var viewMode: ArtistViewMode = .allAlbums
     @State private var selectedYear: Int?
     @State private var isShuffling = false
+    @State private var showNowPlaying = false
+    @State private var isFavorite: Bool
+
+    init(artist: Artist) {
+        self.artist = artist
+        _isFavorite = State(initialValue: artist.isFavorite)
+    }
 
     var body: some View {
-        ZStack {
-            // Background
-            LinearGradient(
-                colors: [
-                    Color.darkBackground,
-                    Color.darkMid,
-                    Color.darkBackground
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+        VStack(spacing: 0) {
+            // Main Content
+            ZStack {
+                // Background
+                LinearGradient(
+                    colors: [
+                        Color.jellyAmpBackground,
+                        Color.jellyAmpMidBackground,
+                        Color.jellyAmpBackground
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Hero Header with Artist Image
-                    artistHeaderSection
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Hero Header with Artist Image
+                        artistHeaderSection
 
-                    // Bio Section
-                    if let bio = artist.bio {
-                        bioSection(bio: bio)
+                        // Bio Section
+                        if let bio = artist.bio {
+                            bioSection(bio: bio)
+                        }
+
+                        // Albums Section
+                        albumsSection
+
+                        // Bottom padding for mini player
+                        Color.clear.frame(height: 100)
                     }
-
-                    // Albums Section
-                    albumsSection
-
-                    // Bottom padding for mini player
-                    Color.clear.frame(height: 100)
                 }
-            }
 
-            // Back Button (floating)
-            VStack {
-                HStack {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.title3)
-                            .foregroundColor(.white)
-                            .frame(width: 44, height: 44)
-                            .background(
-                                Circle()
-                                    .fill(Color.darkMid)
-                                    .glassEffect(.regular)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(Color.neonCyan.opacity(0.5), lineWidth: 1)
-                                    )
-                            )
-                            .neonGlow(color: .neonCyan, radius: 8)
+                // Back Button (floating)
+                VStack {
+                    HStack {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .font(.title3)
+                                .foregroundColor(Color.jellyAmpText)
+                                .frame(width: 44, height: 44)
+                                .background(
+                                    Circle()
+                                        .fill(Color.jellyAmpMidBackground)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(Color.jellyAmpAccent.opacity(0.5), lineWidth: 1)
+                                        )
+                                )
+                                .neonGlow(color: .jellyAmpAccent, radius: 8)
+                        }
+                        .padding(.leading, 20)
+                        .padding(.top, 60)
+
+                        Spacer()
                     }
-                    .padding(.leading, 20)
-                    .padding(.top, 60)
 
                     Spacer()
                 }
+            }
 
-                Spacer()
+            // Mini Player (fixed at bottom)
+            if playerManager.currentTrack != nil {
+                MiniPlayerView(showNowPlaying: $showNowPlaying)
             }
         }
+        .ignoresSafeArea(.keyboard)
         .onAppear {
             Task {
                 await fetchArtistAlbums()
@@ -95,6 +111,9 @@ struct ArtistDetailView: View {
         }
         .sheet(item: $selectedAlbum) { album in
             AlbumDetailView(album: album)
+        }
+        .fullScreenCover(isPresented: $showNowPlaying) {
+            NowPlayingView()
         }
     }
 
@@ -118,6 +137,33 @@ struct ArtistDetailView: View {
         }
     }
 
+    // MARK: - Toggle Favorite
+    private func toggleFavorite() {
+        // Optimistic UI update
+        withAnimation(.spring(response: 0.3)) {
+            isFavorite.toggle()
+        }
+
+        // Call API in background
+        Task {
+            do {
+                if isFavorite {
+                    try await jellyfinService.markFavorite(itemId: artist.id)
+                } else {
+                    try await jellyfinService.unmarkFavorite(itemId: artist.id)
+                }
+            } catch {
+                // Revert on failure
+                await MainActor.run {
+                    withAnimation(.spring(response: 0.3)) {
+                        isFavorite.toggle()
+                    }
+                }
+                print("Error toggling favorite: \(error)")
+            }
+        }
+    }
+
     // MARK: - Artist Header Section
     private var artistHeaderSection: some View {
         VStack(spacing: 0) {
@@ -132,7 +178,7 @@ struct ArtistDetailView: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                                .frame(height: 320)
+                                .frame(maxWidth: .infinity, maxHeight: 320)
                                 .clipped()
                         case .failure:
                             placeholderArtistHeader
@@ -140,16 +186,19 @@ struct ArtistDetailView: View {
                             placeholderArtistHeader
                         }
                     }
-                    .frame(height: 320)
+                    .frame(maxWidth: .infinity, maxHeight: 320)
+                    .clipped()
                 } else {
                     placeholderArtistHeader
                 }
             }
+            .frame(height: 320)
+            .clipped()
             .overlay(
                 LinearGradient(
                     colors: [
                         Color.clear,
-                        Color.darkBackground.opacity(0.8)
+                        Color.jellyAmpBackground.opacity(0.8)
                     ],
                     startPoint: .center,
                     endPoint: .bottom
@@ -160,48 +209,70 @@ struct ArtistDetailView: View {
             VStack(spacing: 20) {
                 Text(artist.name)
                     .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
                     .multilineTextAlignment(.center)
-                    .neonGlow(color: .neonCyan, radius: 12)
+                    .neonGlow(color: .jellyAmpAccent, radius: 12)
                     .padding(.top, -40)
                     .padding(.horizontal, 20)
 
-                // Shuffle Button
-                Button {
-                    shuffleArtist()
-                } label: {
-                    HStack(spacing: 10) {
-                        if isShuffling {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
-                                .scaleEffect(0.9)
-                        } else {
-                            Image(systemName: "shuffle")
-                                .font(.system(size: 18, weight: .semibold))
+                // Action Buttons
+                HStack(spacing: 12) {
+                    // Shuffle Button
+                    Button {
+                        shuffleArtist()
+                    } label: {
+                        HStack(spacing: 10) {
+                            if isShuffling {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                    .scaleEffect(0.9)
+                            } else {
+                                Image(systemName: "shuffle")
+                                    .font(.system(size: 18, weight: .semibold))
+                            }
+                            Text(isShuffling ? "LOADING..." : "SHUFFLE")
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
                         }
-                        Text(isShuffling ? "LOADING..." : "SHUFFLE")
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
-                    }
-                    .foregroundColor(.black)
-                    .padding(.horizontal, 32)
-                    .padding(.vertical, 14)
-                    .background(
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.neonCyan, Color.neonPurple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.jellyAmpAccent, Color.jellyAmpTertiary],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
                                 )
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                        )
+                        .neonGlow(color: .jellyAmpAccent, radius: 12)
+                    }
+                    .disabled(isShuffling)
+
+                    // Favorite Button
+                    Button {
+                        toggleFavorite()
+                    } label: {
+                        Image(systemName: isFavorite ? "heart.fill" : "heart")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(isFavorite ? .neonPink : .white)
+                            .frame(width: 56, height: 56)
+                            .background(
+                                Circle()
+                                    .fill(Color.white.opacity(0.1))
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.jellyAmpSecondary.opacity(isFavorite ? 0.8 : 0.5), lineWidth: 1)
+                                    )
                             )
-                    )
-                    .overlay(
-                        Capsule()
-                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                    )
-                    .neonGlow(color: .neonCyan, radius: 12)
+                            .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 12 : 8)
+                    }
                 }
-                .disabled(isShuffling)
 
                 if artist.albumCount > 0 {
                     HStack(spacing: 8) {
@@ -217,11 +288,10 @@ struct ArtistDetailView: View {
                     .background(
                         Capsule()
                             .fill(Color.white.opacity(0.1))
-                            .glassEffect(.regular)
                     )
                     .overlay(
                         Capsule()
-                            .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
+                            .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
                     )
                 }
             }
@@ -239,7 +309,7 @@ struct ArtistDetailView: View {
                     .foregroundColor(.neonCyan)
                 Text("About")
                     .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
             }
 
             Text(bio)
@@ -253,10 +323,9 @@ struct ArtistDetailView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.05))
-                .glassEffect(.regular)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.neonCyan.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.jellyAmpAccent.opacity(0.2), lineWidth: 1)
                 )
         )
         .padding(.horizontal, 16)
@@ -268,9 +337,9 @@ struct ArtistDetailView: View {
             // Gradient background
             LinearGradient(
                 colors: [
-                    Color.neonCyan.opacity(0.6),
-                    Color.neonPink.opacity(0.6),
-                    Color.neonPurple.opacity(0.7)
+                    Color.jellyAmpAccent.opacity(0.6),
+                    Color.jellyAmpSecondary.opacity(0.6),
+                    Color.jellyAmpTertiary.opacity(0.7)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -292,7 +361,7 @@ struct ArtistDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Discography")
                         .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.jellyAmpText)
 
                     if !albums.isEmpty {
                         Text("\(albums.count) album\(albums.count == 1 ? "" : "s")")
@@ -317,12 +386,11 @@ struct ArtistDetailView: View {
                                 .frame(width: 36, height: 36)
                                 .background(
                                     Circle()
-                                        .fill(viewMode == .allAlbums ? Color.neonCyan : Color.white.opacity(0.1))
-                                        .glassEffect(.regular)
+                                        .fill(viewMode == .allAlbums ? Color.jellyAmpAccent : Color.white.opacity(0.1))
                                 )
                                 .overlay(
                                     Circle()
-                                        .stroke(Color.neonCyan.opacity(0.5), lineWidth: 1)
+                                        .stroke(Color.jellyAmpAccent.opacity(0.5), lineWidth: 1)
                                 )
                         }
 
@@ -337,12 +405,11 @@ struct ArtistDetailView: View {
                                 .frame(width: 36, height: 36)
                                 .background(
                                     Circle()
-                                        .fill(viewMode == .byYear ? Color.neonPink : Color.white.opacity(0.1))
-                                        .glassEffect(.regular)
+                                        .fill(viewMode == .byYear ? Color.jellyAmpSecondary : Color.white.opacity(0.1))
                                 )
                                 .overlay(
                                     Circle()
-                                        .stroke(Color.neonPink.opacity(0.5), lineWidth: 1)
+                                        .stroke(Color.jellyAmpSecondary.opacity(0.5), lineWidth: 1)
                                 )
                         }
                     }
@@ -356,7 +423,7 @@ struct ArtistDetailView: View {
                     Spacer()
                     VStack(spacing: 12) {
                         ProgressView()
-                            .tint(.neonCyan)
+                            .tint(.jellyAmpAccent)
                         Text("Loading albums...")
                             .font(.jellyAmpCaption)
                             .foregroundColor(.secondary)
@@ -397,7 +464,7 @@ struct ArtistDetailView: View {
                 AlbumListRow(album: album) {
                     selectedAlbum = album
                 }
-                .background(Color.darkMid.opacity(0.3))
+                .background(Color.jellyAmpMidBackground.opacity(0.3))
             }
         }
         .transition(.opacity.combined(with: .scale(scale: 0.98)))
@@ -499,11 +566,10 @@ struct StatBadge: View {
         .background(
             Capsule()
                 .fill(Color.white.opacity(0.1))
-                .glassEffect(.regular)
         )
         .overlay(
             Capsule()
-                .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
+                .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
         )
     }
 }
@@ -530,7 +596,7 @@ struct YearSection: View {
                     // Year Text
                     Text(yearString)
                         .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.jellyAmpText)
 
                     Spacer()
 
@@ -547,7 +613,7 @@ struct YearSection: View {
                     .padding(.vertical, 10)
                     .background(
                         Capsule()
-                            .fill(Color.neonCyan.opacity(0.15))
+                            .fill(Color.jellyAmpAccent.opacity(0.15))
                     )
                 }
                 .padding(.horizontal, 20)
@@ -562,8 +628,8 @@ struct YearSection: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color.neonCyan.opacity(0.3),
-                                    Color.neonPink.opacity(0.2)
+                                    Color.jellyAmpAccent.opacity(0.3),
+                                    Color.jellyAmpSecondary.opacity(0.2)
                                 ],
                                 startPoint: .leading,
                                 endPoint: .trailing
@@ -580,7 +646,7 @@ struct YearSection: View {
                         AlbumListRow(album: album) {
                             onAlbumTap(album)
                         }
-                        .background(Color.darkMid.opacity(0.2))
+                        .background(Color.jellyAmpMidBackground.opacity(0.2))
                     }
                 }
                 .padding(.top, 8)

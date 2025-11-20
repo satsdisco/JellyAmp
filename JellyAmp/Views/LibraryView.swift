@@ -47,8 +47,10 @@ enum SortOption: String, CaseIterable {
 
 struct LibraryView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
+    @ObservedObject var themeManager = ThemeManager.shared
     @State private var albums: [Album] = []
     @State private var artists: [Artist] = []
+    @State private var playlists: [Playlist] = []
     @State private var searchText = ""
     @State private var selectedFilter = "Artists"
     @State private var viewMode: ViewMode = .list
@@ -56,11 +58,14 @@ struct LibraryView: View {
     @State private var showSortMenu = false
     @State private var selectedArtist: Artist?
     @State private var selectedAlbum: Album?
+    @State private var selectedPlaylist: Playlist?
     @State private var isLoading = true
+    @State private var isSyncing = false
     @State private var errorMessage: String?
+    @State private var showNewPlaylistSheet = false
 
     let columns = [
-        GridItem(.adaptive(minimum: 160), spacing: 16)
+        GridItem(.adaptive(minimum: 130), spacing: 16)
     ]
 
     var filteredAndSortedAlbums: [Album] {
@@ -101,9 +106,9 @@ struct LibraryView: View {
             // Background
             LinearGradient(
                 colors: [
-                    Color.darkBackground,
-                    Color.darkMid,
-                    Color.darkBackground
+                    Color.jellyAmpBackground,
+                    Color.jellyAmpMidBackground,
+                    Color.jellyAmpBackground
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -128,7 +133,7 @@ struct LibraryView: View {
                     // Loading state
                     Spacer()
                     ProgressView()
-                        .tint(.neonCyan)
+                        .tint(.jellyAmpAccent)
                         .scaleEffect(1.5)
                     Text("Loading library...")
                         .font(.jellyAmpBody)
@@ -144,7 +149,7 @@ struct LibraryView: View {
                             .foregroundColor(.neonPink)
                         Text("Error Loading Library")
                             .font(.jellyAmpHeadline)
-                            .foregroundColor(.white)
+                            .foregroundColor(Color.jellyAmpText)
                         Text(error)
                             .font(.jellyAmpBody)
                             .foregroundColor(.secondary)
@@ -160,9 +165,9 @@ struct LibraryView: View {
                         .padding(.vertical, 12)
                         .background(
                             Capsule()
-                                .fill(Color.neonCyan)
+                                .fill(Color.jellyAmpAccent)
                         )
-                        .neonGlow(color: .neonCyan, radius: 8)
+                        .neonGlow(color: .jellyAmpAccent, radius: 8)
                     }
                     Spacer()
                 } else {
@@ -173,7 +178,7 @@ struct LibraryView: View {
                                 if !filteredArtists.isEmpty {
                                     Text("Favorite Artists")
                                         .font(.jellyAmpHeadline)
-                                        .foregroundColor(.white)
+                                        .foregroundColor(Color.jellyAmpText)
                                         .padding(.horizontal, 20)
                                         .padding(.top, 16)
 
@@ -196,7 +201,7 @@ struct LibraryView: View {
 
                                                 if artist.id != filteredArtists.last?.id {
                                                     Divider()
-                                                        .background(Color.neonCyan.opacity(0.2))
+                                                        .background(Color.jellyAmpAccent.opacity(0.2))
                                                         .padding(.horizontal, 20)
                                                 }
                                             }
@@ -207,7 +212,7 @@ struct LibraryView: View {
                                 if !favoriteAlbums.isEmpty {
                                     Text("Favorite Albums")
                                         .font(.jellyAmpHeadline)
-                                        .foregroundColor(.white)
+                                        .foregroundColor(Color.jellyAmpText)
                                         .padding(.horizontal, 20)
                                         .padding(.top, filteredArtists.isEmpty ? 16 : 24)
 
@@ -230,7 +235,7 @@ struct LibraryView: View {
 
                                                 if album.id != favoriteAlbums.last?.id {
                                                     Divider()
-                                                        .background(Color.neonCyan.opacity(0.2))
+                                                        .background(Color.jellyAmpAccent.opacity(0.2))
                                                         .padding(.horizontal, 20)
                                                 }
                                             }
@@ -245,7 +250,7 @@ struct LibraryView: View {
                                             .foregroundColor(.secondary.opacity(0.5))
                                         Text("No Favorites Yet")
                                             .font(.jellyAmpHeadline)
-                                            .foregroundColor(.white)
+                                            .foregroundColor(Color.jellyAmpText)
                                         Text("Tap the heart icon on albums and artists to add them here")
                                             .font(.jellyAmpBody)
                                             .foregroundColor(.secondary)
@@ -278,12 +283,59 @@ struct LibraryView: View {
 
                                         if artist.id != filteredArtists.last?.id {
                                             Divider()
-                                                .background(Color.neonCyan.opacity(0.2))
+                                                .background(Color.jellyAmpAccent.opacity(0.2))
                                                 .padding(.horizontal, 20)
                                         }
                                     }
                                 }
                                 .padding(.top, 16)
+                            }
+                        } else if selectedFilter == "Playlists" {
+                            // Playlists View
+                            if playlists.isEmpty {
+                                VStack(spacing: 16) {
+                                    Image(systemName: "music.note.list")
+                                        .font(.system(size: 60))
+                                        .foregroundColor(.secondary.opacity(0.5))
+                                    Text("No Playlists Yet")
+                                        .font(.jellyAmpHeadline)
+                                        .foregroundColor(Color.jellyAmpText)
+                                    Text("Create your first playlist to organize your favorite tracks")
+                                        .font(.jellyAmpBody)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal, 40)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 100)
+                            } else {
+                                if viewMode == .grid {
+                                    LazyVGrid(columns: columns, spacing: 16) {
+                                        ForEach(playlists) { playlist in
+                                            PlaylistCard(playlist: playlist) {
+                                                selectedPlaylist = playlist
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                    .padding(.top, 16)
+                                } else {
+                                    LazyVStack(spacing: 0) {
+                                        ForEach(playlists) { playlist in
+                                            PlaylistListRow(playlist: playlist) {
+                                                selectedPlaylist = playlist
+                                            }
+                                            .padding(.horizontal, 20)
+
+                                            if playlist.id != playlists.last?.id {
+                                                Divider()
+                                                    .background(Color.jellyAmpAccent.opacity(0.2))
+                                                    .padding(.horizontal, 20)
+                                            }
+                                        }
+                                    }
+                                    .padding(.top, 16)
+                                }
                             }
                         } else {
                             // Albums View (and Recent for now)
@@ -307,7 +359,7 @@ struct LibraryView: View {
 
                                         if album.id != filteredAndSortedAlbums.last?.id {
                                             Divider()
-                                                .background(Color.neonCyan.opacity(0.2))
+                                                .background(Color.jellyAmpAccent.opacity(0.2))
                                                 .padding(.horizontal, 20)
                                         }
                                     }
@@ -325,6 +377,17 @@ struct LibraryView: View {
         .sheet(item: $selectedAlbum) { album in
             AlbumDetailView(album: album)
         }
+        .sheet(item: $selectedPlaylist) { playlist in
+            PlaylistDetailView(playlist: playlist)
+        }
+        .sheet(isPresented: $showNewPlaylistSheet) {
+            NewPlaylistSheet { playlistId in
+                // Refresh playlists after creation
+                Task {
+                    await syncLibrary()
+                }
+            }
+        }
         .onAppear {
             if albums.isEmpty && artists.isEmpty {
                 Task {
@@ -334,18 +397,42 @@ struct LibraryView: View {
         }
     }
 
+    // MARK: - Library Management
+
+    /// Sync library - force refresh from server
+    private func syncLibrary() async {
+        await MainActor.run {
+            isSyncing = true
+        }
+
+        // Clear cache to force fresh fetch
+        UserDefaults.standard.removeObject(forKey: "cachedAlbums")
+        UserDefaults.standard.removeObject(forKey: "cachedArtists")
+        UserDefaults.standard.removeObject(forKey: "cachedPlaylists")
+
+        // Fetch fresh data
+        await fetchAndCache()
+
+        await MainActor.run {
+            isSyncing = false
+        }
+    }
+
     // MARK: - Fetch Library
     private func fetchLibrary() async {
         // Check cache first for instant loading
         if let cachedAlbums = UserDefaults.standard.data(forKey: "cachedAlbums"),
            let cachedArtists = UserDefaults.standard.data(forKey: "cachedArtists"),
+           let cachedPlaylists = UserDefaults.standard.data(forKey: "cachedPlaylists"),
            let decodedAlbums = try? JSONDecoder().decode([Album].self, from: cachedAlbums),
-           let decodedArtists = try? JSONDecoder().decode([Artist].self, from: cachedArtists) {
+           let decodedArtists = try? JSONDecoder().decode([Artist].self, from: cachedArtists),
+           let decodedPlaylists = try? JSONDecoder().decode([Playlist].self, from: cachedPlaylists) {
 
             // Load cached data immediately
             await MainActor.run {
                 self.albums = decodedAlbums
                 self.artists = decodedArtists
+                self.playlists = decodedPlaylists
                 self.isLoading = false
             }
 
@@ -367,30 +454,34 @@ struct LibraryView: View {
         }
 
         do {
-            // Fetch albums and artists in parallel with smart limits
-            // Initial load: 300 albums and 200 artists (loads in ~1-2 seconds)
-            // Users can load more later if needed
+            // Fetch albums, artists, and playlists in parallel with smart limits
+            // Initial load: 300 albums, 200 artists, and all playlists (loads in ~1-2 seconds)
             async let albumsResult = jellyfinService.fetchMusicItems(includeItemTypes: "MusicAlbum", limit: 300)
             async let artistsResult = jellyfinService.fetchArtists(limit: 200)
+            async let playlistsResult = jellyfinService.fetchPlaylists()
 
-            let (fetchedAlbums, fetchedArtists) = try await (albumsResult, artistsResult)
+            let (fetchedAlbums, fetchedArtists, fetchedPlaylists) = try await (albumsResult, artistsResult, playlistsResult)
 
             // Convert BaseItemDto to our UI models
             let baseURL = jellyfinService.baseURL
             let newAlbums = fetchedAlbums.map { Album(from: $0, baseURL: baseURL) }
             let newArtists = fetchedArtists.map { Artist(from: $0, baseURL: baseURL) }
+            let newPlaylists = fetchedPlaylists.map { Playlist(from: $0, baseURL: baseURL) }
 
             await MainActor.run {
                 self.albums = newAlbums
                 self.artists = newArtists
+                self.playlists = newPlaylists
                 self.isLoading = false
             }
 
             // Cache the results for next launch
             if let albumsData = try? JSONEncoder().encode(newAlbums),
-               let artistsData = try? JSONEncoder().encode(newArtists) {
+               let artistsData = try? JSONEncoder().encode(newArtists),
+               let playlistsData = try? JSONEncoder().encode(newPlaylists) {
                 UserDefaults.standard.set(albumsData, forKey: "cachedAlbums")
                 UserDefaults.standard.set(artistsData, forKey: "cachedArtists")
+                UserDefaults.standard.set(playlistsData, forKey: "cachedPlaylists")
             }
         } catch {
             await MainActor.run {
@@ -424,15 +515,66 @@ struct LibraryView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Library")
                     .font(.jellyAmpTitle)
-                    .foregroundColor(.white)
-                    .neonGlow(color: .neonCyan, radius: 10)
+                    .foregroundColor(Color.jellyAmpText)
+                    .neonGlow(color: .jellyAmpAccent, radius: 10)
 
-                Text("\(albums.count) Albums")
+                Text("\(albums.count) Albums · \(artists.count) Artists")
                     .font(.jellyAmpCaption)
                     .foregroundColor(.secondary)
             }
 
             Spacer()
+
+            // New Playlist button (only show when Playlists filter is selected)
+            if selectedFilter == "Playlists" {
+                Button {
+                    showNewPlaylistSheet = true
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(Color.jellyAmpMidBackground)
+                            .frame(width: 44, height: 44)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.neonPink.opacity(0.5), lineWidth: 1)
+                            )
+
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(.neonPink)
+                    }
+                    .neonGlow(color: .neonPink, radius: 8)
+                }
+            }
+
+            // Sync button
+            Button {
+                Task {
+                    await syncLibrary()
+                }
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color.jellyAmpMidBackground)
+                        .frame(width: 44, height: 44)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.jellyAmpAccent.opacity(0.5), lineWidth: 1)
+                        )
+
+                    if isSyncing {
+                        ProgressView()
+                            .tint(.jellyAmpAccent)
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.jellyAmpAccent)
+                    }
+                }
+                .neonGlow(color: .jellyAmpAccent, radius: 8)
+            }
+            .disabled(isSyncing)
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
@@ -446,8 +588,8 @@ struct LibraryView: View {
                 .foregroundColor(.neonCyan)
 
             TextField("Search albums, artists...", text: $searchText)
-                .foregroundColor(.white)
-                .tint(.neonCyan)
+                .foregroundColor(Color.jellyAmpText)
+                .tint(.jellyAmpAccent)
 
             if !searchText.isEmpty {
                 Button {
@@ -462,10 +604,9 @@ struct LibraryView: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.white.opacity(0.1))
-                .glassEffect(.regular)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
+                        .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
                 )
         )
         .padding(.horizontal, 20)
@@ -476,7 +617,7 @@ struct LibraryView: View {
     private var filterSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                ForEach(["Artists", "Albums", "Favorites", "Recent"], id: \.self) { filter in
+                ForEach(["Artists", "Albums", "Playlists", "Favorites", "Recent"], id: \.self) { filter in
                     FilterPill(
                         title: filter,
                         isSelected: selectedFilter == filter
@@ -505,17 +646,16 @@ struct LibraryView: View {
                     Text(sortOption.rawValue)
                         .font(.jellyAmpCaption)
                 }
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
                         .fill(Color.white.opacity(0.1))
-                        .glassEffect(.regular)
                 )
                 .overlay(
                     Capsule()
-                        .stroke(Color.neonPink.opacity(0.4), lineWidth: 1)
+                        .stroke(Color.jellyAmpSecondary.opacity(0.4), lineWidth: 1)
                 )
             }
             .confirmationDialog("Sort By", isPresented: $showSortMenu, titleVisibility: .visible) {
@@ -544,7 +684,7 @@ struct LibraryView: View {
                             .frame(width: 36, height: 30)
                             .background(
                                 RoundedRectangle(cornerRadius: viewMode == mode ? 8 : 0)
-                                    .fill(viewMode == mode ? Color.neonCyan : Color.clear)
+                                    .fill(viewMode == mode ? Color.jellyAmpAccent : Color.clear)
                             )
                     }
                 }
@@ -552,11 +692,10 @@ struct LibraryView: View {
             .background(
                 Capsule()
                     .fill(Color.white.opacity(0.1))
-                    .glassEffect(.regular)
             )
             .overlay(
                 Capsule()
-                    .stroke(Color.neonCyan.opacity(0.4), lineWidth: 1)
+                    .stroke(Color.jellyAmpAccent.opacity(0.4), lineWidth: 1)
             )
         }
         .padding(.horizontal, 20)
@@ -597,8 +736,8 @@ struct AlbumCard: View {
                             .stroke(
                                 LinearGradient(
                                     colors: [
-                                        Color.neonCyan.opacity(0.6),
-                                        Color.neonPink.opacity(0.6)
+                                        Color.jellyAmpAccent.opacity(0.6),
+                                        Color.jellyAmpSecondary.opacity(0.6)
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -606,7 +745,7 @@ struct AlbumCard: View {
                                 lineWidth: 1.5
                             )
                     )
-                    .neonGlow(color: .neonCyan, radius: isPressed ? 8 : 12)
+                    .neonGlow(color: .jellyAmpAccent, radius: isPressed ? 8 : 12)
                 } else {
                     placeholderArtwork
                 }
@@ -616,7 +755,7 @@ struct AlbumCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(album.name)
                     .font(.jellyAmpBody)
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.jellyAmpText)
                     .lineLimit(1)
 
                 Text(album.artistName)
@@ -647,23 +786,22 @@ struct AlbumCard: View {
             .fill(
                 LinearGradient(
                     colors: [
-                        Color.neonCyan.opacity(0.5),
-                        Color.neonPink.opacity(0.5),
-                        Color.neonPurple.opacity(0.5)
+                        Color.jellyAmpAccent.opacity(0.5),
+                        Color.jellyAmpSecondary.opacity(0.5),
+                        Color.jellyAmpTertiary.opacity(0.5)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
             .aspectRatio(1, contentMode: .fit)
-            .glassEffect(.regular)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(
                         LinearGradient(
                             colors: [
-                                Color.neonCyan.opacity(0.6),
-                                Color.neonPink.opacity(0.6)
+                                Color.jellyAmpAccent.opacity(0.6),
+                                Color.jellyAmpSecondary.opacity(0.6)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -671,7 +809,7 @@ struct AlbumCard: View {
                         lineWidth: 1.5
                     )
             )
-            .neonGlow(color: .neonCyan, radius: isPressed ? 8 : 12)
+            .neonGlow(color: .jellyAmpAccent, radius: isPressed ? 8 : 12)
             .overlay(
                 Image(systemName: "music.note")
                     .font(.system(size: 40))
@@ -695,7 +833,7 @@ struct AlbumListRow: View {
             }
         } label: {
             HStack(spacing: 16) {
-                // Album artwork (square)
+                // Album artwork (square, larger and properly centered)
                 if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
                     AsyncImage(url: url) { phase in
                         switch phase {
@@ -705,66 +843,81 @@ struct AlbumListRow: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                                .frame(width: 64, height: 64)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .frame(width: 80, height: 80)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.neonPink.opacity(0.3), lineWidth: 1)
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color.jellyAmpAccent.opacity(0.5),
+                                                    Color.jellyAmpSecondary.opacity(0.5)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1.5
+                                        )
                                 )
+                                .shadow(color: Color.jellyAmpAccent.opacity(0.2), radius: 8, x: 0, y: 4)
                         case .failure:
                             placeholderArtwork
                         @unknown default:
                             placeholderArtwork
                         }
                     }
-                    .frame(width: 64, height: 64)
+                    .frame(width: 80, height: 80)
                 } else {
                     placeholderArtwork
                 }
 
                 // Album info
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 6) {
                     // Album name - bold and prominent
                     Text(album.name)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                        .lineLimit(1)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(Color.jellyAmpText)
+                        .lineLimit(2)
 
                     // Artist name - secondary
                     Text(album.artistName)
-                        .font(.system(size: 14))
+                        .font(.system(size: 15, weight: .medium))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
 
                     // Year and track count - clear and separated
-                    HStack(spacing: 0) {
+                    HStack(spacing: 8) {
                         if let year = album.year {
-                            Text(String(year))
-                                .font(.system(size: 15, weight: .bold, design: .rounded))
-                                .foregroundColor(.neonCyan)
+                            HStack(spacing: 4) {
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.neonCyan)
+                                Text(String(year))
+                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                    .foregroundColor(.neonCyan)
+                            }
                         }
 
                         if let trackCount = album.trackCount {
-                            if album.year != nil {
-                                Text("  •  ")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.secondary.opacity(0.5))
+                            HStack(spacing: 4) {
+                                Image(systemName: "music.note.list")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.neonPink.opacity(0.8))
+                                Text("\(trackCount)")
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.secondary)
                             }
-                            Text("\(trackCount) track\(trackCount == 1 ? "" : "s")")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.secondary.opacity(0.8))
                         }
                     }
                 }
-
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 // Chevron
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.neonCyan.opacity(0.6))
             }
-            .padding(.vertical, 14)
+            .padding(.vertical, 12)
             .scaleEffect(isPressed ? 0.98 : 1.0)
             .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
         }
@@ -772,22 +925,36 @@ struct AlbumListRow: View {
 
     private var placeholderArtwork: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 10)
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.neonPink.opacity(0.4),
-                            Color.neonPurple.opacity(0.4)
+                            Color.jellyAmpAccent.opacity(0.5),
+                            Color.jellyAmpSecondary.opacity(0.5),
+                            Color.jellyAmpTertiary.opacity(0.5)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 64, height: 64)
-                .glassEffect(.regular)
+                .frame(width: 80, height: 80)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.jellyAmpAccent.opacity(0.5),
+                                    Color.jellyAmpSecondary.opacity(0.5)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
+                )
 
             Image(systemName: "music.note")
-                .font(.system(size: 20))
+                .font(.system(size: 28))
                 .foregroundColor(.white.opacity(0.4))
         }
     }
@@ -809,14 +976,13 @@ struct FilterPill: View {
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(isSelected ? Color.neonCyan : Color.white.opacity(0.1))
-                        .glassEffect(.regular)
+                        .fill(isSelected ? Color.jellyAmpAccent : Color.white.opacity(0.1))
                 )
                 .overlay(
                     Capsule()
-                        .stroke(Color.neonCyan.opacity(isSelected ? 0.8 : 0.3), lineWidth: 1)
+                        .stroke(Color.jellyAmpAccent.opacity(isSelected ? 0.8 : 0.3), lineWidth: 1)
                 )
-                .neonGlow(color: .neonCyan, radius: isSelected ? 8 : 0)
+                .neonGlow(color: .jellyAmpAccent, radius: isSelected ? 8 : 0)
         }
     }
 }
@@ -836,54 +1002,92 @@ struct ArtistCard: View {
             }
         }) {
             VStack(alignment: .leading, spacing: 8) {
-                // Artist artwork (circular)
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.neonPurple.opacity(0.5),
-                                    Color.neonPink.opacity(0.5),
-                                    Color.neonCyan.opacity(0.5)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 160, height: 160)
-                        .glassEffect(.regular)
-                        .overlay(
-                            Circle()
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.neonPurple.opacity(0.6),
-                                            Color.neonPink.opacity(0.6)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1.5
+                // Artist artwork (circular with photo if available)
+                if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            placeholderArtwork
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 130, height: 130)
+                                .clipShape(Circle())
+                                .overlay(
+                                    Circle()
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color.jellyAmpTertiary.opacity(0.6),
+                                                    Color.jellyAmpSecondary.opacity(0.6)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1.5
+                                        )
                                 )
-                        )
-                        .neonGlow(color: .neonPurple, radius: isPressed ? 8 : 12)
-
-                    // Artist icon
-                    Image(systemName: "person.circle.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(.white.opacity(0.4))
+                                .neonGlow(color: .jellyAmpTertiary, radius: isPressed ? 8 : 12)
+                        case .failure:
+                            placeholderArtwork
+                        @unknown default:
+                            placeholderArtwork
+                        }
+                    }
+                    .frame(width: 130, height: 130)
+                } else {
+                    placeholderArtwork
                 }
 
                 // Artist info
                 VStack(alignment: .leading, spacing: 4) {
                     Text(artist.name)
                         .font(.jellyAmpBody)
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
                 }
             }
             .scaleEffect(isPressed ? 0.95 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
+        }
+    }
+
+    private var placeholderArtwork: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.jellyAmpTertiary.opacity(0.5),
+                            Color.jellyAmpSecondary.opacity(0.5),
+                            Color.jellyAmpAccent.opacity(0.5)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 130, height: 130)
+                .overlay(
+                    Circle()
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.jellyAmpTertiary.opacity(0.6),
+                                    Color.jellyAmpSecondary.opacity(0.6)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
+                )
+                .neonGlow(color: .jellyAmpTertiary, radius: isPressed ? 8 : 12)
+
+            // Artist icon
+            Image(systemName: "person.circle.fill")
+                .font(.system(size: 48))
+                .foregroundColor(.white.opacity(0.4))
         }
     }
 }
@@ -919,14 +1123,14 @@ struct ArtistListRow: View {
                                     Circle()
                                         .stroke(
                                             LinearGradient(
-                                                colors: [Color.neonPurple, Color.neonPink],
+                                                colors: [Color.jellyAmpTertiary, Color.jellyAmpSecondary],
                                                 startPoint: .topLeading,
                                                 endPoint: .bottomTrailing
                                             ),
                                             lineWidth: 2
                                         )
                                 )
-                                .shadow(color: Color.neonPurple.opacity(0.5), radius: 8, x: 0, y: 4)
+                                .shadow(color: Color.jellyAmpTertiary.opacity(0.5), radius: 8, x: 0, y: 4)
                         case .failure:
                             placeholderArtistArt
                         @unknown default:
@@ -942,7 +1146,7 @@ struct ArtistListRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(artist.name)
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
                 }
 
@@ -965,8 +1169,8 @@ struct ArtistListRow: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.neonPurple.opacity(0.5),
-                            Color.neonPink.opacity(0.5)
+                            Color.jellyAmpTertiary.opacity(0.5),
+                            Color.jellyAmpSecondary.opacity(0.5)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -977,7 +1181,7 @@ struct ArtistListRow: View {
                     Circle()
                         .stroke(
                             LinearGradient(
-                                colors: [Color.neonPurple, Color.neonPink],
+                                colors: [Color.jellyAmpTertiary, Color.jellyAmpSecondary],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
@@ -987,6 +1191,218 @@ struct ArtistListRow: View {
 
             Image(systemName: "person.circle.fill")
                 .font(.system(size: 28))
+                .foregroundColor(.white.opacity(0.4))
+        }
+    }
+}
+
+// MARK: - Playlist Card Component
+struct PlaylistCard: View {
+    let playlist: Playlist
+    let action: () -> Void
+    @State private var isPressed = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Playlist Artwork
+            ZStack {
+                if let artworkURL = playlist.artworkURL, let url = URL(string: artworkURL) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            placeholderArtwork
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 160, height: 160)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        case .failure:
+                            placeholderArtwork
+                        @unknown default:
+                            placeholderArtwork
+                        }
+                    }
+                    .frame(width: 160, height: 160)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        Color.neonPink.opacity(0.6),
+                                        Color.jellyAmpSecondary.opacity(0.6)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1.5
+                            )
+                    )
+                    .neonGlow(color: .neonPink, radius: isPressed ? 8 : 12)
+                } else {
+                    placeholderArtwork
+                }
+            }
+
+            // Playlist Info
+            VStack(alignment: .leading, spacing: 4) {
+                Text(playlist.name)
+                    .font(.jellyAmpBody)
+                    .foregroundColor(Color.jellyAmpText)
+                    .lineLimit(1)
+
+                Text("\(playlist.trackCount) track\(playlist.trackCount == 1 ? "" : "s")")
+                    .font(.jellyAmpCaption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+        }
+        .scaleEffect(isPressed ? 0.95 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
+        .onTapGesture {
+            isPressed = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isPressed = false
+                action()
+            }
+        }
+    }
+
+    private var placeholderArtwork: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .fill(
+                LinearGradient(
+                    colors: [
+                        Color.neonPink.opacity(0.5),
+                        Color.jellyAmpSecondary.opacity(0.5),
+                        Color.neonPurple.opacity(0.5)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .aspectRatio(1, contentMode: .fit)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.neonPink.opacity(0.6),
+                                Color.jellyAmpSecondary.opacity(0.6)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
+            )
+            .neonGlow(color: .neonPink, radius: isPressed ? 8 : 12)
+            .overlay(
+                Image(systemName: "music.note.list")
+                    .font(.system(size: 40))
+                    .foregroundColor(.white.opacity(0.4))
+            )
+    }
+}
+
+// MARK: - Playlist List Row Component
+struct PlaylistListRow: View {
+    let playlist: Playlist
+    let action: () -> Void
+    @State private var isPressed = false
+
+    var body: some View {
+        Button {
+            isPressed = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isPressed = false
+                action()
+            }
+        } label: {
+            HStack(spacing: 16) {
+                // Playlist artwork (square)
+                if let artworkURL = playlist.artworkURL, let url = URL(string: artworkURL) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            placeholderArtwork
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 64, height: 64)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.neonPink.opacity(0.3), lineWidth: 1)
+                                )
+                        case .failure:
+                            placeholderArtwork
+                        @unknown default:
+                            placeholderArtwork
+                        }
+                    }
+                    .frame(width: 64, height: 64)
+                } else {
+                    placeholderArtwork
+                }
+
+                // Playlist info
+                VStack(alignment: .leading, spacing: 8) {
+                    // Playlist name - bold and prominent
+                    Text(playlist.name)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(Color.jellyAmpText)
+                        .lineLimit(1)
+
+                    // Track count and date
+                    HStack(spacing: 0) {
+                        Text("\(playlist.trackCount) track\(playlist.trackCount == 1 ? "" : "s")")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.secondary.opacity(0.8))
+
+                        if let dateCreated = playlist.dateCreated {
+                            Text("  •  ")
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary.opacity(0.5))
+
+                            Text(dateCreated, style: .date)
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary.opacity(0.6))
+                        }
+                    }
+                }
+
+                Spacer()
+
+                // Chevron
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.neonPink.opacity(0.6))
+            }
+            .padding(.vertical, 14)
+            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
+        }
+    }
+
+    private var placeholderArtwork: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.neonPink.opacity(0.4),
+                            Color.jellyAmpSecondary.opacity(0.4)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 64, height: 64)
+
+            Image(systemName: "music.note.list")
+                .font(.system(size: 20))
                 .foregroundColor(.white.opacity(0.4))
         }
     }

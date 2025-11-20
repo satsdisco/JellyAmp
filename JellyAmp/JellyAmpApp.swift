@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import UserNotifications
 
 @main
 struct JellyAmpApp: App {
@@ -14,6 +15,21 @@ struct JellyAmpApp: App {
 
     // Initialize Watch Connectivity
     private let watchConnectivity = PhoneConnectivityManager.shared
+
+    init() {
+        // Request notification permissions for download completion alerts
+        requestNotificationPermissions()
+    }
+
+    private func requestNotificationPermissions() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if granted {
+                print("✅ Notification permission granted")
+            } else if let error = error {
+                print("❌ Notification permission error: \(error.localizedDescription)")
+            }
+        }
+    }
 
     var body: some Scene {
         WindowGroup {

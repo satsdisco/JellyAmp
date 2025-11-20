@@ -9,6 +9,7 @@ import Foundation
 import AVFoundation
 import MediaPlayer
 import Combine
+import WatchKit
 
 class WatchPlayerManager: NSObject, ObservableObject {
     static let shared = WatchPlayerManager()
@@ -25,6 +26,9 @@ class WatchPlayerManager: NSObject, ObservableObject {
     private var timeObserver: Any?
     private let jellyfinService = WatchJellyfinService.shared
 
+    // CRITICAL: Extended runtime session for background audio on watchOS
+    private var extendedRuntimeSession: WKExtendedRuntimeSession?
+
     override init() {
         super.init()
         setupAudioSession()
@@ -37,12 +41,53 @@ class WatchPlayerManager: NSObject, ObservableObject {
     private func setupAudioSession() {
         do {
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playback, mode: .default)
-            try audioSession.setActive(true)
-            print("✅ Watch audio session configured")
+            // Configure for background playback on watchOS
+            // Note: allowAirPlay is not available on watchOS, only Bluetooth
+            try audioSession.setCategory(.playback,
+                                       mode: .default,
+                                       options: [.allowBluetoothA2DP])
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            print("✅ Watch audio session configured for background playback")
         } catch {
             print("❌ Watch audio session failed: \(error)")
         }
+    }
+
+    /// Ensures audio session is active before playback (critical for watchOS background audio)
+    private func activateAudioSessionIfNeeded() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            if !audioSession.isOtherAudioPlaying {
+                try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            }
+        } catch {
+            print("⚠️ Failed to activate audio session: \(error)")
+        }
+    }
+
+    // MARK: - Extended Runtime Session (Critical for watchOS background audio)
+
+    /// Starts extended runtime session for background audio
+    /// This is REQUIRED for audio to continue when Watch screen is off
+    private func startExtendedRuntimeSession() {
+        // Clean up any existing session
+        stopExtendedRuntimeSession()
+
+        // Create new session
+        extendedRuntimeSession = WKExtendedRuntimeSession()
+        extendedRuntimeSession?.delegate = self
+
+        // Start the session
+        extendedRuntimeSession?.start()
+        print("🔄 Extended runtime session started for background audio")
+    }
+
+    /// Stops extended runtime session
+    private func stopExtendedRuntimeSession() {
+        guard let session = extendedRuntimeSession else { return }
+        session.invalidate()
+        extendedRuntimeSession = nil
+        print("⏹️ Extended runtime session stopped")
     }
 
     // MARK: - Playback
@@ -82,6 +127,12 @@ class WatchPlayerManager: NSObject, ObservableObject {
         }
         player?.pause()
 
+        // CRITICAL: Ensure audio session is active before playback (watchOS background audio)
+        activateAudioSessionIfNeeded()
+
+        // CRITICAL: Start extended runtime session for background playback
+        startExtendedRuntimeSession()
+
         // Create new player
         let playerItem = AVPlayerItem(url: streamURL)
         player = AVPlayer(playerItem: playerItem)
@@ -114,6 +165,8 @@ class WatchPlayerManager: NSObject, ObservableObject {
             player.pause()
             isPlaying = false
         } else {
+            // Ensure audio session is active when resuming (important for watchOS background)
+            activateAudioSessionIfNeeded()
             player.play()
             isPlaying = true
         }
@@ -147,6 +200,7 @@ class WatchPlayerManager: NSObject, ObservableObject {
             playNext()
         } else {
             isPlaying = false
+            stopExtendedRuntimeSession()
         }
     }
 
@@ -224,11 +278,33 @@ class WatchPlayerManager: NSObject, ObservableObject {
             player?.pause()
             isPlaying = false
         } else if type == .ended {
+            // Reactivate audio session after interruption
+            activateAudioSessionIfNeeded()
+
             if let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt,
                AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume) {
                 player?.play()
                 isPlaying = true
             }
+        }
+    }
+}
+
+// MARK: - WKExtendedRuntimeSessionDelegate
+
+extension WatchPlayerManager: WKExtendedRuntimeSessionDelegate {
+    func extendedRuntimeSessionDidStart(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
+        print("✅ Extended runtime session started successfully")
+    }
+    
+    func extendedRuntimeSessionWillExpire(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
+        print("⚠️ Extended runtime session will expire soon")
+    }
+    
+    func extendedRuntimeSession(_ extendedRuntimeSession: WKExtendedRuntimeSession, didInvalidateWith reason: WKExtendedRuntimeSessionInvalidationReason, error: Error?) {
+        print("⏹️ Extended runtime session invalidated: \(reason.rawValue)")
+        if let error = error {
+            print("   Error: \(error.localizedDescription)")
         }
     }
 }

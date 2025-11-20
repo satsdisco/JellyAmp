@@ -9,24 +9,25 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
+    @ObservedObject var themeManager = ThemeManager.shared
     @State private var showSignOutConfirmation = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 // Dark background
-                Color.darkBackground.ignoresSafeArea()
+                Color.jellyAmpBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 24) {
                         // Header with app icon/logo
                         headerSection
 
+                        // Theme Selector
+                        themeSection
+
                         // Server Info Section
                         serverInfoSection
-
-                        // Account Section
-                        accountSection
 
                         // Danger Zone
                         signOutSection
@@ -58,7 +59,7 @@ struct SettingsView: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [.neonCyan, .neonPink],
+                            colors: [Color.jellyAmpAccent, Color.jellyAmpSecondary],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -69,20 +70,123 @@ struct SettingsView: View {
                 Image(systemName: "music.note")
                     .font(.system(size: 40, weight: .bold))
                     .foregroundColor(.white)
-                    .neonGlow(color: .neonCyan, radius: 10)
+                    .neonGlow(color: .jellyAmpAccent, radius: 10)
             }
             .frame(width: 80, height: 80)
 
             Text("JellyAmp")
                 .font(.jellyAmpTitle)
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
 
-            Text("Version 1.0")
+            Text("Version 1.1 (5)")
                 .font(.jellyAmpMono)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
+    }
+
+    // MARK: - Theme Section
+
+    private var themeSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Appearance")
+                .font(.jellyAmpHeadline)
+                .foregroundColor(.jellyAmpAccent)
+
+            VStack(spacing: 12) {
+                ForEach(AppTheme.allCases) { theme in
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            themeManager.currentTheme = theme
+                        }
+                    } label: {
+                        HStack(spacing: 16) {
+                            // Theme icon
+                            ZStack {
+                                Circle()
+                                    .fill(themeIconBackground(for: theme))
+                                    .frame(width: 44, height: 44)
+
+                                Image(systemName: themeIcon(for: theme))
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundColor(themeIconColor(for: theme))
+                            }
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(theme.displayName)
+                                    .font(.jellyAmpBody)
+                                    .foregroundColor(Color.jellyAmpText)
+
+                                Text(theme.description)
+                                    .font(.jellyAmpCaption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+
+                            // Checkmark if selected
+                            if themeManager.currentTheme == theme {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.jellyAmpAccent)
+                            }
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(themeManager.currentTheme == theme ? Color.jellyAmpMidBackground : Color.clear)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(
+                                            themeManager.currentTheme == theme ?
+                                            LinearGradient(
+                                                colors: [Color.jellyAmpAccent.opacity(0.5), Color.jellyAmpSecondary.opacity(0.5)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ) :
+                                            LinearGradient(
+                                                colors: [Color.white.opacity(0.1), Color.white.opacity(0.05)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: themeManager.currentTheme == theme ? 2 : 1
+                                        )
+                                )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    // Helper functions for theme icons
+    private func themeIcon(for theme: AppTheme) -> String {
+        switch theme {
+        case .cypherpunk:
+            return "bolt.fill"
+        case .sleek:
+            return "circle.hexagongrid.fill"
+        }
+    }
+
+    private func themeIconColor(for theme: AppTheme) -> Color {
+        switch theme {
+        case .cypherpunk:
+            return .neonCyan
+        case .sleek:
+            return .goldBrass
+        }
+    }
+
+    private func themeIconBackground(for theme: AppTheme) -> Color {
+        switch theme {
+        case .cypherpunk:
+            return .neonCyan.opacity(0.2)
+        case .sleek:
+            return .goldBrass.opacity(0.2)
+        }
     }
 
     // MARK: - Server Info Section
@@ -91,13 +195,13 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Server")
                 .font(.jellyAmpHeadline)
-                .foregroundColor(.neonCyan)
+                .foregroundColor(.jellyAmpAccent)
 
             VStack(alignment: .leading, spacing: 12) {
                 // Server URL
                 HStack {
                     Image(systemName: "server.rack")
-                        .foregroundColor(.neonPurple)
+                        .foregroundColor(.jellyAmpTertiary)
                         .frame(width: 24)
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -107,7 +211,7 @@ struct SettingsView: View {
 
                         Text(jellyfinService.baseURL.isEmpty ? "Not configured" : jellyfinService.baseURL)
                             .font(.jellyAmpMono)
-                            .foregroundColor(.white)
+                            .foregroundColor(Color.jellyAmpText)
                             .lineLimit(1)
                             .truncationMode(.middle)
                     }
@@ -121,7 +225,7 @@ struct SettingsView: View {
                 // Connection Status
                 HStack {
                     Image(systemName: jellyfinService.isAuthenticated ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .foregroundColor(jellyfinService.isAuthenticated ? .neonGreen : .neonPink)
+                        .foregroundColor(jellyfinService.isAuthenticated ? .jellyAmpSuccess : .jellyAmpSecondary)
                         .frame(width: 24)
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -131,7 +235,7 @@ struct SettingsView: View {
 
                         Text(jellyfinService.isAuthenticated ? "Connected" : "Disconnected")
                             .font(.jellyAmpMono)
-                            .foregroundColor(jellyfinService.isAuthenticated ? .neonGreen : .neonPink)
+                            .foregroundColor(jellyfinService.isAuthenticated ? .jellyAmpSuccess : .jellyAmpSecondary)
                     }
 
                     Spacer()
@@ -140,58 +244,12 @@ struct SettingsView: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.darkMid)
+                    .fill(Color.jellyAmpMidBackground)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(
                                 LinearGradient(
-                                    colors: [.neonCyan.opacity(0.3), .neonPurple.opacity(0.3)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
-                    )
-            )
-        }
-    }
-
-    // MARK: - Account Section
-
-    private var accountSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Account")
-                .font(.jellyAmpHeadline)
-                .foregroundColor(.neonCyan)
-
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "person.circle.fill")
-                        .foregroundColor(.neonCyan)
-                        .frame(width: 24)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("User")
-                            .font(.jellyAmpBody)
-                            .foregroundColor(.secondary)
-
-                        Text(jellyfinService.currentUser?.Name ?? "Unknown")
-                            .font(.jellyAmpMono)
-                            .foregroundColor(.white)
-                    }
-
-                    Spacer()
-                }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.darkMid)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.neonPink.opacity(0.3), .neonPurple.opacity(0.3)],
+                                    colors: [Color.jellyAmpAccent.opacity(0.3), Color.jellyAmpTertiary.opacity(0.3)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),
@@ -208,7 +266,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Danger Zone")
                 .font(.jellyAmpHeadline)
-                .foregroundColor(.neonPink)
+                .foregroundColor(.red)
 
             Button {
                 showSignOutConfirmation = true
@@ -219,13 +277,13 @@ struct SettingsView: View {
                         .font(.jellyAmpHeadline)
                     Spacer()
                 }
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
                 .padding()
                 .background(
                     RoundedRectangle(cornerRadius: 16)
                         .fill(
                             LinearGradient(
-                                colors: [.neonPink.opacity(0.2), .red.opacity(0.2)],
+                                colors: [.red.opacity(0.2), .red.opacity(0.1)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -234,7 +292,7 @@ struct SettingsView: View {
                             RoundedRectangle(cornerRadius: 16)
                                 .stroke(
                                     LinearGradient(
-                                        colors: [.neonPink, .red],
+                                        colors: [.red.opacity(0.8), .red.opacity(0.5)],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     ),

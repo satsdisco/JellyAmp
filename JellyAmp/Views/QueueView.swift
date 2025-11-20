@@ -9,6 +9,7 @@ import SwiftUI
 
 struct QueueView: View {
     @ObservedObject var playerManager = PlayerManager.shared
+    @ObservedObject var themeManager = ThemeManager.shared
     @Environment(\.dismiss) var dismiss
 
     @State private var editMode: EditMode = .inactive
@@ -18,9 +19,9 @@ struct QueueView: View {
             // Background
             LinearGradient(
                 colors: [
-                    Color.darkBackground,
-                    Color.darkMid,
-                    Color.darkBackground
+                    Color.jellyAmpBackground,
+                    Color.jellyAmpMidBackground,
+                    Color.jellyAmpBackground
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -77,18 +78,17 @@ struct QueueView: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.title3)
-                            .foregroundColor(.white)
+                            .foregroundColor(Color.jellyAmpText)
                             .frame(width: 44, height: 44)
                             .background(
                                 Circle()
-                                    .fill(Color.darkMid)
-                                    .glassEffect(.regular)
+                                    .fill(Color.jellyAmpMidBackground)
                                     .overlay(
                                         Circle()
-                                            .stroke(Color.neonPink.opacity(0.5), lineWidth: 1)
+                                            .stroke(Color.jellyAmpSecondary.opacity(0.5), lineWidth: 1)
                                     )
                             )
-                            .neonGlow(color: .neonPink, radius: 8)
+                            .neonGlow(color: .jellyAmpSecondary, radius: 8)
                     }
                     .padding(.trailing, 20)
                     .padding(.top, 60)
@@ -108,8 +108,8 @@ struct QueueView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Up Next")
                         .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                        .neonGlow(color: .neonCyan, radius: 12)
+                        .foregroundColor(Color.jellyAmpText)
+                        .neonGlow(color: .jellyAmpAccent, radius: 12)
 
                     Text("\(playerManager.queue.count) track\(playerManager.queue.count == 1 ? "" : "s")")
                         .font(.system(size: 15, weight: .medium, design: .rounded))
@@ -139,11 +139,11 @@ struct QueueView: View {
                     .padding(.vertical, 10)
                     .background(
                         Capsule()
-                            .fill(Color.neonCyan.opacity(0.15))
+                            .fill(Color.jellyAmpAccent.opacity(0.15))
                     )
                     .overlay(
                         Capsule()
-                            .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
+                            .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
                     )
                 }
 
@@ -165,11 +165,11 @@ struct QueueView: View {
                         .padding(.vertical, 10)
                         .background(
                             Capsule()
-                                .fill(Color.neonPink.opacity(0.15))
+                                .fill(Color.jellyAmpSecondary.opacity(0.15))
                         )
                         .overlay(
                             Capsule()
-                                .stroke(Color.neonPink.opacity(0.3), lineWidth: 1)
+                                .stroke(Color.jellyAmpSecondary.opacity(0.3), lineWidth: 1)
                         )
                     }
                 }
@@ -191,7 +191,7 @@ struct QueueView: View {
 
             Text("Queue is Empty")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
+                .foregroundColor(Color.jellyAmpText)
 
             Text("Play some music to see it here")
                 .font(.system(size: 16))
@@ -262,11 +262,11 @@ struct QueueTrackRow: View {
             .padding(.vertical, 14)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isCurrentTrack ? Color.neonCyan.opacity(0.1) : Color.darkMid.opacity(isPressed ? 0.5 : 0.3))
+                    .fill(isCurrentTrack ? Color.jellyAmpAccent.opacity(0.1) : Color.jellyAmpMidBackground.opacity(isPressed ? 0.5 : 0.3))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isCurrentTrack ? Color.neonCyan.opacity(0.4) : Color.clear, lineWidth: 1)
+                    .stroke(isCurrentTrack ? Color.jellyAmpAccent.opacity(0.4) : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)

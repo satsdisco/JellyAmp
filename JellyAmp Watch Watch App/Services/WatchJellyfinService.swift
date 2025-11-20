@@ -134,7 +134,7 @@ class WatchJellyfinService: ObservableObject {
             "Recursive": "true",
             "ArtistIds": artistId,
             "SortBy": "Album,SortName",
-            "Fields": "AudioInfo,ParentId"
+            "Fields": "AudioInfo,ParentId,UserData"
         ]
 
         let url = buildURL(endpoint: endpoint, params: params)
@@ -156,7 +156,7 @@ class WatchJellyfinService: ObservableObject {
         let params = [
             "ParentId": albumId,
             "SortBy": "ParentIndexNumber,IndexNumber,SortName",
-            "Fields": "AudioInfo,ParentId"
+            "Fields": "AudioInfo,ParentId,UserData"
         ]
 
         let url = buildURL(endpoint: endpoint, params: params)
@@ -167,6 +167,49 @@ class WatchJellyfinService: ObservableObject {
         let response = try JSONDecoder().decode(ItemsResponse.self, from: data)
 
         return response.Items.compactMap { WatchTrack(from: $0) }
+    }
+
+    // MARK: - Favorites
+
+    /// Mark an item as favorite
+    func markFavorite(itemId: String) async throws {
+        guard let token = accessToken, let userId = userId else {
+            throw NSError(domain: "WatchJellyfin", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+
+        let endpoint = "\(baseURL)/Users/\(userId)/FavoriteItems/\(itemId)"
+        guard let url = URL(string: endpoint) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("MediaBrowser Token=\"\(token)\"", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let (_, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NSError(domain: "WatchJellyfin", code: 500, userInfo: [NSLocalizedDescriptionKey: "Failed to mark as favorite"])
+        }
+    }
+
+    /// Remove item from favorites
+    func unmarkFavorite(itemId: String) async throws {
+        guard let token = accessToken, let userId = userId else {
+            throw NSError(domain: "WatchJellyfin", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+
+        let endpoint = "\(baseURL)/Users/\(userId)/FavoriteItems/\(itemId)"
+        guard let url = URL(string: endpoint) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.addValue("MediaBrowser Token=\"\(token)\"", forHTTPHeaderField: "Authorization")
+
+        let (_, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NSError(domain: "WatchJellyfin", code: 500, userInfo: [NSLocalizedDescriptionKey: "Failed to remove from favorites"])
+        }
     }
 
     // MARK: - Streaming URL
@@ -216,6 +259,12 @@ struct ItemDto: Codable {
     let Artists: [String]?
     let Album: String?
     let ProductionYear: Int?
+    let ParentId: String?  // Album ID for tracks
+    let UserData: UserDataDto?
+}
+
+struct UserDataDto: Codable {
+    let IsFavorite: Bool?
 }
 
 struct NameIdPair: Codable {
@@ -256,7 +305,9 @@ struct WatchTrack: Identifiable {
     let name: String
     let artist: String
     let album: String
+    let albumId: String
     let duration: TimeInterval
+    var isFavorite: Bool
 
     init?(from dto: ItemDto) {
         guard dto.`Type` == "Audio" else { return nil }
@@ -264,6 +315,8 @@ struct WatchTrack: Identifiable {
         self.name = dto.Name
         self.artist = dto.Artists?.first ?? dto.AlbumArtist ?? "Unknown Artist"
         self.album = dto.Album ?? ""
+        self.albumId = dto.ParentId ?? ""
+        self.isFavorite = dto.UserData?.IsFavorite ?? false
 
         if let ticks = dto.RunTimeTicks {
             self.duration = Double(ticks) / 10_000_000.0

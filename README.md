@@ -2,7 +2,7 @@
 
 A modern music streaming client for Jellyfin servers, built for iOS and Apple Watch.
 
-![Platform](https://img.shields.io/badge/platform-iOS%2016.0%2B%20%7C%20watchOS%209.0%2B-blue)
+![Platform](https://img.shields.io/badge/platform-iOS%2017.0%2B%20%7C%20watchOS%2010.0%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -36,7 +36,7 @@ A modern music streaming client for Jellyfin servers, built for iOS and Apple Wa
 
 ## Requirements
 
-- iOS 16.0+ / watchOS 9.0+
+- iOS 17.0+ / watchOS 10.0+
 - Xcode 15.0+
 - A running Jellyfin server
 - Jellyfin server with Quick Connect enabled (recommended)
