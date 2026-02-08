@@ -170,29 +170,31 @@ struct ArtistDetailView: View {
             // Large artist artwork/gradient
             ZStack {
                 if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            placeholderArtistHeader
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(maxWidth: .infinity, maxHeight: 320)
-                                .clipped()
-                        case .failure:
-                            placeholderArtistHeader
-                        @unknown default:
-                            placeholderArtistHeader
+                    GeometryReader { geo in
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .empty:
+                                placeholderArtistHeader
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: geo.size.width, height: 280)
+                                    .clipped()
+                            case .failure:
+                                placeholderArtistHeader
+                            @unknown default:
+                                placeholderArtistHeader
+                            }
                         }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: 320)
+                    .frame(height: 280)
                     .clipped()
                 } else {
                     placeholderArtistHeader
                 }
             }
-            .frame(height: 320)
+            .frame(height: 280)
             .clipped()
             .overlay(
                 LinearGradient(
@@ -344,7 +346,7 @@ struct ArtistDetailView: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-            .frame(height: 320)
+            .frame(height: 280)
 
             // Artist icon overlay
             Image(systemName: "person.circle.fill")
