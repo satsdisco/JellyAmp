@@ -80,9 +80,15 @@ class JellyfinService: ObservableObject {
 
         self.session = URLSession(configuration: config)
 
-        // Check for stored authentication - need BOTH token AND server URL
+        // Check for stored credentials and validate session
         if KeychainService.shared.getAccessToken() != nil && !baseURL.isEmpty {
+            // Start with optimistic authentication, then validate
             self.isAuthenticated = true
+            
+            // Validate session in background
+            Task {
+                await validateSessionOnLaunch()
+            }
         }
     }
 
@@ -202,16 +208,29 @@ class JellyfinService: ObservableObject {
 
         let (data, response) = try await session.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
+        guard let httpResponse = response as? HTTPURLResponse else {
             throw JellyfinError.invalidResponse
         }
-
-        let user = try SafeJellyfinDecoder.decode(User.self, from: data)
-        self.currentUser = user
-
-        // Store user ID for future use
-        UserDefaults.standard.set(user.Id, forKey: "jellyfinUserId")
+        
+        // Handle specific HTTP status codes for authentication
+        switch httpResponse.statusCode {
+        case 200:
+            // Success - decode user
+            let user = try SafeJellyfinDecoder.decode(User.self, from: data)
+            self.currentUser = user
+            
+            // Store user ID for future use
+            UserDefaults.standard.set(user.Id, forKey: "jellyfinUserId")
+            
+        case 401:
+            throw JellyfinError.unauthorized
+            
+        case 403:
+            throw JellyfinError.forbidden
+            
+        default:
+            throw JellyfinError.invalidResponse
+        }
     }
 
     // MARK: - Music Library
@@ -779,6 +798,71 @@ class JellyfinService: ObservableObject {
             return false
         }
     }
+    
+    /// Validates session on app launch and handles authentication state
+    @MainActor
+    private func validateSessionOnLaunch() async {
+        guard let token = KeychainService.shared.getAccessToken() else {
+            // No token - stay unauthenticated
+            self.isAuthenticated = false
+            return
+        }
+        
+        do {
+            // Use the existing fetchCurrentUser method to validate
+            try await fetchCurrentUser(token: token)
+            // Session is valid - stay authenticated
+            logger.info("✅ Session validated successfully on app launch")
+        } catch {
+            // Handle specific authentication errors
+            if let jellyfinError = error as? JellyfinError {
+                switch jellyfinError {
+                case .unauthorized, .forbidden:
+                    // Token is invalid/expired - redirect to login
+                    logger.info("🔄 Session expired (\(jellyfinError.errorDescription ?? "authentication error")) - redirecting to login")
+                    await handleInvalidSession()
+                    return
+                    
+                default:
+                    // Other Jellyfin errors - keep user authenticated for now
+                    logger.warning("⚠️ Jellyfin error during session validation (keeping user authenticated): \(jellyfinError.localizedDescription)")
+                    return
+                }
+            }
+            
+            // Handle network errors - don't log out, user might be offline
+            if let urlError = error as? URLError {
+                logger.warning("⚠️ Network error during session validation: \(urlError.localizedDescription)")
+                // Keep user authenticated, they can try again when online
+                return
+            }
+            
+            // Handle other errors - keep user authenticated unless clearly auth-related
+            let errorString = error.localizedDescription.lowercased()
+            if errorString.contains("401") || errorString.contains("403") || 
+               errorString.contains("unauthorized") || errorString.contains("forbidden") {
+                logger.info("🔄 Session expired (authentication error detected) - redirecting to login")
+                await handleInvalidSession()
+            } else {
+                // Other errors (network, server issues) - keep user authenticated
+                logger.warning("⚠️ Session validation error (keeping user authenticated): \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    /// Handles invalid session by clearing credentials and showing login
+    @MainActor
+    private func handleInvalidSession() async {
+        // Clear stored credentials
+        KeychainService.shared.deleteAccessToken()
+        UserDefaults.standard.removeObject(forKey: "jellyfinUserId")
+        
+        // Update authentication state
+        self.isAuthenticated = false
+        self.currentUser = nil
+        
+        logger.info("🔑 Cleared expired credentials - user will see login screen")
+    }
 
     /// Signs out and clears stored credentials
     func signOut() {
@@ -819,6 +903,8 @@ enum JellyfinError: LocalizedError {
     case networkError(Error)
     case quickConnectTimeout
     case invalidURL
+    case unauthorized
+    case forbidden
 
     var errorDescription: String? {
         switch self {
@@ -832,6 +918,10 @@ enum JellyfinError: LocalizedError {
             return "Quick Connect timed out. Please try again."
         case .invalidURL:
             return "Invalid server URL. Please check your server address."
+        case .unauthorized:
+            return "Session expired. Please sign in again."
+        case .forbidden:
+            return "Access forbidden. Please check your permissions."
         }
     }
 }

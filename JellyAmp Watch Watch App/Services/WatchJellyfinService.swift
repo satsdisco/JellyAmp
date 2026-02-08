@@ -22,6 +22,13 @@ class WatchJellyfinService: ObservableObject {
 
     init() {
         loadCredentials()
+        
+        // Validate session if credentials exist
+        if isAuthenticated {
+            Task {
+                await validateSessionOnLaunch()
+            }
+        }
     }
 
     // MARK: - Authentication
@@ -65,6 +72,95 @@ class WatchJellyfinService: ObservableObject {
         userId = nil
         userName = ""
         isAuthenticated = false
+    }
+    
+    /// Validates current session by fetching user info
+    func validateSession() async throws -> Bool {
+        guard let token = accessToken, let userId = userId else { return false }
+        
+        let endpoint = "\(baseURL)/Users/Me"
+        guard let url = URL(string: endpoint) else {
+            throw NSError(domain: "WatchJellyfin", code: 400, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+        }
+        
+        var request = URLRequest(url: url)
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("MediaBrowser Token=\"\(token)\"", forHTTPHeaderField: "Authorization")
+        
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                return false
+            }
+            
+            switch httpResponse.statusCode {
+            case 200:
+                return true
+            case 401, 403:
+                throw NSError(domain: "WatchJellyfin", code: httpResponse.statusCode, userInfo: [
+                    NSLocalizedDescriptionKey: "Session expired"
+                ])
+            default:
+                return false
+            }
+        } catch {
+            throw error
+        }
+    }
+    
+    /// Validates session on app launch and handles authentication state
+    @MainActor
+    private func validateSessionOnLaunch() async {
+        guard accessToken != nil else {
+            // No token - stay unauthenticated
+            isAuthenticated = false
+            return
+        }
+        
+        do {
+            let isValid = try await validateSession()
+            if isValid {
+                print("✅ Watch session validated successfully on app launch")
+            }
+        } catch {
+            // Handle network errors vs authentication errors
+            if let nsError = error as NSError? {
+                let statusCode = nsError.code
+                if statusCode == 401 || statusCode == 403 {
+                    // Authentication failed - token is invalid/expired
+                    print("🔄 Watch session expired (HTTP \(statusCode)) - clearing credentials")
+                    await handleInvalidSession()
+                    return
+                }
+            }
+            
+            // Handle network errors - don't log out, user might be offline
+            if let urlError = error as? URLError {
+                print("⚠️ Watch network error during session validation: \(urlError.localizedDescription)")
+                // Keep user authenticated, they can try again when online
+                return
+            }
+            
+            // Check error description for auth-related keywords
+            let errorString = error.localizedDescription.lowercased()
+            if errorString.contains("401") || errorString.contains("403") || 
+               errorString.contains("unauthorized") || errorString.contains("forbidden") {
+                print("🔄 Watch session expired (authentication error detected) - clearing credentials")
+                await handleInvalidSession()
+            } else {
+                // Other errors - keep user authenticated
+                print("⚠️ Watch session validation error (keeping user authenticated): \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    /// Handles invalid session by clearing credentials
+    @MainActor
+    private func handleInvalidSession() async {
+        // Clear stored credentials
+        signOut()
+        print("🔑 Watch cleared expired credentials - user needs to re-sync from phone")
     }
 
     // MARK: - Library Fetching
