@@ -443,10 +443,6 @@ struct FavoriteAlbumCard: View {
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 140, height: 140)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.jellyAmpAccent.opacity(0.4), lineWidth: 1.5)
-                                )
                         default:
                             placeholderArtwork
                         }
@@ -484,10 +480,6 @@ struct FavoriteAlbumCard: View {
                     )
                 )
                 .frame(width: 140, height: 140)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.jellyAmpAccent.opacity(0.4), lineWidth: 1.5)
-                )
 
             Image(systemName: "music.note")
                 .font(.title)
@@ -517,10 +509,6 @@ struct FavoriteArtistCard: View {
                             )
                         )
                         .frame(width: 120, height: 120)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.jellyAmpTertiary.opacity(0.5), lineWidth: 2)
-                        )
 
                     Image(systemName: "person.circle.fill")
                         .font(.title)

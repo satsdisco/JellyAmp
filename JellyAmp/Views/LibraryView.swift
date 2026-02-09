@@ -900,20 +900,6 @@ struct AlbumCard: View {
                     }
                     .transaction { $0.animation = nil }
                     .frame(width: 160, height: 160)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        Color.jellyAmpAccent.opacity(0.6),
-                                        Color.jellyAmpSecondary.opacity(0.6)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1.5
-                            )
-                    )
                     .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 } else {
                     placeholderArtwork
@@ -955,20 +941,6 @@ struct AlbumCard: View {
                 )
             )
             .aspectRatio(1, contentMode: .fit)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.jellyAmpAccent.opacity(0.6),
-                                Color.jellyAmpSecondary.opacity(0.6)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1.5
-                    )
-            )
             .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
             .overlay(
                 Image(systemName: "music.note")
@@ -996,20 +968,6 @@ struct AlbumListRow: View {
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 80, height: 80)
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .stroke(
-                                            LinearGradient(
-                                                colors: [
-                                                    Color.jellyAmpAccent.opacity(0.5),
-                                                    Color.jellyAmpSecondary.opacity(0.5)
-                                                ],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            ),
-                                            lineWidth: 1.5
-                                        )
-                                )
                                 .shadow(color: Color.jellyAmpAccent.opacity(0.2), radius: 8, x: 0, y: 4)
                         case .failure:
                             placeholderArtwork
@@ -1087,20 +1045,6 @@ struct AlbumListRow: View {
                     )
                 )
                 .frame(width: 80, height: 80)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.jellyAmpAccent.opacity(0.5),
-                                    Color.jellyAmpSecondary.opacity(0.5)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1.5
-                        )
-                )
 
             Image(systemName: "music.note")
                 .font(.title2)
@@ -1153,20 +1097,6 @@ struct ArtistCard: View {
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 130, height: 130)
                                 .clipShape(Circle())
-                                .overlay(
-                                    Circle()
-                                        .stroke(
-                                            LinearGradient(
-                                                colors: [
-                                                    Color.jellyAmpTertiary.opacity(0.6),
-                                                    Color.jellyAmpSecondary.opacity(0.6)
-                                                ],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            ),
-                                            lineWidth: 1.5
-                                        )
-                                )
                                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                         case .failure:
                             placeholderArtwork
@@ -1205,20 +1135,6 @@ struct ArtistCard: View {
                     )
                 )
                 .frame(width: 130, height: 130)
-                .overlay(
-                    Circle()
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.jellyAmpTertiary.opacity(0.6),
-                                    Color.jellyAmpSecondary.opacity(0.6)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1.5
-                        )
-                )
                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
 
             // Artist icon
@@ -1247,17 +1163,6 @@ struct ArtistListRow: View {
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 64, height: 64)
                                 .clipShape(Circle())
-                                .overlay(
-                                    Circle()
-                                        .stroke(
-                                            LinearGradient(
-                                                colors: [Color.jellyAmpTertiary, Color.jellyAmpSecondary],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            ),
-                                            lineWidth: 2
-                                        )
-                                )
                                 .shadow(color: Color.jellyAmpTertiary.opacity(0.5), radius: 8, x: 0, y: 4)
                         case .failure:
                             placeholderArtistArt
@@ -1303,17 +1208,6 @@ struct ArtistListRow: View {
                     )
                 )
                 .frame(width: 64, height: 64)
-                .overlay(
-                    Circle()
-                        .stroke(
-                            LinearGradient(
-                                colors: [Color.jellyAmpTertiary, Color.jellyAmpSecondary],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 2
-                        )
-                )
 
             Image(systemName: "person.circle.fill")
                 .font(.title2)
@@ -1349,20 +1243,6 @@ struct PlaylistCard: View {
                     }
                     .transaction { $0.animation = nil }
                     .frame(width: 160, height: 160)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        Color.neonPink.opacity(0.6),
-                                        Color.jellyAmpSecondary.opacity(0.6)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1.5
-                            )
-                    )
                     .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 } else {
                     placeholderArtwork
@@ -1398,20 +1278,6 @@ struct PlaylistCard: View {
                 )
             )
             .aspectRatio(1, contentMode: .fit)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.neonPink.opacity(0.6),
-                                Color.jellyAmpSecondary.opacity(0.6)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1.5
-                    )
-            )
             .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
             .overlay(
                 Image(systemName: "music.note.list")
@@ -1439,10 +1305,6 @@ struct PlaylistListRow: View {
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 64, height: 64)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.neonPink.opacity(0.3), lineWidth: 1)
-                                )
                         case .failure:
                             placeholderArtwork
                         @unknown default:
