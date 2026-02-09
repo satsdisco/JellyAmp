@@ -69,7 +69,9 @@ struct MainTabView: View {
             
             // Now Playing View as overlay for hero animation
             if showNowPlaying {
-                NowPlayingView(namespace: playerAnimation)
+                NowPlayingView(namespace: playerAnimation, onDismiss: {
+                    showNowPlaying = false
+                })
                     .transition(.move(edge: .bottom))
                     .zIndex(1)
             }

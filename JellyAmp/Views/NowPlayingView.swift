@@ -21,6 +21,7 @@ struct NowPlayingView: View {
     @State private var dominantColor: Color?
     @ObservedObject var sleepTimer = SleepTimerManager.shared
     var namespace: Namespace.ID
+    var onDismiss: (() -> Void)?
 
     var body: some View {
         ZStack {
@@ -85,7 +86,11 @@ struct NowPlayingView: View {
     private var topBar: some View {
         HStack {
             Button {
-                dismiss()
+                if let onDismiss = onDismiss {
+                    onDismiss()
+                } else {
+                    dismiss()
+                }
             } label: {
                 Image(systemName: "chevron.down")
                     .font(.title3)
