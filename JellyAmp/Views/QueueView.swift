@@ -261,7 +261,7 @@ struct QueueTrackRow: View {
             .padding(.vertical, 14)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isCurrentTrack ? Color.jellyAmpAccent.opacity(0.1) : Color.jellyAmpMidBackground.opacity(isPressed ? 0.5 : 0.3))
+                    .fill(isCurrentTrack ? Color.jellyAmpAccent.opacity(0.1) : Color.jellyAmpMidBackground.opacity(0.3))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)

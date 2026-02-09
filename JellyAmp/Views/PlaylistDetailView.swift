@@ -465,8 +465,6 @@ struct PlaylistTrackRow: View {
             }
             .padding(.vertical, 12)
             .contentShape(Rectangle())
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
         }
         .contextMenu {
             // Download/Delete option

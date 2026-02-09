@@ -412,8 +412,6 @@ struct FavoriteTrackRow: View {
             }
             .padding(.vertical, 10)
             .contentShape(Rectangle())
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
         }
     }
 
@@ -483,8 +481,6 @@ struct FavoriteAlbumCard: View {
                 }
                 .frame(width: 140)
             }
-            .scaleEffect(isPressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
         }
     }
 
@@ -549,8 +545,6 @@ struct FavoriteArtistCard: View {
                     .lineLimit(1)
                     .frame(width: 120)
             }
-            .scaleEffect(isPressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
         }
     }
 }

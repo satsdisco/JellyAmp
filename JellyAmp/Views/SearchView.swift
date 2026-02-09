@@ -354,7 +354,7 @@ struct SearchResultRow: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.jellyAmpMidBackground.opacity(isPressed ? 0.5 : 0.3))
+                    .fill(Color.jellyAmpMidBackground.opacity(0.3))
             )
         }
         .buttonStyle(.plain)
