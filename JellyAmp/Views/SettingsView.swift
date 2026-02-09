@@ -54,25 +54,13 @@ struct SettingsView: View {
 
     private var headerSection: some View {
         VStack(spacing: 12) {
-            // App Icon/Logo Area
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.jellyAmpAccent, Color.jellyAmpSecondary],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 80, height: 80)
-                    .blur(radius: 20)
-
-                Image(systemName: "music.note")
-                    .font(.title.weight(.bold))
-                    .foregroundColor(.white)
-                    .neonGlow(color: .jellyAmpAccent, radius: 10)
-            }
-            .frame(width: 80, height: 80)
+            // App Icon
+            Image("AppIcon_Display")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 80, height: 80)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .shadow(color: Color.jellyAmpAccent.opacity(0.3), radius: 10, y: 4)
 
             Text("JellyAmp")
                 .font(.jellyAmpTitle)
