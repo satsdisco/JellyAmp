@@ -113,6 +113,21 @@ struct AlbumDetailView: View {
                 selectedTrackIds = []
             }
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.body.weight(.semibold))
+                        .foregroundColor(.white)
+                        .padding(8)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+            }
+        }
+        .toolbarBackground(.hidden, for: .navigationBar)
     }
 
     // MARK: - Fetch Album Tracks
