@@ -43,9 +43,6 @@ struct SearchView: View {
                 // Header
                 searchHeader
 
-                // Search Bar
-                searchBar
-
                 // Filter Tabs
                 filterTabs
 
@@ -60,6 +57,10 @@ struct SearchView: View {
                     searchResultsList
                 }
             }
+        }
+        .searchable(text: $searchText, prompt: "Search artists, albums, tracks...")
+        .onChange(of: searchText) { _, newValue in
+            performSearch(query: newValue)
         }
         .navigationDestination(for: Album.self) { album in
             AlbumDetailView(album: album)
@@ -92,51 +93,6 @@ struct SearchView: View {
         }
         .padding(.top, 60)
         .padding(.bottom, 20)
-    }
-
-    // MARK: - Search Bar
-    private var searchBar: some View {
-        HStack(spacing: 12) {
-            // Search Icon
-            Image(systemName: "magnifyingglass")
-                .font(.headline.weight(.semibold))
-                .foregroundColor(.neonCyan)
-
-            // Text Field
-            TextField("Search artists, albums, tracks...", text: $searchText)
-                .font(.body)
-                .foregroundColor(Color.jellyAmpText)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .accessibilityLabel("Search music library")
-                .onChange(of: searchText) { _, newValue in
-                    performSearch(query: newValue)
-                }
-
-            // Clear Button
-            if !searchText.isEmpty {
-                Button {
-                    searchText = ""
-                    searchResults = []
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                }
-                .accessibilityLabel("Clear search")
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.jellyAmpMidBackground.opacity(0.6))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
-        )
-        .padding(.horizontal, 16)
     }
 
     // MARK: - Filter Tabs

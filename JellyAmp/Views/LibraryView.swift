@@ -114,9 +114,6 @@ struct LibraryView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Search Bar
-                searchSection
-
                 // Filter Pills
                 filterSection
 
@@ -359,6 +356,7 @@ struct LibraryView: View {
         .refreshable {
             await syncLibrary()
         }
+        .searchable(text: $searchText, prompt: "Search albums, artists...")
         .navigationDestination(for: Artist.self) { artist in
             ArtistDetailView(artist: artist)
         }
@@ -601,40 +599,6 @@ struct LibraryView: View {
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 20)
-    }
-
-    // MARK: - Search Section
-    private var searchSection: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.neonCyan)
-
-            TextField("Search albums, artists...", text: $searchText)
-                .foregroundColor(Color.jellyAmpText)
-                .tint(.jellyAmpAccent)
-                .accessibilityLabel("Search albums and artists")
-
-            if !searchText.isEmpty {
-                Button {
-                    searchText = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                }
-                .accessibilityLabel("Clear search")
-            }
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.1))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
-                )
-        )
-        .padding(.horizontal, 20)
-        .padding(.bottom, 16)
     }
 
     // MARK: - Filter Section
