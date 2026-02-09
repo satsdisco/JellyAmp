@@ -165,6 +165,9 @@ class PlayerManager: NSObject, ObservableObject {
             return
         }
 
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+
         if isPlaying {
             player.pause()
             isPlaying = false
@@ -196,6 +199,9 @@ class PlayerManager: NSObject, ObservableObject {
 
     /// Skips to next track
     func playNext() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+
         switch repeatMode {
         case .one:
             // Repeat current track
@@ -228,6 +234,9 @@ class PlayerManager: NSObject, ObservableObject {
 
     /// Skips to previous track
     func playPrevious() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+
         // If more than 3 seconds into track, restart it
         if currentTime > 3 {
             seek(to: 0)

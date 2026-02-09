@@ -482,6 +482,10 @@ struct NowPlayingView: View {
     private func toggleFavorite() {
         guard let currentTrack = playerManager.currentTrack else { return }
 
+        // Haptic feedback
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+
         // Optimistic UI update
         withAnimation(.spring(response: 0.3)) {
             isFavorite.toggle()

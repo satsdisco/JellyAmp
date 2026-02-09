@@ -154,6 +154,7 @@ struct QueueView: View {
                 // Clear Queue Button
                 if !playerManager.queue.isEmpty {
                     Button {
+                        UINotificationFeedbackGenerator().notificationOccurred(.warning)
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                             playerManager.clearQueue()
                         }

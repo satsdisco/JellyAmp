@@ -343,6 +343,7 @@ struct AlbumDetailView: View {
             // Play All Button
             Button {
                 guard !albumTracks.isEmpty else { return }
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 playerManager.play(tracks: albumTracks, startingAt: 0)
             } label: {
                 HStack(spacing: 8) {
@@ -367,6 +368,7 @@ struct AlbumDetailView: View {
             // Shuffle Button
             Button {
                 guard !albumTracks.isEmpty else { return }
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 playerManager.shuffleEnabled = true
                 playerManager.play(tracks: albumTracks, startingAt: 0)
             } label: {
