@@ -17,6 +17,7 @@ struct SearchView: View {
     @State private var searchResults: [BaseItemDto] = []
     @State private var isSearching = false
     @State private var selectedFilter: SearchFilter = .all
+    @State private var searchTask: Task<Void, Never>?
     // Navigation handled by NavigationStack
 
     enum SearchFilter: String, CaseIterable {
@@ -225,12 +226,11 @@ struct SearchView: View {
             return
         }
 
-        // Debounce search
-        Task {
+        // Cancel previous search task to avoid race conditions
+        searchTask?.cancel()
+        searchTask = Task {
             try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
-
-            // Check if query is still the same
-            guard searchText == query else { return }
+            guard !Task.isCancelled else { return }
 
             await MainActor.run {
                 isSearching = true
@@ -238,12 +238,14 @@ struct SearchView: View {
 
             do {
                 let results = try await jellyfinService.searchMusic(query: query)
+                guard !Task.isCancelled else { return }
 
                 await MainActor.run {
                     searchResults = results
                     isSearching = false
                 }
             } catch {
+                guard !Task.isCancelled else { return }
                 print("Search error: \(error)")
                 await MainActor.run {
                     searchResults = []
