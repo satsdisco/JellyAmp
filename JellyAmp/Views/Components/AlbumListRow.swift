@@ -1,0 +1,104 @@
+import SwiftUI
+
+struct AlbumListRow: View {
+    let album: Album
+
+    var body: some View {
+            HStack(spacing: 16) {
+                // Album artwork (square, larger and properly centered)
+                if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
+                    CachedAsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            placeholderArtwork
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 80, height: 80)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .shadow(color: Color.jellyAmpAccent.opacity(0.2), radius: 8, x: 0, y: 4)
+                        case .failure:
+                            placeholderArtwork
+                        @unknown default:
+                            placeholderArtwork
+                        }
+                    }
+                    .transaction { $0.animation = nil }
+                    .frame(width: 80, height: 80)
+                } else {
+                    placeholderArtwork
+                }
+
+                // Album info
+                VStack(alignment: .leading, spacing: 6) {
+                    // Album name - bold and prominent
+                    Text(album.name)
+                        .font(.headline.weight(.bold))
+                        .foregroundColor(Color.jellyAmpText)
+                        .lineLimit(2)
+
+                    // Artist name - secondary
+                    Text(album.artistName)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+
+                    // Year and track count - clear and separated
+                    HStack(spacing: 8) {
+                        if let year = album.year {
+                            HStack(spacing: 4) {
+                                Image(systemName: "calendar")
+                                    .font(.caption2)
+                                    .foregroundColor(.neonCyan)
+                                Text(String(year))
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundColor(.neonCyan)
+                            }
+                        }
+
+                        if let trackCount = album.trackCount {
+                            HStack(spacing: 4) {
+                                Image(systemName: "music.note.list")
+                                    .font(.caption2)
+                                    .foregroundColor(.neonPink.opacity(0.8))
+                                Text("\(trackCount)")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Chevron
+                Image(systemName: "chevron.right")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.neonCyan.opacity(0.6))
+            }
+            .padding(.vertical, 12)
+    }
+
+    private var placeholderArtwork: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.jellyAmpAccent.opacity(0.5),
+                            Color.jellyAmpSecondary.opacity(0.5),
+                            Color.jellyAmpTertiary.opacity(0.5)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 80, height: 80)
+
+            Image(systemName: "music.note")
+                .font(.title2)
+                .foregroundColor(.white.opacity(0.4))
+        }
+    }
+}
+
