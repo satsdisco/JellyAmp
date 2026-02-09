@@ -19,8 +19,6 @@ struct FavoritesView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     // Navigation handled by NavigationStack
-    @State private var showNowPlaying = false
-    @Namespace private var playerAnimation
 
     var body: some View {
         ZStack {
@@ -111,9 +109,6 @@ struct FavoritesView: View {
         }
         .navigationTitle("Favorites")
         .navigationBarTitleDisplayMode(.large)
-        .sheet(isPresented: $showNowPlaying) {
-            NowPlayingView(namespace: playerAnimation)
-        }
         .onAppear {
             if favoriteTracks.isEmpty && favoriteAlbums.isEmpty && favoriteArtists.isEmpty {
                 Task {
@@ -155,7 +150,6 @@ struct FavoritesView: View {
                 // Play All button
                 Button {
                     playerManager.play(tracks: favoriteTracks)
-                    showNowPlaying = true
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "play.fill")
@@ -179,7 +173,6 @@ struct FavoritesView: View {
                 ForEach(Array(favoriteTracks.prefix(10).enumerated()), id: \.element.id) { index, track in
                     FavoriteTrackRow(track: track) {
                         playerManager.play(tracks: favoriteTracks, startingAt: index)
-                        showNowPlaying = true
                     }
                     .padding(.horizontal, 20)
 

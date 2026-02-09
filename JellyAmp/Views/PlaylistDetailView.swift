@@ -16,10 +16,8 @@ struct PlaylistDetailView: View {
     @State private var isFavorite: Bool
     @State private var playlistTracks: [Track] = []
     @State private var isLoadingTracks = true
-    @State private var showNowPlaying = false
     @State private var showAddToPlaylist = false
     @State private var selectedTrackIds: [String] = []
-    @Namespace private var playerAnimation
 
     init(playlist: Playlist) {
         self.playlist = playlist
@@ -76,9 +74,6 @@ struct PlaylistDetailView: View {
             Task {
                 await fetchPlaylistTracks()
             }
-        }
-        .sheet(isPresented: $showNowPlaying) {
-            NowPlayingView(namespace: playerAnimation)
         }
         .sheet(isPresented: $showAddToPlaylist) {
             PlaylistSelectionSheet(trackIds: selectedTrackIds) {
@@ -267,7 +262,6 @@ struct PlaylistDetailView: View {
             Button {
                 guard !playlistTracks.isEmpty else { return }
                 playerManager.play(tracks: playlistTracks, startingAt: 0)
-                showNowPlaying = true
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "play.fill")
@@ -292,7 +286,6 @@ struct PlaylistDetailView: View {
                 guard !playlistTracks.isEmpty else { return }
                 playerManager.shuffleEnabled = true
                 playerManager.play(tracks: playlistTracks, startingAt: 0)
-                showNowPlaying = true
             } label: {
                 Image(systemName: "shuffle")
                     .font(.title3.weight(.semibold))
@@ -381,7 +374,6 @@ struct PlaylistDetailView: View {
                         PlaylistTrackRow(track: track, trackNumber: index + 1) {
                             // Play from this track
                             playerManager.play(tracks: playlistTracks, startingAt: index)
-                            showNowPlaying = true
                         } onAddToPlaylist: {
                             // Add track to another playlist
                             selectedTrackIds = [track.id]

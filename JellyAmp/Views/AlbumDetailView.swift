@@ -17,10 +17,8 @@ struct AlbumDetailView: View {
     @State private var isFavorite: Bool
     @State private var albumTracks: [Track] = []
     @State private var isLoadingTracks = true
-    @State private var showNowPlaying = false
     @State private var showAddToPlaylist = false
     @State private var selectedTrackIds: [String] = []
-    @Namespace private var playerAnimation
 
     init(album: Album) {
         self.album = album
@@ -101,9 +99,6 @@ struct AlbumDetailView: View {
             Task {
                 await fetchAlbumTracks()
             }
-        }
-        .sheet(isPresented: $showNowPlaying) {
-            NowPlayingView(namespace: playerAnimation)
         }
         .sheet(isPresented: $showAddToPlaylist) {
             PlaylistSelectionSheet(trackIds: selectedTrackIds) {
@@ -349,7 +344,6 @@ struct AlbumDetailView: View {
             Button {
                 guard !albumTracks.isEmpty else { return }
                 playerManager.play(tracks: albumTracks, startingAt: 0)
-                showNowPlaying = true
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "play.fill")
@@ -375,7 +369,6 @@ struct AlbumDetailView: View {
                 guard !albumTracks.isEmpty else { return }
                 playerManager.shuffleEnabled = true
                 playerManager.play(tracks: albumTracks, startingAt: 0)
-                showNowPlaying = true
             } label: {
                 Image(systemName: "shuffle")
                     .font(.title3.weight(.semibold))
@@ -510,7 +503,6 @@ struct AlbumDetailView: View {
                         AlbumTrackRow(track: track, trackNumber: index + 1) {
                             // Play from this track
                             playerManager.play(tracks: albumTracks, startingAt: index)
-                            showNowPlaying = true
                         } onAddToPlaylist: {
                             // Add track to playlist
                             selectedTrackIds = [track.id]
