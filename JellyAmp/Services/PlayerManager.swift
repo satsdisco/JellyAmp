@@ -283,6 +283,9 @@ class PlayerManager: NSObject, ObservableObject {
     }
 
     /// Seeks to specific time
+    /// Flag to tell the time observer that a deliberate seek is in progress
+    private var isSeeking = false
+
     func seek(to time: Double) {
         guard let player = player else {
             logger.error("❌ Cannot seek - player is nil")
@@ -317,15 +320,19 @@ class PlayerManager: NSObject, ObservableObject {
 
         logger.info("🔍 Seeking to \(clampedTime)s (duration: \(self.duration)s)")
 
-        // Update currentTime immediately to prevent time observer from snapping back
+        // Mark seeking so the time observer doesn't fight us
+        isSeeking = true
+        // Update currentTime immediately to prevent UI snapping back
         self.currentTime = clampedTime
 
         // Use small tolerance for reliable backward seeking (zero tolerance fails on some codecs)
         let tolerance = CMTime(seconds: 0.5, preferredTimescale: 600)
         player.seek(to: cmTime, toleranceBefore: tolerance, toleranceAfter: tolerance) { [weak self] completed in
             guard let self = self else { return }
+            self.isSeeking = false
             if completed {
                 self.logger.info("✅ Seek completed to \(clampedTime)s")
+                self.currentTime = clampedTime
                 self.updateNowPlayingInfo()
             } else {
                 self.logger.error("❌ Seek failed to \(clampedTime)s")
@@ -779,6 +786,9 @@ class PlayerManager: NSObject, ObservableObject {
             guard let self = self else { return }
             guard time.isValid && time.isNumeric else { return }
 
+            // Don't update time during an active seek — let the seek completion handle it
+            guard !self.isSeeking else { return }
+
             let newTime = time.seconds
 
             // CRITICAL: Reset time tracking when track changes
@@ -789,10 +799,10 @@ class PlayerManager: NSObject, ObservableObject {
                 lastTrackedTrackId = currentTrackId
             }
 
-            // CRITICAL: Detect unexpected restarts WITHIN THE SAME TRACK
-            // If time jumps backward by more than 2 seconds (not a normal seek), the stream restarted
-            // Only check if we've been playing for at least 10 seconds AND we're still on the same track
-            if newTime < lastValidTime - 2.0 && lastValidTime > 10.0 && lastTrackedTrackId == self.currentTrack?.id {
+            // Detect unexpected restarts WITHIN THE SAME TRACK
+            // If time jumps backward by more than 10 seconds AND we've been playing for a while,
+            // this is likely a stream restart (not a user seek, which sets isSeeking=true)
+            if newTime < lastValidTime - 10.0 && lastValidTime > 30.0 && lastTrackedTrackId == self.currentTrack?.id {
                 self.logger.error("🚨 UNEXPECTED RESTART DETECTED: Time jumped from \(lastValidTime)s to \(newTime)s")
                 self.logger.error("   Track: '\(self.currentTrack?.name ?? "unknown")'")
                 self.logger.error("   This indicates the AVPlayer stream restarted on its own")
