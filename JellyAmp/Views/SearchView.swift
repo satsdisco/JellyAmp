@@ -16,8 +16,7 @@ struct SearchView: View {
     @State private var searchResults: [BaseItemDto] = []
     @State private var isSearching = false
     @State private var selectedFilter: SearchFilter = .all
-    @State private var selectedAlbum: Album?
-    @State private var selectedArtist: Artist?
+    // Navigation handled by NavigationStack
 
     enum SearchFilter: String, CaseIterable {
         case all = "All"
@@ -62,12 +61,14 @@ struct SearchView: View {
                 }
             }
         }
-        .sheet(item: $selectedAlbum) { album in
+        .navigationDestination(for: Album.self) { album in
             AlbumDetailView(album: album)
         }
-        .sheet(item: $selectedArtist) { artist in
+        .navigationDestination(for: Artist.self) { artist in
             ArtistDetailView(artist: artist)
         }
+        .navigationTitle("Search")
+        .navigationBarTitleDisplayMode(.large)
     }
 
     // MARK: - Header
@@ -172,13 +173,35 @@ struct SearchView: View {
         ScrollView {
             VStack(spacing: 8) {
                 ForEach(filteredResults, id: \.id) { item in
-                    SearchResultRow(
-                        item: item,
-                        baseURL: jellyfinService.baseURL,
-                        onTap: {
-                            handleItemTap(item)
+                    if item.type == "MusicArtist" {
+                        NavigationLink(value: Artist(from: item, baseURL: jellyfinService.baseURL)) {
+                            SearchResultRow(
+                                item: item,
+                                baseURL: jellyfinService.baseURL,
+                                onTap: {
+                                    // Action now handled by NavigationLink
+                                }
+                            )
                         }
-                    )
+                    } else if item.type == "MusicAlbum" {
+                        NavigationLink(value: Album(from: item, baseURL: jellyfinService.baseURL)) {
+                            SearchResultRow(
+                                item: item,
+                                baseURL: jellyfinService.baseURL,
+                                onTap: {
+                                    // Action now handled by NavigationLink
+                                }
+                            )
+                        }
+                    } else {
+                        SearchResultRow(
+                            item: item,
+                            baseURL: jellyfinService.baseURL,
+                            onTap: {
+                                handleItemTap(item)
+                            }
+                        )
+                    }
                 }
 
                 // Bottom padding
@@ -288,17 +311,7 @@ struct SearchView: View {
     }
 
     private func handleItemTap(_ item: BaseItemDto) {
-        let baseURL = jellyfinService.baseURL
-
         switch item.type {
-        case "MusicArtist":
-            let artist = Artist(from: item, baseURL: baseURL)
-            selectedArtist = artist
-
-        case "MusicAlbum":
-            let album = Album(from: item, baseURL: baseURL)
-            selectedAlbum = album
-
         case "Audio":
             // Play track
             let track = Track(from: item, baseURL: baseURL)

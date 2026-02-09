@@ -56,9 +56,7 @@ struct LibraryView: View {
     @State private var viewMode: ViewMode = .list
     @State private var sortOption: SortOption = .nameAsc
     @State private var showSortMenu = false
-    @State private var selectedArtist: Artist?
-    @State private var selectedAlbum: Album?
-    @State private var selectedPlaylist: Playlist?
+    // Navigation handled by NavigationStack and NavigationLink
     @State private var isLoading = true
     @State private var isSyncing = false
     @State private var errorMessage: String?
@@ -116,9 +114,6 @@ struct LibraryView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                headerSection
-
                 // Search Bar
                 searchSection
 
@@ -185,8 +180,10 @@ struct LibraryView: View {
                                     if viewMode == .grid {
                                         LazyVGrid(columns: columns, spacing: 16) {
                                             ForEach(filteredArtists) { artist in
-                                                ArtistCard(artist: artist) {
-                                                    selectedArtist = artist
+                                                NavigationLink(value: artist) {
+                                                    ArtistCard(artist: artist) {
+                                                        // Action now handled by NavigationLink
+                                                    }
                                                 }
                                             }
                                         }
@@ -194,8 +191,10 @@ struct LibraryView: View {
                                     } else {
                                         LazyVStack(spacing: 0) {
                                             ForEach(filteredArtists) { artist in
-                                                ArtistListRow(artist: artist) {
-                                                    selectedArtist = artist
+                                                NavigationLink(value: artist) {
+                                                    ArtistListRow(artist: artist) {
+                                                        // Action now handled by NavigationLink
+                                                    }
                                                 }
                                                 .padding(.horizontal, 20)
 
@@ -219,8 +218,10 @@ struct LibraryView: View {
                                     if viewMode == .grid {
                                         LazyVGrid(columns: columns, spacing: 16) {
                                             ForEach(favoriteAlbums) { album in
-                                                AlbumCard(album: album) {
-                                                    selectedAlbum = album
+                                                NavigationLink(value: album) {
+                                                    AlbumCard(album: album) {
+                                                        // Action now handled by NavigationLink
+                                                    }
                                                 }
                                             }
                                         }
@@ -228,8 +229,10 @@ struct LibraryView: View {
                                     } else {
                                         LazyVStack(spacing: 0) {
                                             ForEach(favoriteAlbums) { album in
-                                                AlbumListRow(album: album) {
-                                                    selectedAlbum = album
+                                                NavigationLink(value: album) {
+                                                    AlbumListRow(album: album) {
+                                                        // Action now handled by NavigationLink
+                                                    }
                                                 }
                                                 .padding(.horizontal, 20)
 
@@ -266,8 +269,10 @@ struct LibraryView: View {
                             if viewMode == .grid {
                                 LazyVGrid(columns: columns, spacing: 16) {
                                     ForEach(filteredArtists) { artist in
-                                        ArtistCard(artist: artist) {
-                                            selectedArtist = artist
+                                        NavigationLink(value: artist) {
+                                            ArtistCard(artist: artist) {
+                                                // Action now handled by NavigationLink
+                                            }
                                         }
                                     }
                                 }
@@ -276,8 +281,10 @@ struct LibraryView: View {
                             } else {
                                 LazyVStack(spacing: 0) {
                                     ForEach(filteredArtists) { artist in
-                                        ArtistListRow(artist: artist) {
-                                            selectedArtist = artist
+                                        NavigationLink(value: artist) {
+                                            ArtistListRow(artist: artist) {
+                                                // Action now handled by NavigationLink
+                                            }
                                         }
                                         .padding(.horizontal, 20)
 
@@ -312,8 +319,10 @@ struct LibraryView: View {
                                 if viewMode == .grid {
                                     LazyVGrid(columns: columns, spacing: 16) {
                                         ForEach(playlists) { playlist in
-                                            PlaylistCard(playlist: playlist) {
-                                                selectedPlaylist = playlist
+                                            NavigationLink(value: playlist) {
+                                                PlaylistCard(playlist: playlist) {
+                                                    // Action now handled by NavigationLink
+                                                }
                                             }
                                         }
                                     }
@@ -322,8 +331,10 @@ struct LibraryView: View {
                                 } else {
                                     LazyVStack(spacing: 0) {
                                         ForEach(playlists) { playlist in
-                                            PlaylistListRow(playlist: playlist) {
-                                                selectedPlaylist = playlist
+                                            NavigationLink(value: playlist) {
+                                                PlaylistListRow(playlist: playlist) {
+                                                    // Action now handled by NavigationLink
+                                                }
                                             }
                                             .padding(.horizontal, 20)
 
@@ -342,8 +353,10 @@ struct LibraryView: View {
                             if viewMode == .grid {
                                 LazyVGrid(columns: columns, spacing: 16) {
                                     ForEach(filteredAndSortedAlbums) { album in
-                                        AlbumCard(album: album) {
-                                            selectedAlbum = album
+                                        NavigationLink(value: album) {
+                                            AlbumCard(album: album) {
+                                                // Action now handled by NavigationLink
+                                            }
                                         }
                                     }
                                 }
@@ -352,8 +365,10 @@ struct LibraryView: View {
                             } else {
                                 LazyVStack(spacing: 0) {
                                     ForEach(filteredAndSortedAlbums) { album in
-                                        AlbumListRow(album: album) {
-                                            selectedAlbum = album
+                                        NavigationLink(value: album) {
+                                            AlbumListRow(album: album) {
+                                                // Action now handled by NavigationLink
+                                            }
                                         }
                                         .padding(.horizontal, 20)
 
@@ -371,14 +386,46 @@ struct LibraryView: View {
                 }
             }
         }
-        .sheet(item: $selectedArtist) { artist in
+        .navigationDestination(for: Artist.self) { artist in
             ArtistDetailView(artist: artist)
         }
-        .sheet(item: $selectedAlbum) { album in
+        .navigationDestination(for: Album.self) { album in
             AlbumDetailView(album: album)
         }
-        .sheet(item: $selectedPlaylist) { playlist in
+        .navigationDestination(for: Playlist.self) { playlist in
             PlaylistDetailView(playlist: playlist)
+        }
+        .navigationTitle("Library")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                // New Playlist button (only show when Playlists filter is selected)
+                if selectedFilter == "Playlists" {
+                    Button {
+                        showNewPlaylistSheet = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(.neonPink)
+                    }
+                }
+                
+                // Sync button
+                Button {
+                    Task {
+                        await syncLibrary()
+                    }
+                } label: {
+                    if isSyncing {
+                        ProgressView()
+                            .tint(.jellyAmpAccent)
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .foregroundColor(.jellyAmpAccent)
+                    }
+                }
+                .disabled(isSyncing)
+            }
         }
         .sheet(isPresented: $showNewPlaylistSheet) {
             NewPlaylistSheet { playlistId in

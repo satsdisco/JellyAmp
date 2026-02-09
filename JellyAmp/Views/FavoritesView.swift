@@ -17,8 +17,7 @@ struct FavoritesView: View {
     @State private var favoriteArtists: [Artist] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
-    @State private var selectedAlbum: Album?
-    @State private var selectedArtist: Artist?
+    // Navigation handled by NavigationStack
     @State private var showNowPlaying = false
 
     var body: some View {
@@ -104,12 +103,14 @@ struct FavoritesView: View {
                 }
             }
         }
-        .sheet(item: $selectedAlbum) { album in
+        .navigationDestination(for: Album.self) { album in
             AlbumDetailView(album: album)
         }
-        .sheet(item: $selectedArtist) { artist in
+        .navigationDestination(for: Artist.self) { artist in
             ArtistDetailView(artist: artist)
         }
+        .navigationTitle("Favorites")
+        .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showNowPlaying) {
             NowPlayingView()
         }
@@ -267,8 +268,10 @@ struct FavoritesView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(favoriteAlbums.prefix(10)) { album in
-                        FavoriteAlbumCard(album: album) {
-                            selectedAlbum = album
+                        NavigationLink(value: album) {
+                            FavoriteAlbumCard(album: album) {
+                                // Action now handled by NavigationLink
+                            }
                         }
                     }
                 }
@@ -300,8 +303,10 @@ struct FavoritesView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(favoriteArtists.prefix(10)) { artist in
-                        FavoriteArtistCard(artist: artist) {
-                            selectedArtist = artist
+                        NavigationLink(value: artist) {
+                            FavoriteArtistCard(artist: artist) {
+                                // Action now handled by NavigationLink
+                            }
                         }
                     }
                 }

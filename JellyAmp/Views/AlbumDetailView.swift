@@ -90,34 +90,7 @@ struct AlbumDetailView: View {
                     }
                 }
 
-                // Back Button (floating)
-                VStack {
-                    HStack {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "chevron.left")
-                                .font(.title3)
-                                .foregroundColor(Color.jellyAmpText)
-                                .frame(width: 44, height: 44)
-                                .background(
-                                    Circle()
-                                        .fill(Color.jellyAmpMidBackground)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color.jellyAmpAccent.opacity(0.5), lineWidth: 1)
-                                        )
-                                )
-                                .neonGlow(color: .jellyAmpAccent, radius: 8)
-                        }
-                        .padding(.leading, 20)
-                        .padding(.top, 60)
-
-                        Spacer()
-                    }
-
-                    Spacer()
-                }
+                // Navigation handled by NavigationStack
             }
 
             // Mini Player (fixed at bottom)

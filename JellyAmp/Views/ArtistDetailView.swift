@@ -22,7 +22,7 @@ struct ArtistDetailView: View {
 
     @State private var albums: [Album] = []
     @State private var isLoadingAlbums = true
-    @State private var selectedAlbum: Album?
+    // Navigation handled by NavigationStack
     @State private var viewMode: ArtistViewMode = .allAlbums
     @State private var selectedYear: Int?
     @State private var isShuffling = false
@@ -68,34 +68,7 @@ struct ArtistDetailView: View {
                     }
                 }
 
-                // Back Button (floating)
-                VStack {
-                    HStack {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "chevron.left")
-                                .font(.title3)
-                                .foregroundColor(Color.jellyAmpText)
-                                .frame(width: 44, height: 44)
-                                .background(
-                                    Circle()
-                                        .fill(Color.jellyAmpMidBackground)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color.jellyAmpAccent.opacity(0.5), lineWidth: 1)
-                                        )
-                                )
-                                .neonGlow(color: .jellyAmpAccent, radius: 8)
-                        }
-                        .padding(.leading, 20)
-                        .padding(.top, 60)
-
-                        Spacer()
-                    }
-
-                    Spacer()
-                }
+                // Navigation handled by NavigationStack
             }
 
             // Mini Player (fixed at bottom)
@@ -109,7 +82,7 @@ struct ArtistDetailView: View {
                 await fetchArtistAlbums()
             }
         }
-        .sheet(item: $selectedAlbum) { album in
+        .navigationDestination(for: Album.self) { album in
             AlbumDetailView(album: album)
         }
         .fullScreenCover(isPresented: $showNowPlaying) {
@@ -463,8 +436,10 @@ struct ArtistDetailView: View {
     private var allAlbumsView: some View {
         VStack(spacing: 0) {
             ForEach(albums.sorted(by: { ($0.year ?? 0) > ($1.year ?? 0) })) { album in
-                AlbumListRow(album: album) {
-                    selectedAlbum = album
+                NavigationLink(value: album) {
+                    AlbumListRow(album: album) {
+                        // Action now handled by NavigationLink
+                    }
                 }
                 .background(Color.jellyAmpMidBackground.opacity(0.3))
             }
@@ -485,8 +460,8 @@ struct ArtistDetailView: View {
                             selectedYear = (selectedYear == year) ? nil : year
                         }
                     },
-                    onAlbumTap: { album in
-                        selectedAlbum = album
+                    onAlbumTap: { _ in
+                        // Navigation now handled by NavigationLink
                     }
                 )
             }
@@ -645,8 +620,10 @@ struct YearSection: View {
             if isExpanded {
                 VStack(spacing: 0) {
                     ForEach(albums.sorted(by: { ($0.year ?? 0) > ($1.year ?? 0) })) { album in
-                        AlbumListRow(album: album) {
-                            onAlbumTap(album)
+                        NavigationLink(value: album) {
+                            AlbumListRow(album: album) {
+                                // Action now handled by NavigationLink
+                            }
                         }
                         .background(Color.jellyAmpMidBackground.opacity(0.2))
                     }
