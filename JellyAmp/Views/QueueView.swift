@@ -12,7 +12,7 @@ struct QueueView: View {
     @ObservedObject var themeManager = ThemeManager.shared
     @Environment(\.dismiss) var dismiss
 
-    @State private var editMode: EditMode = .inactive
+    @State private var editMode: EditMode = .active
 
     var body: some View {
         ZStack {
@@ -68,7 +68,6 @@ struct QueueView: View {
                     }
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
-                    .environment(\.editMode, .constant(.active))
                 }
             }
 
