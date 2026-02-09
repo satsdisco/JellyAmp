@@ -11,6 +11,8 @@ struct NowPlayingView: View {
     @ObservedObject var playerManager = WatchPlayerManager.shared
     @ObservedObject var jellyfinService = WatchJellyfinService.shared
     @State private var isFavorite = false
+    @State private var crownVolume: Double = 1.0
+    @State private var showVolumeIndicator = false
 
     var body: some View {
         VStack(spacing: 6) {
@@ -29,8 +31,56 @@ struct NowPlayingView: View {
             // Playback controls
             controlsView
         }
+        .overlay(alignment: .top) {
+            if showVolumeIndicator {
+                HStack(spacing: 6) {
+                    Image(systemName: crownVolume == 0 ? "speaker.slash.fill" : crownVolume < 0.5 ? "speaker.wave.1.fill" : "speaker.wave.2.fill")
+                        .font(.caption2)
+                        .foregroundColor(.cyan)
+                    
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(Color.white.opacity(0.2))
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.cyan, .pink],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: geo.size.width * crownVolume)
+                        }
+                    }
+                    .frame(height: 4)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(.black.opacity(0.8))
+                .cornerRadius(8)
+                .padding(.top, 4)
+                .transition(.opacity)
+            }
+        }
         .padding(.vertical, 4)
+        .focusable(true)
+        .digitalCrownRotation($crownVolume, from: 0.0, through: 1.0, by: 0.05, sensitivity: .medium)
+        .onChange(of: crownVolume) { _, newValue in
+            playerManager.setVolume(Float(newValue))
+            withAnimation(.easeIn(duration: 0.15)) {
+                showVolumeIndicator = true
+            }
+            // Hide after delay
+            Task {
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                withAnimation(.easeOut(duration: 0.3)) {
+                    showVolumeIndicator = false
+                }
+            }
+        }
         .onAppear {
+            crownVolume = Double(playerManager.volume)
             syncFavoriteState()
         }
         .onChange(of: playerManager.currentTrack?.id) { _, _ in

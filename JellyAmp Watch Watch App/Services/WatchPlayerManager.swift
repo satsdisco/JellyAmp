@@ -21,6 +21,7 @@ class WatchPlayerManager: NSObject, ObservableObject {
     @Published var duration: Double = 0
     @Published var queue: [WatchTrack] = []
     @Published var currentIndex: Int = 0
+    @Published var volume: Float = 1.0
 
     private var player: AVPlayer?
     private var timeObserver: Any?
@@ -152,6 +153,9 @@ class WatchPlayerManager: NSObject, ObservableObject {
             object: playerItem
         )
 
+        // Apply current volume
+        player?.volume = self.volume
+
         // Start playback
         player?.play()
         isPlaying = true
@@ -186,6 +190,11 @@ class WatchPlayerManager: NSObject, ObservableObject {
             currentIndex -= 1
             playCurrentTrack()
         }
+    }
+
+    func setVolume(_ volume: Float) {
+        self.volume = max(0, min(1, volume))
+        player?.volume = self.volume
     }
 
     func seek(to time: Double) {
