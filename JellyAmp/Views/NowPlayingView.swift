@@ -121,7 +121,7 @@ struct NowPlayingView: View {
             if let track = playerManager.currentTrack,
                let artworkURLString = track.artworkURL,
                let artworkURL = URL(string: artworkURLString) {
-                AsyncImage(url: artworkURL) { phase in
+                CachedAsyncImage(url: artworkURL) { phase in
                     switch phase {
                     case .empty:
                         placeholderArtwork

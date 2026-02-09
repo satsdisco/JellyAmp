@@ -157,7 +157,7 @@ struct PlaylistDetailView: View {
 
                 // Playlist artwork
                 if let artworkURL = playlist.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             placeholderArtwork

@@ -158,7 +158,7 @@ struct ArtistDetailView: View {
             ZStack {
                 if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
                     GeometryReader { geo in
-                        AsyncImage(url: url) { phase in
+                        CachedAsyncImage(url: url) { phase in
                             switch phase {
                             case .empty:
                                 placeholderArtistHeader

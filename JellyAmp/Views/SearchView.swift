@@ -283,7 +283,7 @@ struct SearchResultRow: View {
                     let itemId = item.id
                     let imageURL = "\(baseURL)/Items/\(itemId)/Images/Primary?fillHeight=80&fillWidth=80&quality=90&tag=\(primaryTag)"
 
-                    AsyncImage(url: URL(string: imageURL)) { phase in
+                    CachedAsyncImage(url: URL(string: imageURL)) { phase in
                         switch phase {
                         case .empty:
                             placeholderImage

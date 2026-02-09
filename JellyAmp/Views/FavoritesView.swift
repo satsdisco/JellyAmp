@@ -361,7 +361,7 @@ struct FavoriteTrackRow: View {
             HStack(spacing: 12) {
                 // Album artwork
                 if let artworkURL = track.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let image):
                             image
@@ -447,7 +447,7 @@ struct FavoriteAlbumCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 // Album artwork
                 if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let image):
                             image

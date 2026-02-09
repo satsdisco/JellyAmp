@@ -253,7 +253,7 @@ struct AlbumDetailView: View {
 
                 // Album artwork
                 if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             placeholderArtwork

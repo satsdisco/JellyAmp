@@ -882,7 +882,7 @@ struct AlbumCard: View {
             // Album Artwork
             ZStack {
                 if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             placeholderArtwork
@@ -986,7 +986,7 @@ struct AlbumListRow: View {
             HStack(spacing: 16) {
                 // Album artwork (square, larger and properly centered)
                 if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             placeholderArtwork
@@ -1143,7 +1143,7 @@ struct ArtistCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 // Artist artwork (circular with photo if available)
                 if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             placeholderArtwork
@@ -1237,7 +1237,7 @@ struct ArtistListRow: View {
             HStack(spacing: 16) {
                 // Artist artwork (circular with photo if available)
                 if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             placeholderArtistArt
@@ -1331,7 +1331,7 @@ struct PlaylistCard: View {
             // Playlist Artwork
             ZStack {
                 if let artworkURL = playlist.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             placeholderArtwork
@@ -1429,7 +1429,7 @@ struct PlaylistListRow: View {
             HStack(spacing: 16) {
                 // Playlist artwork (square)
                 if let artworkURL = playlist.artworkURL, let url = URL(string: artworkURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             placeholderArtwork

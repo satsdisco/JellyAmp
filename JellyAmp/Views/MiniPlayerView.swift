@@ -61,7 +61,7 @@ struct MiniPlayerView: View {
     }
 
     private func miniPlayerArtwork(for track: Track) -> some View {
-        AsyncImage(url: URL(string: track.artworkURL ?? "")) { phase in
+        CachedAsyncImage(url: URL(string: track.artworkURL ?? "")) { phase in
             switch phase {
             case .success(let image):
                 image.resizable().aspectRatio(contentMode: .fill)
