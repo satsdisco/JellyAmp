@@ -219,13 +219,23 @@ struct NowPlayingView: View {
                     .font(.jellyAmpTitle)
                     .foregroundColor(Color.jellyAmpText)
 
-                Text(track.artistName)
-                    .font(.jellyAmpHeadline)
-                    .foregroundColor(.secondary)
+                Button {
+                    navigateToArtist(track: track)
+                } label: {
+                    Text(track.artistName)
+                        .font(.jellyAmpHeadline)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("Go to artist: \(track.artistName)")
 
-                Text(track.albumName)
-                    .font(.jellyAmpCaption)
-                    .foregroundColor(.gray)
+                Button {
+                    navigateToAlbum(track: track)
+                } label: {
+                    Text(track.albumName)
+                        .font(.jellyAmpCaption)
+                        .foregroundColor(.gray)
+                }
+                .accessibilityLabel("Go to album: \(track.albumName)")
             } else {
                 Text("No Track Playing")
                     .font(.jellyAmpTitle)
@@ -502,6 +512,42 @@ struct NowPlayingView: View {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    private func navigateToArtist(track: Track) {
+        // Build an Artist from track data and request navigation
+        let artist = Artist(
+            id: track.artistId ?? "",
+            name: track.artistName,
+            bio: nil,
+            albumCount: 0,
+            artworkURL: nil
+        )
+        guard !artist.id.isEmpty else { return }
+        NavigationCoordinator.shared.pendingArtistNavigation = artist
+        if let onDismiss = onDismiss {
+            onDismiss()
+        } else {
+            dismiss()
+        }
+    }
+
+    private func navigateToAlbum(track: Track) {
+        guard let albumId = track.albumId else { return }
+        let album = Album(
+            id: albumId,
+            name: track.albumName,
+            artistName: track.artistName,
+            artistId: track.artistId,
+            year: track.productionYear,
+            artworkURL: track.artworkURL
+        )
+        NavigationCoordinator.shared.pendingAlbumNavigation = album
+        if let onDismiss = onDismiss {
+            onDismiss()
+        } else {
+            dismiss()
+        }
     }
 
     private func toggleFavorite() {

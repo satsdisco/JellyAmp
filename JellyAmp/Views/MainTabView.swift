@@ -10,14 +10,16 @@ import SwiftUI
 struct MainTabView: View {
     @State private var selectedTab = 0
     @State private var showNowPlaying = false
+    @State private var libraryPath = NavigationPath()
     @ObservedObject var playerManager = PlayerManager.shared
     @ObservedObject var themeManager = ThemeManager.shared
+    @ObservedObject var navCoordinator = NavigationCoordinator.shared
     @Namespace private var playerAnimation
 
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
-                NavigationStack {
+                NavigationStack(path: $libraryPath) {
                     LibraryView()
                 }
                 .tabItem {
@@ -81,6 +83,24 @@ struct MainTabView: View {
             }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showNowPlaying)
+        .onChange(of: navCoordinator.pendingArtistNavigation) { _, artist in
+            guard let artist = artist else { return }
+            navCoordinator.pendingArtistNavigation = nil
+            selectedTab = 0
+            libraryPath = NavigationPath()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                libraryPath.append(artist)
+            }
+        }
+        .onChange(of: navCoordinator.pendingAlbumNavigation) { _, album in
+            guard let album = album else { return }
+            navCoordinator.pendingAlbumNavigation = nil
+            selectedTab = 0
+            libraryPath = NavigationPath()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                libraryPath.append(album)
+            }
+        }
     }
 }
 

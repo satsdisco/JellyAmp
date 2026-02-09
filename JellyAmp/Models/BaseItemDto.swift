@@ -24,6 +24,7 @@ struct BaseItemDto: Codable, Identifiable, Equatable {
     let AlbumId: String?
     let AlbumPrimaryImageTag: String?
     let ImageTags: ImageTagsWrapper?
+    let ArtistItems: [NameIdPair]?
 
     // Playlist/Album properties
     let ChildCount: Int?
@@ -77,6 +78,7 @@ struct BaseItemDto: Codable, Identifiable, Equatable {
         AlbumId = try? container.decode(String.self, forKey: .AlbumId)
         AlbumPrimaryImageTag = try? container.decode(String.self, forKey: .AlbumPrimaryImageTag)
         ImageTags = try? container.decode(ImageTagsWrapper.self, forKey: .ImageTags)
+        ArtistItems = try? container.decode([NameIdPair].self, forKey: .ArtistItems)
 
         ChildCount = try? container.decode(Int.self, forKey: .ChildCount)
         CumulativeRunTimeTicks = try? container.decode(Int64.self, forKey: .CumulativeRunTimeTicks)
@@ -118,6 +120,7 @@ struct BaseItemDto: Codable, Identifiable, Equatable {
         try container.encodeIfPresent(AlbumId, forKey: .AlbumId)
         try container.encodeIfPresent(AlbumPrimaryImageTag, forKey: .AlbumPrimaryImageTag)
         try container.encodeIfPresent(ImageTags, forKey: .ImageTags)
+        try container.encodeIfPresent(ArtistItems, forKey: .ArtistItems)
 
         try container.encodeIfPresent(ChildCount, forKey: .ChildCount)
         try container.encodeIfPresent(CumulativeRunTimeTicks, forKey: .CumulativeRunTimeTicks)
@@ -147,7 +150,7 @@ struct BaseItemDto: Codable, Identifiable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case Id, Name, ServerId
         case ItemType = "Type"  // Renamed to avoid conflict with Swift's Type
-        case RunTimeTicks, Album, AlbumArtist, Artists, AlbumId, AlbumPrimaryImageTag, ImageTags
+        case RunTimeTicks, Album, AlbumArtist, Artists, AlbumId, AlbumPrimaryImageTag, ImageTags, ArtistItems
         case ChildCount, CumulativeRunTimeTicks
         case IndexNumber, ParentIndexNumber, PremiereDate, ProductionYear, Overview, Genres
         case DateCreated, CollectionType, Path, ChannelId, IsFolder
@@ -159,7 +162,7 @@ struct BaseItemDto: Codable, Identifiable, Equatable {
     init(Id: String, Name: String, ServerId: String? = nil, Type: ItemType,
          RunTimeTicks: Int64? = nil, Album: String? = nil, AlbumArtist: String? = nil,
          Artists: [String]? = nil, AlbumId: String? = nil, AlbumPrimaryImageTag: String? = nil,
-         ImageTags: ImageTagsWrapper? = nil, ChildCount: Int? = nil,
+         ImageTags: ImageTagsWrapper? = nil, ArtistItems: [NameIdPair]? = nil, ChildCount: Int? = nil,
          CumulativeRunTimeTicks: Int64? = nil, IndexNumber: Int? = nil,
          ParentIndexNumber: Int? = nil, PremiereDate: String? = nil,
          ProductionYear: Int? = nil, Overview: String? = nil, Genres: [String]? = nil,
@@ -179,6 +182,7 @@ struct BaseItemDto: Codable, Identifiable, Equatable {
         self.AlbumId = AlbumId
         self.AlbumPrimaryImageTag = AlbumPrimaryImageTag
         self.ImageTags = ImageTags
+        self.ArtistItems = ArtistItems
         self.ChildCount = ChildCount
         self.CumulativeRunTimeTicks = CumulativeRunTimeTicks
         self.IndexNumber = IndexNumber
@@ -466,4 +470,10 @@ extension Array where Element == BaseItemDto {
             return String(format: "%d:%02d", minutes, seconds)
         }
     }
+}
+
+// MARK: - Name/Id Pair (for ArtistItems)
+struct NameIdPair: Codable, Equatable {
+    let Name: String
+    let Id: String
 }

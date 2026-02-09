@@ -45,7 +45,7 @@ struct Track: Identifiable, Codable, Equatable, Hashable {
         self.indexNumber = item.IndexNumber
         self.parentIndexNumber = item.ParentIndexNumber
         self.albumId = item.AlbumId
-        self.artistId = item.Artists?.first != nil ? item.Id : nil  // Artist ID not directly available for tracks
+        self.artistId = item.ArtistItems?.first?.Id
         self.productionYear = item.ProductionYear
     }
 
