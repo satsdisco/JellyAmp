@@ -79,7 +79,6 @@ struct SearchView: View {
                 Text("Search")
                     .font(.title.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
-                    .neonGlow(color: .jellyAmpAccent, radius: 6)
 
                 if !searchResults.isEmpty {
                     Text("\(filteredResults.count) result\(filteredResults.count == 1 ? "" : "s")")
@@ -107,16 +106,13 @@ struct SearchView: View {
                     } label: {
                         Text(filter.rawValue)
                             .font(.subheadline.weight(.bold))
-                            .foregroundColor(selectedFilter == filter ? .black : .neonCyan)
+                            .foregroundColor(selectedFilter == filter ? .black : .jellyAmpAccent)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 10)
                             .background(
-                                Capsule()
-                                    .fill(selectedFilter == filter ? Color.jellyAmpAccent : Color.jellyAmpAccent.opacity(0.15))
-                            )
-                            .overlay(
-                                Capsule()
-                                    .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
+                                selectedFilter == filter ? 
+                                    .jellyAmpAccent : .ultraThinMaterial,
+                                in: Capsule()
                             )
                     }
                     .accessibilityLabel("Filter: \(filter.rawValue)")

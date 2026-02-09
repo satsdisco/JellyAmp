@@ -27,19 +27,7 @@ struct MiniPlayerView: View {
                         case .empty, .failure, _:
                             ZStack {
                                 Rectangle()
-                                    .fill(.thinMaterial)
-
-                                Rectangle()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.neonPink.opacity(0.2),
-                                                Color.neonPurple.opacity(0.2)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                    .fill(.regularMaterial)
 
                                 Image(systemName: "music.note")
                                     .font(.body.weight(.medium))
@@ -49,21 +37,8 @@ struct MiniPlayerView: View {
                     }
                     .frame(width: 48, height: 48)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        Color.white.opacity(0.2),
-                                        Color.white.opacity(0.05)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
-                    )
-                    .shadow(color: Color.black.opacity(0.3), radius: 4, x: 0, y: 2)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(.white.opacity(0.1), lineWidth: 0.5))
+                    .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
                     .padding(.leading, 12)
 
                     // Track info with two lines
@@ -89,109 +64,18 @@ struct MiniPlayerView: View {
                     Button {
                         playerManager.togglePlayPause()
                     } label: {
-                        ZStack {
-                            // Glass button background
-                            Circle()
-                                .fill(.thinMaterial)
-                                .frame(width: 40, height: 40)
-
-                            Circle()
-                                .fill(Color.neonPink.opacity(0.15))
-                                .frame(width: 40, height: 40)
-
-                            // Border glow
-                            Circle()
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.neonPink.opacity(0.5),
-                                            Color.neonPink.opacity(0.2)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1.5
-                                )
-                                .frame(width: 40, height: 40)
-
-                            Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
-                                .font(.body.weight(.semibold))
-                                .foregroundColor(.neonPink)
-                        }
-                        .shadow(color: Color.neonPink.opacity(0.3), radius: 8, x: 0, y: 0)
+                        Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
+                            .font(.body.weight(.semibold))
+                            .foregroundColor(.neonPink)
+                            .frame(width: 40, height: 40)
+                            .background(.ultraThinMaterial, in: Circle())
+                            .overlay(Circle().stroke(.neonPink.opacity(0.3), lineWidth: 1))
                     }
                     .accessibilityLabel(playerManager.isPlaying ? "Pause" : "Play")
                     .padding(.trailing, 12)
                 }
                 .frame(height: 64)
-                .background(
-                    ZStack {
-                        // Base glass layer with ultra thin material
-                        Rectangle()
-                            .fill(.ultraThinMaterial)
-
-                        // Dark tinted overlay for depth
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color.black.opacity(0.45),
-                                        Color.black.opacity(0.55),
-                                        Color.black.opacity(0.65)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .opacity(0.8)
-
-                        // Inner shadow for depth
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color.black.opacity(0.3),
-                                        Color.clear
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .frame(height: 4)
-                            .frame(maxHeight: .infinity, alignment: .top)
-                            .blur(radius: 2)
-
-                        // Glass highlight on top edge
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color.white.opacity(0.15),
-                                        Color.white.opacity(0.05),
-                                        Color.clear
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .frame(height: 1.5)
-                            .frame(maxHeight: .infinity, alignment: .top)
-
-                        // Shimmer effect
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color.white.opacity(0.06),
-                                        Color.clear,
-                                        Color.white.opacity(0.04)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                    }
-                )
+                .background(.regularMaterial)
                 .overlay(
                     // Subtle bottom divider
                     Rectangle()
