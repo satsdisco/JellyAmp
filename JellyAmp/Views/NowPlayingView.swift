@@ -301,7 +301,7 @@ struct NowPlayingView: View {
 
     // MARK: - Controls Section
     private var controlsSection: some View {
-        HStack(spacing: 40) {
+        HStack(spacing: 20) {
             // Previous
             Button {
                 playerManager.playPrevious()
@@ -311,6 +311,16 @@ struct NowPlayingView: View {
                     .foregroundColor(Color.jellyAmpText)
             }
             .accessibilityLabel("Previous track")
+
+            // Skip back 15s
+            Button {
+                playerManager.seek(to: max(0, playerManager.currentTime - 15))
+            } label: {
+                Image(systemName: "gobackward.15")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+            }
+            .accessibilityLabel("Skip back 15 seconds")
 
             // Play/Pause (prominent)
             Button {
@@ -334,6 +344,16 @@ struct NowPlayingView: View {
                 }
             }
             .accessibilityLabel(playerManager.isPlaying ? "Pause" : "Play")
+
+            // Skip forward 15s
+            Button {
+                playerManager.seek(to: min(playerManager.duration, playerManager.currentTime + 15))
+            } label: {
+                Image(systemName: "goforward.15")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+            }
+            .accessibilityLabel("Skip forward 15 seconds")
 
             // Next
             Button {
