@@ -298,7 +298,7 @@ struct AlbumDetailView: View {
                     .font(.title2.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Spacing.lg)
 
                 Text(album.artistName)
                     .font(.jellyAmpHeadline)
