@@ -26,6 +26,7 @@ class PlayerManager: NSObject, ObservableObject {
     @Published var currentTime: Double = 0
     @Published var duration: Double = 0
     @Published var isBuffering = false
+    private var isSeeking = false
     @Published var errorMessage: String?
 
     // MARK: - Playback Queue
@@ -59,6 +60,21 @@ class PlayerManager: NSObject, ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var playerItemCancellables = Set<AnyCancellable>() // Separate for player item observers
     private let jellyfinService = JellyfinService.shared
+
+    /// Get playback URL respecting user's streaming quality preference
+    private func playbackURL(for track: Track) -> URL? {
+        // Check offline first
+        if let localURL = downloadManager.getLocalURL(for: track.id) {
+            return localURL
+        }
+        let qualityRaw = UserDefaults.standard.string(forKey: "streamingQuality") ?? "medium"
+        let quality = StreamingQuality(rawValue: qualityRaw) ?? .medium
+        if quality == .original {
+            return jellyfinService.getDownloadURL(for: track.id)
+        } else {
+            return jellyfinService.getStreamingURL(for: track.id, bitrate: quality.bitrate)
+        }
+    }
     private let downloadManager = DownloadManager.shared
     private var originalQueue: [Track] = []
     private var originalIndex: Int = 0
@@ -283,9 +299,6 @@ class PlayerManager: NSObject, ObservableObject {
     }
 
     /// Seeks to specific time
-    /// Flag to tell the time observer that a deliberate seek is in progress
-    private var isSeeking = false
-
     func seek(to time: Double) {
         guard let player = player else {
             logger.error("❌ Cannot seek - player is nil")
@@ -320,7 +333,7 @@ class PlayerManager: NSObject, ObservableObject {
 
         logger.info("🔍 Seeking to \(clampedTime)s (duration: \(self.duration)s)")
 
-        // Mark seeking so the time observer doesn't fight us
+        // Mark seeking so the time observer/restart detector don't fight us
         isSeeking = true
         // Update currentTime immediately to prevent UI snapping back
         self.currentTime = clampedTime
@@ -474,15 +487,14 @@ class PlayerManager: NSObject, ObservableObject {
                 guard nextIndex < queue.count else { break }
 
                 let nextTrack = queue[nextIndex]
-                guard let streamURL = jellyfinService.getStreamingURL(for: nextTrack.id) else {
+                guard let url = playbackURL(for: nextTrack) else {
                     logger.error("❌ Failed to preload track at index \(nextIndex): \(nextTrack.name)")
                     continue
                 }
 
-                let playerItem = AVPlayerItem(url: streamURL)
+                let playerItem = AVPlayerItem(url: url)
                 playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = true
-                playerItem.preferredForwardBufferDuration = 60.0  // Large buffer for stability
-                // Note: No bitrate limit - using direct file streaming
+                playerItem.preferredForwardBufferDuration = 60.0
 
                 player?.insert(playerItem, after: nil)
                 playerItems.append(playerItem)
@@ -598,39 +610,21 @@ class PlayerManager: NSObject, ObservableObject {
         logger.info("🎵 Setting up gapless queue starting at index \(index)")
 
         for (offset, track) in tracksToLoad.enumerated() {
-            // Check if track is downloaded for offline playback
-            let playbackURL: URL?
-            let isOffline: Bool
+            let isOffline = downloadManager.getLocalURL(for: track.id) != nil
 
-            if let localURL = downloadManager.getLocalURL(for: track.id) {
-                playbackURL = localURL
-                isOffline = true
-                logger.info("  [\(offset)] Using offline file: \(track.name)")
-            } else {
-                let qualityRaw = UserDefaults.standard.string(forKey: "streamingQuality") ?? "medium"
-                let quality = StreamingQuality(rawValue: qualityRaw) ?? .medium
-                if quality == .original {
-                    playbackURL = jellyfinService.getDownloadURL(for: track.id)
-                } else {
-                    playbackURL = jellyfinService.getStreamingURL(for: track.id, bitrate: quality.bitrate)
-                }
-                isOffline = false
-                logger.info("  [\(offset)] Streaming (\(qualityRaw)): \(track.name)")
-            }
-
-            guard let url = playbackURL else {
+            guard let url = self.playbackURL(for: track) else {
                 logger.error("❌ Failed to get playback URL for track at index \(index + offset): \(track.name)")
                 continue
             }
 
+            logger.info("  [\(offset)] \(isOffline ? "Offline" : "Streaming"): \(track.name)")
+
             let playerItem = AVPlayerItem(url: url)
 
-            // Configure for reliable playback
+            // Configure for reliable streaming playback
             if !isOffline {
-                // Streaming configuration
                 playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = true
-                playerItem.preferredForwardBufferDuration = 60.0  // Large buffer for stability
-                playerItem.preferredPeakBitRate = 128000  // Match our max streaming bitrate
+                playerItem.preferredForwardBufferDuration = 60.0
             }
 
             playerItems.append(playerItem)
@@ -747,16 +741,15 @@ class PlayerManager: NSObject, ObservableObject {
         if nextIndex < queue.count {
             let nextTrack = queue[nextIndex]
 
-            guard let streamURL = jellyfinService.getStreamingURL(for: nextTrack.id) else {
+            guard let url = playbackURL(for: nextTrack) else {
                 logger.error("❌ Failed to preload next track: \(nextTrack.name)")
                 updateNowPlayingInfo()
                 return
             }
 
-            let playerItem = AVPlayerItem(url: streamURL)
+            let playerItem = AVPlayerItem(url: url)
             playerItem.canUseNetworkResourcesForLiveStreamingWhilePaused = true
-            playerItem.preferredForwardBufferDuration = 60.0  // Large buffer for stability
-            playerItem.preferredPeakBitRate = 128000  // Match our max streaming bitrate
+            playerItem.preferredForwardBufferDuration = 60.0
 
             player?.insert(playerItem, after: nil)
             playerItems.append(playerItem)
@@ -802,7 +795,7 @@ class PlayerManager: NSObject, ObservableObject {
             // Detect unexpected restarts WITHIN THE SAME TRACK
             // If time jumps backward by more than 10 seconds AND we've been playing for a while,
             // this is likely a stream restart (not a user seek, which sets isSeeking=true)
-            if newTime < lastValidTime - 10.0 && lastValidTime > 30.0 && lastTrackedTrackId == self.currentTrack?.id {
+            if !self.isSeeking && newTime < lastValidTime - 10.0 && lastValidTime > 30.0 && lastTrackedTrackId == self.currentTrack?.id {
                 self.logger.error("🚨 UNEXPECTED RESTART DETECTED: Time jumped from \(lastValidTime)s to \(newTime)s")
                 self.logger.error("   Track: '\(self.currentTrack?.name ?? "unknown")'")
                 self.logger.error("   This indicates the AVPlayer stream restarted on its own")
