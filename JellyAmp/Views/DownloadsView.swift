@@ -55,21 +55,10 @@ struct DownloadsView: View {
 
     // MARK: - Empty State
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "arrow.down.circle")
-                .font(.title)
-                .foregroundColor(.jellyAmpAccent)
-                .neonGlow(color: .jellyAmpAccent, radius: 20)
-
-            Text("No Downloads")
-                .font(.jellyAmpTitle)
-                .foregroundColor(Color.jellyAmpText)
-
+        ContentUnavailableView {
+            Label("No Downloads", systemImage: "arrow.down.circle")
+        } description: {
             Text("Download albums or tracks for offline playback.\nTap the download button on any album.")
-                .font(.jellyAmpBody)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
         }
     }
 

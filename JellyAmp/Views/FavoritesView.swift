@@ -150,21 +150,10 @@ struct FavoritesView: View {
 
     // MARK: - Empty State
     private var emptyStateView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "heart.slash")
-                .font(.title)
-                .foregroundColor(.neonPink.opacity(0.5))
-                .neonGlow(color: .jellyAmpSecondary, radius: 20)
-
-            Text("No Favorites Yet")
-                .font(.title2.weight(.bold))
-                .foregroundColor(Color.jellyAmpText)
-
+        ContentUnavailableView {
+            Label("No Favorites Yet", systemImage: "heart.slash")
+        } description: {
             Text("Tap the heart icon on tracks, albums, and artists to add them to your favorites")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 50)
         }
     }
 

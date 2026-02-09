@@ -137,34 +137,16 @@ struct LibraryView: View {
                     Spacer()
                 } else if let error = errorMessage {
                     // Error state
-                    Spacer()
-                    VStack(spacing: 16) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.title)
-                            .foregroundColor(.neonPink)
-                        Text("Error Loading Library")
-                            .font(.jellyAmpHeadline)
-                            .foregroundColor(Color.jellyAmpText)
+                    ContentUnavailableView {
+                        Label("Error Loading Library", systemImage: "exclamationmark.triangle")
+                    } description: {
                         Text(error)
-                            .font(.jellyAmpBody)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
-                        Button("Try Again") {
-                            Task {
-                                await fetchLibrary()
-                            }
+                    } actions: {
+                        Button("Try Again") { 
+                            Task { await fetchLibrary() } 
                         }
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                        .background(
-                            Capsule()
-                                .fill(Color.jellyAmpAccent)
-                        )
-                        .neonGlow(color: .jellyAmpAccent, radius: 8)
+                        .buttonStyle(.borderedProminent)
                     }
-                    Spacer()
                 } else {
                     ScrollView {
                         if selectedFilter == "Favorites" {
@@ -245,18 +227,10 @@ struct LibraryView: View {
                                 }
 
                                 if filteredArtists.isEmpty && favoriteAlbums.isEmpty {
-                                    VStack(spacing: 16) {
-                                        Image(systemName: "heart.slash")
-                                            .font(.title)
-                                            .foregroundColor(.secondary.opacity(0.5))
-                                        Text("No Favorites Yet")
-                                            .font(.jellyAmpHeadline)
-                                            .foregroundColor(Color.jellyAmpText)
+                                    ContentUnavailableView {
+                                        Label("No Favorites Yet", systemImage: "heart.slash")
+                                    } description: {
                                         Text("Tap the heart icon on albums and artists to add them here")
-                                            .font(.jellyAmpBody)
-                                            .foregroundColor(.secondary)
-                                            .multilineTextAlignment(.center)
-                                            .padding(.horizontal, 40)
                                     }
                                     .frame(maxWidth: .infinity)
                                     .padding(.top, 100)
@@ -300,18 +274,10 @@ struct LibraryView: View {
                         } else if selectedFilter == "Playlists" {
                             // Playlists View
                             if playlists.isEmpty {
-                                VStack(spacing: 16) {
-                                    Image(systemName: "music.note.list")
-                                        .font(.title)
-                                        .foregroundColor(.secondary.opacity(0.5))
-                                    Text("No Playlists Yet")
-                                        .font(.jellyAmpHeadline)
-                                        .foregroundColor(Color.jellyAmpText)
+                                ContentUnavailableView {
+                                    Label("No Playlists Yet", systemImage: "music.note.list")
+                                } description: {
                                     Text("Create your first playlist to organize your favorite tracks")
-                                        .font(.jellyAmpBody)
-                                        .foregroundColor(.secondary)
-                                        .multilineTextAlignment(.center)
-                                        .padding(.horizontal, 40)
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.top, 100)

@@ -372,17 +372,10 @@ struct PlaylistDetailView: View {
                 }
                 .padding(.vertical, 40)
             } else if playlistTracks.isEmpty {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 12) {
-                        Image(systemName: "music.note.list")
-                            .font(.title)
-                            .foregroundColor(.secondary.opacity(0.5))
-                        Text("No tracks in playlist")
-                            .font(.jellyAmpBody)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
+                ContentUnavailableView {
+                    Label("Empty Playlist", systemImage: "music.note.list")
+                } description: {
+                    Text("No tracks in playlist")
                 }
                 .padding(.vertical, 40)
             } else {

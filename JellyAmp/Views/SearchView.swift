@@ -217,18 +217,10 @@ struct SearchView: View {
 
     // MARK: - Empty State
     private var emptySearchView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "magnifyingglass")
-                .font(.title)
-                .foregroundColor(.neonCyan.opacity(0.5))
-
-            Text("Search Your Library")
-                .font(.title3.weight(.bold))
-                .foregroundColor(Color.jellyAmpText)
-
+        ContentUnavailableView {
+            Label("Search Your Library", systemImage: "magnifyingglass")
+        } description: {
             Text("Find artists, albums, and tracks")
-                .font(.body)
-                .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -249,18 +241,10 @@ struct SearchView: View {
 
     // MARK: - No Results State
     private var noResultsView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "music.note.list")
-                .font(.title)
-                .foregroundColor(.secondary.opacity(0.5))
-
-            Text("No Results")
-                .font(.title3.weight(.bold))
-                .foregroundColor(Color.jellyAmpText)
-
+        ContentUnavailableView {
+            Label("No Results", systemImage: "music.note.list")
+        } description: {
             Text("Try a different search term")
-                .font(.body)
-                .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
