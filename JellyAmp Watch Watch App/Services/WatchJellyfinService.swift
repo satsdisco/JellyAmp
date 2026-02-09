@@ -18,7 +18,15 @@ class WatchJellyfinService: ObservableObject {
 
     private var accessToken: String?
     private var userId: String?
-    private let deviceId = "JellyAmp-Watch"
+    private static let deviceIdKey = "JellyAmpWatchDeviceId"
+    let deviceId: String = {
+        if let existing = UserDefaults.standard.string(forKey: deviceIdKey) {
+            return existing
+        }
+        let newId = UUID().uuidString
+        UserDefaults.standard.set(newId, forKey: deviceIdKey)
+        return newId
+    }()
 
     init() {
         loadCredentials()

@@ -28,7 +28,15 @@ class JellyfinService: ObservableObject {
     }
     private let clientName = "JellyAmp"
     private let clientVersion = "1.0.0"
-    private let deviceId = UUID().uuidString
+    private static let deviceIdKey = "JellyAmpDeviceId"
+    let deviceId: String = {
+        if let existing = UserDefaults.standard.string(forKey: deviceIdKey) {
+            return existing
+        }
+        let newId = UUID().uuidString
+        UserDefaults.standard.set(newId, forKey: deviceIdKey)
+        return newId
+    }()
 
     @Published var isAuthenticated = false
     @Published var currentUser: User?
