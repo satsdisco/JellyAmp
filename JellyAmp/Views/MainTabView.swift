@@ -67,16 +67,51 @@ struct MainTabView: View {
                 }
             }
             
-            // Now Playing View as overlay for hero animation
+            // Now Playing View as overlay with swipe-to-dismiss
             if showNowPlaying {
-                NowPlayingView(namespace: playerAnimation, onDismiss: {
+                NowPlayingDismissWrapper {
                     showNowPlaying = false
-                })
-                    .transition(.move(edge: .bottom))
-                    .zIndex(1)
+                } content: {
+                    NowPlayingView(namespace: playerAnimation, onDismiss: {
+                        showNowPlaying = false
+                    })
+                }
+                .transition(.move(edge: .bottom))
+                .zIndex(1)
             }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showNowPlaying)
+    }
+}
+
+// MARK: - Swipe-to-Dismiss Wrapper
+struct NowPlayingDismissWrapper<Content: View>: View {
+    let onDismiss: () -> Void
+    @ViewBuilder let content: () -> Content
+    @State private var dragOffset: CGFloat = 0
+
+    var body: some View {
+        content()
+            .offset(y: max(0, dragOffset))
+            .gesture(
+                DragGesture(minimumDistance: 20)
+                    .onChanged { value in
+                        // Only allow downward drag
+                        if value.translation.height > 0 {
+                            dragOffset = value.translation.height
+                        }
+                    }
+                    .onEnded { value in
+                        if value.translation.height > 150 || value.predictedEndTranslation.height > 300 {
+                            // Dismiss
+                            onDismiss()
+                        }
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            dragOffset = 0
+                        }
+                    }
+            )
+            .animation(.interactiveSpring(), value: dragOffset)
     }
 }
 

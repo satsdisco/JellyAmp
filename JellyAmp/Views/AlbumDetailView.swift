@@ -552,9 +552,12 @@ struct InfoBadge: View {
             Text(value)
                 .font(.system(.caption, design: .monospaced).weight(.medium))
                 .foregroundColor(Color.jellyAmpText)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+        .fixedSize()
         .background(
             Capsule()
                 .fill(Color.white.opacity(0.1))

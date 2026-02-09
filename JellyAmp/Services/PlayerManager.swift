@@ -296,12 +296,15 @@ class PlayerManager: NSObject, ObservableObject {
 
         logger.info("🔍 Seeking to \(clampedTime)s (duration: \(self.duration)s)")
 
-        // Seek with precise tolerances for accurate scrubbing
-        player.seek(to: cmTime, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] completed in
+        // Update currentTime immediately to prevent time observer from snapping back
+        self.currentTime = clampedTime
+
+        // Use small tolerance for reliable backward seeking (zero tolerance fails on some codecs)
+        let tolerance = CMTime(seconds: 0.5, preferredTimescale: 600)
+        player.seek(to: cmTime, toleranceBefore: tolerance, toleranceAfter: tolerance) { [weak self] completed in
             guard let self = self else { return }
             if completed {
                 self.logger.info("✅ Seek completed to \(clampedTime)s")
-                // Update Now Playing info after seek completes
                 self.updateNowPlayingInfo()
             } else {
                 self.logger.error("❌ Seek failed to \(clampedTime)s")
@@ -925,6 +928,26 @@ class PlayerManager: NSObject, ObservableObject {
                 return .success
             }
             return .commandFailed
+        }
+
+        // Skip forward/backward 15s (lock screen & Control Center)
+        commandCenter.skipForwardCommand.removeTarget(nil)
+        commandCenter.skipBackwardCommand.removeTarget(nil)
+        commandCenter.skipForwardCommand.isEnabled = true
+        commandCenter.skipBackwardCommand.isEnabled = true
+        commandCenter.skipForwardCommand.preferredIntervals = [15]
+        commandCenter.skipBackwardCommand.preferredIntervals = [15]
+
+        commandCenter.skipForwardCommand.addTarget { [weak self] _ in
+            guard let self = self else { return .commandFailed }
+            self.seek(to: min(self.duration, self.currentTime + 15))
+            return .success
+        }
+
+        commandCenter.skipBackwardCommand.addTarget { [weak self] _ in
+            guard let self = self else { return .commandFailed }
+            self.seek(to: max(0, self.currentTime - 15))
+            return .success
         }
     }
 
