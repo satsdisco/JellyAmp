@@ -898,8 +898,9 @@ struct AlbumCard: View {
                         case .success(let image):
                             image
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 160, height: 160)
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity)
+                                .clipped()
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         case .failure:
                             placeholderArtwork
@@ -908,7 +909,8 @@ struct AlbumCard: View {
                         }
                     }
                     .transaction { $0.animation = nil }
-                    .frame(width: 160, height: 160)
+                    .aspectRatio(1, contentMode: .fit)
+                    .frame(maxWidth: .infinity)
                     .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 } else {
                     placeholderArtwork
@@ -1103,8 +1105,9 @@ struct ArtistCard: View {
                         case .success(let image):
                             image
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 130, height: 130)
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity)
+                                .clipped()
                                 .clipShape(Circle())
                                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                         case .failure:
@@ -1114,7 +1117,8 @@ struct ArtistCard: View {
                         }
                     }
                     .transaction { $0.animation = nil }
-                    .frame(width: 130, height: 130)
+                    .aspectRatio(1, contentMode: .fit)
+                    .frame(maxWidth: .infinity)
                 } else {
                     placeholderArtwork
                 }
@@ -1143,7 +1147,8 @@ struct ArtistCard: View {
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 130, height: 130)
+                .aspectRatio(1, contentMode: .fit)
+                .frame(maxWidth: .infinity)
                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
 
             // Artist icon
@@ -1241,8 +1246,9 @@ struct PlaylistCard: View {
                         case .success(let image):
                             image
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 160, height: 160)
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity)
+                                .clipped()
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         case .failure:
                             placeholderArtwork
@@ -1251,7 +1257,8 @@ struct PlaylistCard: View {
                         }
                     }
                     .transaction { $0.animation = nil }
-                    .frame(width: 160, height: 160)
+                    .aspectRatio(1, contentMode: .fit)
+                    .frame(maxWidth: .infinity)
                     .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 } else {
                     placeholderArtwork
