@@ -11,6 +11,7 @@ struct SettingsView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
     @ObservedObject var themeManager = ThemeManager.shared
     @State private var showSignOutConfirmation = false
+    @AppStorage("preferredAppearance") private var preferredAppearance = "always_dark"
 
     var body: some View {
         NavigationStack {
@@ -148,6 +149,60 @@ struct SettingsView: View {
                     .accessibilityAddTraits(themeManager.currentTheme == theme ? .isSelected : [])
                 }
             }
+            
+            // Appearance Setting
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Color Scheme")
+                    .font(.jellyAmpBody)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 16)
+                
+                ForEach(["always_dark", "system"], id: \.self) { appearance in
+                    Button {
+                        preferredAppearance = appearance
+                    } label: {
+                        HStack {
+                            Image(systemName: appearanceIcon(for: appearance))
+                                .font(.title3)
+                                .foregroundColor(.jellyAmpText)
+                                .frame(width: 24)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(appearanceTitle(for: appearance))
+                                    .font(.jellyAmpBody)
+                                    .foregroundColor(.jellyAmpText)
+                                
+                                Text(appearanceDescription(for: appearance))
+                                    .font(.jellyAmpCaption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            if preferredAppearance == appearance {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.jellyAmpAccent)
+                            }
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(preferredAppearance == appearance ? Color.jellyAmpMidBackground : Color.clear)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(
+                                            preferredAppearance == appearance ?
+                                            Color.jellyAmpAccent.opacity(0.5) :
+                                            Color.white.opacity(0.1),
+                                            lineWidth: 1
+                                        )
+                                )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
         }
     }
 
@@ -176,6 +231,40 @@ struct SettingsView: View {
             return .neonCyan.opacity(0.2)
         case .sleek:
             return .goldBrass.opacity(0.2)
+        }
+    }
+    
+    // Helper functions for appearance setting
+    private func appearanceIcon(for appearance: String) -> String {
+        switch appearance {
+        case "always_dark":
+            return "moon.fill"
+        case "system":
+            return "circle.lefthalf.filled"
+        default:
+            return "moon.fill"
+        }
+    }
+    
+    private func appearanceTitle(for appearance: String) -> String {
+        switch appearance {
+        case "always_dark":
+            return "Always Dark"
+        case "system":
+            return "System"
+        default:
+            return "Always Dark"
+        }
+    }
+    
+    private func appearanceDescription(for appearance: String) -> String {
+        switch appearance {
+        case "always_dark":
+            return "Force dark mode for optimal cypherpunk aesthetic"
+        case "system":
+            return "Follow system light/dark mode setting"
+        default:
+            return "Force dark mode for optimal cypherpunk aesthetic"
         }
     }
 

@@ -9,7 +9,8 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
-
+    @AppStorage("preferredAppearance") private var preferredAppearance = "always_dark"
+    
     var body: some View {
         Group {
             if jellyfinService.isAuthenticated {
@@ -20,7 +21,18 @@ struct ContentView: View {
                 OnboardingView()
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(colorScheme)
+    }
+    
+    private var colorScheme: ColorScheme? {
+        switch preferredAppearance {
+        case "system":
+            return nil
+        case "always_dark":
+            return .dark
+        default:
+            return .dark
+        }
     }
 }
 
