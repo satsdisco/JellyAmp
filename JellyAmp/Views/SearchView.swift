@@ -110,32 +110,19 @@ struct SearchView: View {
                 ForEach(filteredResults, id: \.id) { item in
                     if item.type == "MusicArtist" {
                         NavigationLink(value: Artist(from: item, baseURL: jellyfinService.baseURL)) {
-                            SearchResultRow(
-                                item: item,
-                                baseURL: jellyfinService.baseURL,
-                                onTap: {
-                                    // Action now handled by NavigationLink
-                                }
-                            )
+                            SearchResultRow(item: item, baseURL: jellyfinService.baseURL)
                         }
+                        .buttonStyle(.plain)
                     } else if item.type == "MusicAlbum" {
                         NavigationLink(value: Album(from: item, baseURL: jellyfinService.baseURL)) {
-                            SearchResultRow(
-                                item: item,
-                                baseURL: jellyfinService.baseURL,
-                                onTap: {
-                                    // Action now handled by NavigationLink
-                                }
-                            )
+                            SearchResultRow(item: item, baseURL: jellyfinService.baseURL)
                         }
+                        .buttonStyle(.plain)
                     } else {
-                        SearchResultRow(
-                            item: item,
-                            baseURL: jellyfinService.baseURL,
-                            onTap: {
-                                handleItemTap(item)
-                            }
-                        )
+                        Button { handleItemTap(item) } label: {
+                            SearchResultRow(item: item, baseURL: jellyfinService.baseURL)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
 
@@ -247,13 +234,9 @@ struct SearchView: View {
 struct SearchResultRow: View {
     let item: BaseItemDto
     let baseURL: String
-    let onTap: () -> Void
 
     var body: some View {
-        Button {
-            onTap()
-        } label: {
-            HStack(spacing: 16) {
+        HStack(spacing: 16) {
                 // Artwork/Icon
                 if let imageTags = item.imageTags,
                    let primaryTag = imageTags["Primary"] {
@@ -332,8 +315,7 @@ struct SearchResultRow: View {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.jellyAmpMidBackground.opacity(0.3))
             )
-        }
-        .buttonStyle(.plain)
+            .contentShape(Rectangle())
         .padding(.horizontal, 16)
     }
 
