@@ -20,6 +20,7 @@ struct NowPlayingView: View {
     @State private var showSleepTimer = false
     @State private var dominantColor: Color?
     @ObservedObject var sleepTimer = SleepTimerManager.shared
+    @State private var dragOffset: CGFloat = 0
     var namespace: Namespace.ID
     var onDismiss: (() -> Void)?
 
@@ -72,6 +73,32 @@ struct NowPlayingView: View {
             .padding(.top, 60)
             .padding(.bottom, 40)
         }
+        .offset(y: max(0, dragOffset))
+        .opacity(1.0 - Double(max(0, dragOffset)) / 500.0)
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    // Only allow downward drag
+                    if value.translation.height > 0 {
+                        dragOffset = value.translation.height
+                    }
+                }
+                .onEnded { value in
+                    if value.translation.height > 150 || value.velocity.height > 500 {
+                        // Dismiss
+                        if let onDismiss = onDismiss {
+                            onDismiss()
+                        } else {
+                            dismiss()
+                        }
+                    } else {
+                        // Snap back
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            dragOffset = 0
+                        }
+                    }
+                }
+        )
         .onChange(of: playerManager.currentTrack) { _, newTrack in
             // Update favorite status when track changes
             isFavorite = newTrack?.isFavorite ?? false

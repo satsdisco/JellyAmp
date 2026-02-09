@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D8BAE535B03280ABFE74A329 /* SwipeBackGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FDEB2B8B50283C61B2EDAC1 /* SwipeBackGesture.swift */; };
 		4BEDE7AD2EA2BA6A001E8050 /* JellyAmpKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BEDE7A22EA2BA6A001E8050 /* JellyAmpKit.framework */; };
 		4BEDE7B72EA2BA6A001E8050 /* JellyAmpKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BEDE7A22EA2BA6A001E8050 /* JellyAmpKit.framework */; };
 		4BEDE7B82EA2BA6A001E8050 /* JellyAmpKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4BEDE7A22EA2BA6A001E8050 /* JellyAmpKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -119,6 +120,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7FDEB2B8B50283C61B2EDAC1 /* SwipeBackGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeBackGesture.swift; sourceTree = "<group>"; };
 		4BEDE7732EA2B830001E8050 /* JellyAmp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JellyAmp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4BEDE7802EA2B834001E8050 /* JellyAmpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JellyAmpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4BEDE78A2EA2B834001E8050 /* JellyAmpUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JellyAmpUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -275,6 +277,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BEDED4549B5773BEB4F21D25 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				7FDEB2B8B50283C61B2EDAC1 /* SwipeBackGesture.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
 		4BEDE76A2EA2B830001E8050 = {
 			isa = PBXGroup;
 			children = (
@@ -684,6 +694,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8BAE535B03280ABFE74A329 /* SwipeBackGesture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
