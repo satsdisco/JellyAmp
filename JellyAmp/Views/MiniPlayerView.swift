@@ -10,6 +10,7 @@ import SwiftUI
 struct MiniPlayerView: View {
     @ObservedObject var playerManager = PlayerManager.shared
     @Binding var showNowPlaying: Bool
+    var namespace: Namespace.ID
 
     var body: some View {
         if let currentTrack = playerManager.currentTrack {
@@ -56,6 +57,7 @@ struct MiniPlayerView: View {
         }
         .frame(height: 64)
         .background(.regularMaterial)
+        .matchedGeometryEffect(id: "playerBg", in: namespace)
     }
 
     private func miniPlayerArtwork(for track: Track) -> some View {
@@ -76,6 +78,7 @@ struct MiniPlayerView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
         .padding(.leading, 12)
+        .matchedGeometryEffect(id: "albumArt", in: namespace)
     }
 
     private var miniPlayerPlayButton: some View {
@@ -171,9 +174,17 @@ struct TickerText: View {
 
 // MARK: - Preview
 #Preview {
-    VStack {
-        Spacer()
-        MiniPlayerView(showNowPlaying: .constant(false))
+    struct PreviewWrapper: View {
+        @Namespace private var namespace
+        
+        var body: some View {
+            VStack {
+                Spacer()
+                MiniPlayerView(showNowPlaying: .constant(false), namespace: namespace)
+            }
+            .background(Color.jellyAmpBackground)
+        }
     }
-    .background(Color.jellyAmpBackground)
+    
+    return PreviewWrapper()
 }

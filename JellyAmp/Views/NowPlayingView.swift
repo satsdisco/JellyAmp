@@ -17,6 +17,7 @@ struct NowPlayingView: View {
     @State private var sliderValue: Double = 0
     @State private var showQueue = false
     @State private var isFavorite = false
+    var namespace: Namespace.ID
 
     var body: some View {
         ZStack {
@@ -31,6 +32,7 @@ struct NowPlayingView: View {
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
+            .matchedGeometryEffect(id: "playerBg", in: namespace)
 
             // Content
             VStack(spacing: 0) {
@@ -151,8 +153,10 @@ struct NowPlayingView: View {
                     }
                 }
                 .frame(width: 320, height: 320)
+                .matchedGeometryEffect(id: "albumArt", in: namespace)
             } else {
                 placeholderArtwork
+                    .matchedGeometryEffect(id: "albumArt", in: namespace)
             }
         }
     }
@@ -467,5 +471,13 @@ struct AirPlayButton: UIViewRepresentable {
 
 // MARK: - Preview
 #Preview {
-    NowPlayingView()
+    struct PreviewWrapper: View {
+        @Namespace private var namespace
+        
+        var body: some View {
+            NowPlayingView(namespace: namespace)
+        }
+    }
+    
+    return PreviewWrapper()
 }
