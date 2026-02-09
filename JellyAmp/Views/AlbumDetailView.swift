@@ -73,8 +73,9 @@ struct AlbumDetailView: View {
 
                 ScrollView {
                     VStack(spacing: 0) {
-                        // Album Hero Section
+                        // Album Hero Section (extends behind status bar)
                         albumHeroSection
+                            .padding(.top, -60) // Pull up behind status bar
 
                         // Action Buttons
                         actionButtonsSection

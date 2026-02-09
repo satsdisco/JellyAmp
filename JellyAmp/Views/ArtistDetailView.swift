@@ -52,8 +52,9 @@ struct ArtistDetailView: View {
 
                 ScrollView {
                     VStack(spacing: 0) {
-                        // Hero Header with Artist Image
+                        // Hero Header with Artist Image (extends behind status bar)
                         artistHeaderSection
+                            .padding(.top, -60) // Pull up behind status bar
 
                         // Bio Section
                         if let bio = artist.bio {
