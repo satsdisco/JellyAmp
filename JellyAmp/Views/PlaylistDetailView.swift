@@ -70,10 +70,6 @@ struct PlaylistDetailView: View {
                 // Navigation handled by NavigationStack
             }
 
-            // Mini Player (fixed at bottom)
-            if playerManager.currentTrack != nil {
-                MiniPlayerView(showNowPlaying: $showNowPlaying, namespace: playerAnimation)
-            }
         }
         .ignoresSafeArea(.keyboard)
         .onAppear {
