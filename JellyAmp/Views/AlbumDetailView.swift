@@ -631,6 +631,20 @@ struct AlbumTrackRow: View {
             .contentShape(Rectangle())
         }
         .contextMenu {
+            // Play Next
+            Button {
+                playerManager.playNext(track: track)
+            } label: {
+                Label("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward")
+            }
+
+            // Play Last
+            Button {
+                playerManager.playLast(track: track)
+            } label: {
+                Label("Play Last", systemImage: "text.line.last.and.arrowtriangle.forward")
+            }
+
             // Add to Queue
             Button {
                 playerManager.addToQueue(track: track)

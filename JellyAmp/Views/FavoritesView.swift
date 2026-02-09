@@ -404,6 +404,18 @@ struct FavoriteTrackRow: View {
         }
         .contextMenu {
             Button {
+                playerManager.playNext(track: track)
+            } label: {
+                Label("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward")
+            }
+
+            Button {
+                playerManager.playLast(track: track)
+            } label: {
+                Label("Play Last", systemImage: "text.line.last.and.arrowtriangle.forward")
+            }
+
+            Button {
                 playerManager.addToQueue(track: track)
             } label: {
                 Label("Add to Queue", systemImage: "text.append")

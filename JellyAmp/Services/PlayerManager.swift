@@ -263,6 +263,25 @@ class PlayerManager: NSObject, ObservableObject {
         }
     }
 
+    /// Insert track to play after current track
+    func playNext(track: Track) {
+        let insertIndex = min(currentIndex + 1, queue.count)
+        queue.insert(track, at: insertIndex)
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+    }
+
+    /// Add track to end of queue
+    func playLast(track: Track) {
+        queue.append(track)
+        if currentTrack == nil {
+            currentIndex = queue.count - 1
+            playCurrentTrack()
+        }
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+    }
+
     /// Seeks to specific time
     func seek(to time: Double) {
         guard let player = player else {
