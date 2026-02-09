@@ -56,12 +56,12 @@ struct MainTabView: View {
             .tag(4)
         }
         .tint(.jellyAmpAccent)
-        .safeAreaInset(edge: .bottom) {
+        .overlay(alignment: .bottom) {
             // Mini Player floats above tab bar
             if playerManager.currentTrack != nil {
                 MiniPlayerView(showNowPlaying: $showNowPlaying)
                     .padding(.horizontal, 8)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 56) // Tab bar height + spacing
             }
         }
         .fullScreenCover(isPresented: $showNowPlaying) {
