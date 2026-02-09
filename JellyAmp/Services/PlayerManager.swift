@@ -578,9 +578,15 @@ class PlayerManager: NSObject, ObservableObject {
                 isOffline = true
                 logger.info("  [\(offset)] Using offline file: \(track.name)")
             } else {
-                playbackURL = jellyfinService.getStreamingURL(for: track.id)
+                let qualityRaw = UserDefaults.standard.string(forKey: "streamingQuality") ?? "medium"
+                let quality = StreamingQuality(rawValue: qualityRaw) ?? .medium
+                if quality == .original {
+                    playbackURL = jellyfinService.getDownloadURL(for: track.id)
+                } else {
+                    playbackURL = jellyfinService.getStreamingURL(for: track.id, bitrate: quality.bitrate)
+                }
                 isOffline = false
-                logger.info("  [\(offset)] Streaming: \(track.name)")
+                logger.info("  [\(offset)] Streaming (\(qualityRaw)): \(track.name)")
             }
 
             guard let url = playbackURL else {

@@ -7,11 +7,55 @@
 
 import SwiftUI
 
+enum StreamingQuality: String, CaseIterable, Identifiable {
+    case low = "low"
+    case medium = "medium"
+    case high = "high"
+    case original = "original"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .low: return "Low"
+        case .medium: return "Medium"
+        case .high: return "High"
+        case .original: return "Original"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .low: return "96 kbps — saves data"
+        case .medium: return "192 kbps — balanced"
+        case .high: return "320 kbps — high quality"
+        case .original: return "Direct stream — best quality, more data"
+        }
+    }
+
+    var bitrate: Int {
+        switch self {
+        case .low: return 96
+        case .medium: return 192
+        case .high: return 320
+        case .original: return 0
+        }
+    }
+}
+
 struct SettingsView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
     @ObservedObject var themeManager = ThemeManager.shared
     @State private var showSignOutConfirmation = false
     @AppStorage("preferredAppearance") private var preferredAppearance = "always_dark"
+    @AppStorage("streamingQuality") private var selectedQualityRaw = StreamingQuality.medium.rawValue
+
+    private var selectedQuality: StreamingQuality {
+        get { StreamingQuality(rawValue: selectedQualityRaw) ?? .medium }
+    }
+    private func setSelectedQuality(_ quality: StreamingQuality) {
+        selectedQualityRaw = quality.rawValue
+    }
 
     var body: some View {
         NavigationStack {
@@ -26,6 +70,9 @@ struct SettingsView: View {
 
                         // Theme Selector
                         themeSection
+
+                        // Streaming Quality
+                        streamingQualitySection
 
                         // Server Info Section
                         serverInfoSection
@@ -265,6 +312,50 @@ struct SettingsView: View {
             return "Follow system light/dark mode setting"
         default:
             return "Force dark mode for optimal cypherpunk aesthetic"
+        }
+    }
+
+    // MARK: - Streaming Quality Section
+    private var streamingQualitySection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Streaming")
+                .font(.jellyAmpHeadline)
+                .foregroundColor(.jellyAmpAccent)
+
+            VStack(spacing: 8) {
+                ForEach(StreamingQuality.allCases) { quality in
+                    Button {
+                        setSelectedQuality(quality)
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(quality.displayName)
+                                    .font(.jellyAmpBody)
+                                    .foregroundColor(Color.jellyAmpText)
+                                Text(quality.description)
+                                    .font(.jellyAmpCaption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            if selectedQuality == quality {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.jellyAmpAccent)
+                            }
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(selectedQuality == quality ? Color.jellyAmpMidBackground : Color.clear)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(selectedQuality == quality ? Color.jellyAmpAccent.opacity(0.5) : Color.white.opacity(0.1), lineWidth: 1)
+                                )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
         }
     }
 
