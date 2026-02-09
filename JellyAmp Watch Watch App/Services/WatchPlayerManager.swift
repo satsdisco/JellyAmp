@@ -10,6 +10,7 @@ import AVFoundation
 import MediaPlayer
 import Combine
 import WatchKit
+import WidgetKit
 
 class WatchPlayerManager: NSObject, ObservableObject {
     static let shared = WatchPlayerManager()
@@ -218,6 +219,7 @@ class WatchPlayerManager: NSObject, ObservableObject {
     private func updateNowPlayingInfo() {
         guard let track = currentTrack else {
             MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            updateComplicationData(track: nil)
             return
         }
 
@@ -231,6 +233,26 @@ class WatchPlayerManager: NSObject, ObservableObject {
         ]
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        updateComplicationData(track: track)
+    }
+
+    /// Write now-playing data to shared App Group for complications
+    private func updateComplicationData(track: WatchTrack?) {
+        guard let defaults = UserDefaults(suiteName: "group.jellyampos.Jellywatch.JellyAmp") else { return }
+
+        if let track = track {
+            defaults.set(track.name, forKey: "complication_trackName")
+            defaults.set(track.artist, forKey: "complication_artistName")
+            defaults.set(track.album, forKey: "complication_albumName")
+            defaults.set(isPlaying, forKey: "complication_isPlaying")
+        } else {
+            defaults.removeObject(forKey: "complication_trackName")
+            defaults.removeObject(forKey: "complication_artistName")
+            defaults.removeObject(forKey: "complication_albumName")
+            defaults.set(false, forKey: "complication_isPlaying")
+        }
+
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     // MARK: - Remote Controls
