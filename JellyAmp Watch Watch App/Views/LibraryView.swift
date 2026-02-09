@@ -94,23 +94,26 @@ struct LibraryView: View {
     private var artistsList: some View {
         List(artists) { artist in
             NavigationLink(destination: ArtistDetailView(artist: artist)) {
-                HStack {
-                    Image(systemName: "music.mic")
-                        .font(.body)
-                        .foregroundColor(.cyan)
-                        .frame(width: 30)
+                HStack(spacing: 10) {
+                    AlbumArtworkView(
+                        albumId: artist.id,
+                        baseURL: jellyfinService.baseURL,
+                        size: 36
+                    )
+                    .frame(width: 36, height: 36)
+                    .clipShape(Circle())
 
                     Text(artist.name)
                         .font(.headline)
                         .lineLimit(1)
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, 2)
             }
             .accessibilityLabel("Artist: \(artist.name)")
             .accessibilityHint("Double tap to view artist albums")
         }
         .listStyle(PlainListStyle())
-        .focusable(true) // Enable Digital Crown scrolling
+        .focusable(true)
     }
 
     // MARK: - Albums List
@@ -118,34 +121,44 @@ struct LibraryView: View {
     private var albumsList: some View {
         List(albums) { album in
             NavigationLink(destination: AlbumDetailView(album: album)) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(album.name)
-                        .font(.headline)
-                        .lineLimit(1)
+                HStack(spacing: 10) {
+                    AlbumArtworkView(
+                        albumId: album.id,
+                        baseURL: jellyfinService.baseURL,
+                        size: 40
+                    )
+                    .frame(width: 40, height: 40)
+                    .cornerRadius(6)
 
-                    HStack(spacing: 4) {
-                        Text(album.artist)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(album.name)
+                            .font(.headline)
+                            .lineLimit(1)
 
-                        if let year = album.year {
-                            Text("•")
+                        HStack(spacing: 4) {
+                            Text(album.artist)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            Text(String(year))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+
+                            if let year = album.year {
+                                Text("•")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text(String(year))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
+                        .lineLimit(1)
                     }
-                    .lineLimit(1)
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, 2)
             }
             .accessibilityLabel("Album: \(album.name) by \(album.artist)")
             .accessibilityHint("Double tap to view album")
         }
         .listStyle(PlainListStyle())
-        .focusable(true) // Enable Digital Crown scrolling
+        .focusable(true)
     }
 
     // MARK: - Empty/Error States

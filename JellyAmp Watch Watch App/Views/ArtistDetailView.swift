@@ -112,18 +112,28 @@ struct ArtistDetailView: View {
 
                             ForEach(filteredAlbums) { album in
                                 NavigationLink(destination: AlbumDetailView(album: album)) {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(album.name)
-                                            .font(.headline)
-                                            .lineLimit(1)
+                                    HStack(spacing: 10) {
+                                        AlbumArtworkView(
+                                            albumId: album.id,
+                                            baseURL: jellyfinService.baseURL,
+                                            size: 40
+                                        )
+                                        .frame(width: 40, height: 40)
+                                        .cornerRadius(6)
 
-                                        if let year = album.year {
-                                            Text(String(year))
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(album.name)
+                                                .font(.headline)
+                                                .lineLimit(1)
+
+                                            if let year = album.year {
+                                                Text(String(year))
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
                                         }
                                     }
-                                    .padding(.vertical, 4)
+                                    .padding(.vertical, 2)
                                 }
                                 .accessibilityLabel("Album: \(album.name)\(album.year.map { ", released \($0)" } ?? "")")
                                 .accessibilityHint("Double tap to view album tracks")
