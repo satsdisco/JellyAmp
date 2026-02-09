@@ -36,6 +36,7 @@ struct NowPlayingView: View {
         .onChange(of: playerManager.currentTrack?.id) { _, _ in
             syncFavoriteState()
         }
+        .containerBackground(.black.gradient, for: .navigation)
     }
 
     // MARK: - Track Info

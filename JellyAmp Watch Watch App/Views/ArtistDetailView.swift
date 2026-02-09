@@ -55,6 +55,8 @@ struct ArtistDetailView: View {
                             )
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .accessibilityLabel("View \(tabs[index].label)")
+                        .accessibilityAddTraits(selectedTab == index ? .isSelected : [])
                     }
                 }
                 .padding(.horizontal, 8)
@@ -123,9 +125,12 @@ struct ArtistDetailView: View {
                                     }
                                     .padding(.vertical, 4)
                                 }
+                                .accessibilityLabel("Album: \(album.name)\(album.year.map { ", released \($0)" } ?? "")")
+                                .accessibilityHint("Double tap to view album tracks")
                             }
                         }
                         .listStyle(PlainListStyle())
+                        .focusable(true) // Enable Digital Crown scrolling
                     } else if let year = selectedYear {
                         Spacer()
                         Text("No albums for \(String(year))")
@@ -169,6 +174,7 @@ struct ArtistDetailView: View {
                             .padding(.vertical, 4)
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .accessibilityLabel("Play all \(tracks.count) tracks by \(artist.name)")
 
                         // Track list
                         ForEach(Array(tracks.enumerated()), id: \.element.id) { index, track in
@@ -197,9 +203,12 @@ struct ArtistDetailView: View {
                                 .padding(.vertical, 4)
                             }
                             .buttonStyle(PlainButtonStyle())
+                            .accessibilityLabel("Track \(index + 1): \(track.name) from \(track.album)")
+                            .accessibilityHint("Double tap to play")
                         }
                     }
                     .listStyle(PlainListStyle())
+                    .focusable(true) // Enable Digital Crown scrolling
                 } else {
                     Spacer()
                     Text("No tracks available")
@@ -242,6 +251,7 @@ struct ArtistDetailView: View {
                                 )
                             }
                             .buttonStyle(PlainButtonStyle())
+                            .accessibilityLabel("View all albums from all years, \(albums.count) albums total")
 
                             // Individual years (descending order - newest first)
                             ForEach(uniqueYears.sorted(by: >), id: \.self) { year in
@@ -269,16 +279,19 @@ struct ArtistDetailView: View {
                                     )
                                 }
                                 .buttonStyle(PlainButtonStyle())
+                                .accessibilityLabel("View albums from \(year), \(albums.filter { $0.year == year }.count) albums")
                             }
                         }
                         .padding(.horizontal, 8)
                         .padding(.vertical, 8)
                     }
+                    .focusable(true) // Enable Digital Crown scrolling
                 }
             }
         }
         .navigationTitle(artist.name)
         .navigationBarTitleDisplayMode(.inline)
+        .containerBackground(.black.gradient, for: .navigation)
         .task {
             await loadArtistContent()
         }

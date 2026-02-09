@@ -29,6 +29,9 @@ struct WatchOnboardingView: View {
             Spacer()
         }
         .padding()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Sign in required. Please sign in on your iPhone first, then credentials will sync automatically.")
+        .containerBackground(.black.gradient, for: .navigation)
     }
 }
 

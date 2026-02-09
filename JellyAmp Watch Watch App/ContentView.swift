@@ -34,6 +34,7 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .containerBackground(.black.gradient, for: .tabView)
     }
 }
 

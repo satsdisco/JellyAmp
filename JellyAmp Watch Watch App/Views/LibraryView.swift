@@ -86,6 +86,7 @@ struct LibraryView: View {
                 }
             }
         }
+        .containerBackground(.black.gradient, for: .navigation)
     }
 
     // MARK: - Artists List
@@ -109,6 +110,7 @@ struct LibraryView: View {
             .accessibilityHint("Double tap to view artist albums")
         }
         .listStyle(PlainListStyle())
+        .focusable(true) // Enable Digital Crown scrolling
     }
 
     // MARK: - Albums List
@@ -143,6 +145,7 @@ struct LibraryView: View {
             .accessibilityHint("Double tap to view album")
         }
         .listStyle(PlainListStyle())
+        .focusable(true) // Enable Digital Crown scrolling
     }
 
     // MARK: - Empty/Error States

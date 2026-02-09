@@ -42,6 +42,8 @@ struct AlbumArtworkView: View {
                 }
             }
         }
+        .accessibilityLabel("Album artwork")
+        .accessibilityHidden(image == nil) // Hide placeholder from VoiceOver
         .task {
             await loadArtwork()
         }

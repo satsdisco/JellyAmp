@@ -34,6 +34,7 @@ struct AlbumDetailView: View {
         .task {
             await loadTracks()
         }
+        .containerBackground(.black.gradient, for: .navigation)
     }
 
     // MARK: - Tracks List
@@ -48,6 +49,7 @@ struct AlbumDetailView: View {
                     .foregroundColor(.cyan)
                     .fontWeight(.semibold)
             }
+            .accessibilityLabel("Play all tracks in \(album.name)")
 
             // Track list
             ForEach(Array(tracks.enumerated()), id: \.element.id) { index, track in
@@ -67,8 +69,11 @@ struct AlbumDetailView: View {
                     }
                     .padding(.vertical, 4)
                 }
+                .accessibilityLabel("Track \(index + 1): \(track.name) by \(track.artist)")
+                .accessibilityHint("Double tap to play")
             }
         }
+        .focusable(true) // Enable Digital Crown scrolling
     }
 
     // MARK: - Empty/Error States

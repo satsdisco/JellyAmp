@@ -22,6 +22,8 @@ struct SettingsView: View {
                         Text(jellyfinService.userName)
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Current user: \(jellyfinService.userName)")
 
                     HStack {
                         Text("Server")
@@ -30,6 +32,8 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Connected to server: \(serverDomain)")
                 }
 
                 // Sign out
@@ -39,7 +43,8 @@ struct SettingsView: View {
                     } label: {
                         Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                     }
-                    .accessibilityLabel("Sign out of account")
+                    .accessibilityLabel("Sign out of current account")
+                    .accessibilityHint("Double tap to sign out, requires confirmation")
                 }
             } else {
                 // Not authenticated
@@ -72,7 +77,9 @@ struct SettingsView: View {
                 }
             }
         }
+        .focusable(true) // Enable Digital Crown scrolling
         .navigationTitle("Settings")
+        .containerBackground(.black.gradient, for: .navigation)
         .confirmationDialog("Sign Out", isPresented: $showSignOutConfirmation) {
             Button("Sign Out", role: .destructive) {
                 jellyfinService.signOut()
