@@ -11,7 +11,9 @@
 		4BEDE7B72EA2BA6A001E8050 /* JellyAmpKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BEDE7A22EA2BA6A001E8050 /* JellyAmpKit.framework */; };
 		4BEDE7B82EA2BA6A001E8050 /* JellyAmpKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4BEDE7A22EA2BA6A001E8050 /* JellyAmpKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4BEDE7E42EA2BECB001E8050 /* JellyAmp Watch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 4BEDE7C42EA2BEC6001E8050 /* JellyAmp Watch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		777C30687F5055DAE981F7E3 /* JellyAmpComplicationExtension.appex in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 640F3D57D6E9A34930B0D805 /* JellyAmpComplicationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6D1D0D042F3A7AA100995579 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1D0D032F3A7AA100995579 /* WidgetKit.framework */; };
+		6D1D0D062F3A7AA100995579 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1D0D052F3A7AA100995579 /* SwiftUI.framework */; };
+		6D1D0D112F3A7AA200995579 /* JellyAmpComplicationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6D1D0D012F3A7AA100995579 /* JellyAmpComplicationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +73,13 @@
 			remoteGlobalIDString = 4BEDE7C32EA2BEC6001E8050;
 			remoteInfo = "JellyAmp Watch Watch App";
 		};
+		6D1D0D0F2F3A7AA200995579 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4BEDE76B2EA2B830001E8050 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6D1D0D002F3A7AA100995579;
+			remoteInfo = JellyAmpComplicationExtension;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -96,6 +105,17 @@
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6D1D0D122F3A7AA200995579 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6D1D0D112F3A7AA200995579 /* JellyAmpComplicationExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -107,7 +127,10 @@
 		4BEDE7C42EA2BEC6001E8050 /* JellyAmp Watch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "JellyAmp Watch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4BEDE7D02EA2BECB001E8050 /* JellyAmp Watch Watch AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "JellyAmp Watch Watch AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4BEDE7DA2EA2BECB001E8050 /* JellyAmp Watch Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "JellyAmp Watch Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		640F3D57D6E9A34930B0D805 /* JellyAmpComplicationExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = JellyAmpComplicationExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6D1D0D012F3A7AA100995579 /* JellyAmpComplicationExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = JellyAmpComplicationExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6D1D0D032F3A7AA100995579 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		6D1D0D052F3A7AA100995579 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		6D1D0D172F3A7E7D00995579 /* JellyAmpComplicationExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JellyAmpComplicationExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -117,6 +140,13 @@
 				Info.plist,
 			);
 			target = 4BEDE7722EA2B830001E8050 /* JellyAmp */;
+		};
+		6D1D0D162F3A7AA200995579 /* Exceptions for "JellyAmpComplication" folder in "JellyAmpComplicationExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 6D1D0D002F3A7AA100995579 /* JellyAmpComplicationExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -164,9 +194,12 @@
 			path = "JellyAmp Watch Watch AppUITests";
 			sourceTree = "<group>";
 		};
-		CC9D72978014C84B2C218601 /* JellyAmpComplicationExtension */ = {
+		6D1D0D072F3A7AA100995579 /* JellyAmpComplication */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = JellyAmpComplicationExtension;
+			exceptions = (
+				6D1D0D162F3A7AA200995579 /* Exceptions for "JellyAmpComplication" folder in "JellyAmpComplicationExtension" target */,
+			);
+			path = JellyAmpComplication;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -230,10 +263,12 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		014133E91800692A53449A60 /* Frameworks */ = {
+		6D1D0CFE2F3A7AA100995579 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6D1D0D062F3A7AA100995579 /* SwiftUI.framework in Frameworks */,
+				6D1D0D042F3A7AA100995579 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,6 +278,7 @@
 		4BEDE76A2EA2B830001E8050 = {
 			isa = PBXGroup;
 			children = (
+				6D1D0D172F3A7E7D00995579 /* JellyAmpComplicationExtension.entitlements */,
 				4BEDE7752EA2B830001E8050 /* JellyAmp */,
 				4BEDE7832EA2B834001E8050 /* JellyAmpTests */,
 				4BEDE78D2EA2B834001E8050 /* JellyAmpUITests */,
@@ -251,9 +287,10 @@
 				4BEDE7C52EA2BEC6001E8050 /* JellyAmp Watch Watch App */,
 				4BEDE7D32EA2BECB001E8050 /* JellyAmp Watch Watch AppTests */,
 				4BEDE7DD2EA2BECB001E8050 /* JellyAmp Watch Watch AppUITests */,
+				6D1D0D072F3A7AA100995579 /* JellyAmpComplication */,
+				6D1D0D022F3A7AA100995579 /* Frameworks */,
 				4BEDE7742EA2B830001E8050 /* Products */,
-			
-				CC9D72978014C84B2C218601 /* JellyAmpComplicationExtension */,);
+			);
 			sourceTree = "<group>";
 		};
 		4BEDE7742EA2B830001E8050 /* Products */ = {
@@ -267,9 +304,18 @@
 				4BEDE7C42EA2BEC6001E8050 /* JellyAmp Watch Watch App.app */,
 				4BEDE7D02EA2BECB001E8050 /* JellyAmp Watch Watch AppTests.xctest */,
 				4BEDE7DA2EA2BECB001E8050 /* JellyAmp Watch Watch AppUITests.xctest */,
-			
-				640F3D57D6E9A34930B0D805 /* JellyAmpComplicationExtension.appex */,);
+				6D1D0D012F3A7AA100995579 /* JellyAmpComplicationExtension.appex */,
+			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		6D1D0D022F3A7AA100995579 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6D1D0D032F3A7AA100995579 /* WidgetKit.framework */,
+				6D1D0D052F3A7AA100995579 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -411,10 +457,12 @@
 				4BEDE7C02EA2BEC6001E8050 /* Sources */,
 				4BEDE7C12EA2BEC6001E8050 /* Frameworks */,
 				4BEDE7C22EA2BEC6001E8050 /* Resources */,
+				6D1D0D122F3A7AA200995579 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				6D1D0D102F3A7AA200995579 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				4BEDE7C52EA2BEC6001E8050 /* JellyAmp Watch Watch App */,
@@ -472,26 +520,26 @@
 			productReference = 4BEDE7DA2EA2BECB001E8050 /* JellyAmp Watch Watch AppUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		FD4BD9C3401729B51957D526 /* JellyAmpComplicationExtension */ = {
+		6D1D0D002F3A7AA100995579 /* JellyAmpComplicationExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2F28CE18CA6A668117C05D7A /* Build configuration list for PBXNativeTarget "JellyAmpComplicationExtension" */;
+			buildConfigurationList = 6D1D0D152F3A7AA200995579 /* Build configuration list for PBXNativeTarget "JellyAmpComplicationExtension" */;
 			buildPhases = (
-				40AC87966767A6FC9D9A40B4 /* Sources */,
-				014133E91800692A53449A60 /* Frameworks */,
-				36C87EEB969888F6D982C622 /* Resources */,
+				6D1D0CFD2F3A7AA100995579 /* Sources */,
+				6D1D0CFE2F3A7AA100995579 /* Frameworks */,
+				6D1D0CFF2F3A7AA100995579 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				CC9D72978014C84B2C218601 /* JellyAmpComplicationExtension */,
+				6D1D0D072F3A7AA100995579 /* JellyAmpComplication */,
 			);
 			name = JellyAmpComplicationExtension;
 			packageProductDependencies = (
 			);
 			productName = JellyAmpComplicationExtension;
-			productReference = 640F3D57D6E9A34930B0D805 /* JellyAmpComplicationExtension.appex */;
+			productReference = 6D1D0D012F3A7AA100995579 /* JellyAmpComplicationExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -501,7 +549,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2600;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					4BEDE7722EA2B830001E8050 = {
@@ -533,6 +581,9 @@
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = 4BEDE7C32EA2BEC6001E8050;
 					};
+					6D1D0D002F3A7AA100995579 = {
+						CreatedOnToolsVersion = 26.2;
+					};
 				};
 			};
 			buildConfigurationList = 4BEDE76E2EA2B830001E8050 /* Build configuration list for PBXProject "JellyAmp" */;
@@ -557,8 +608,8 @@
 				4BEDE7C32EA2BEC6001E8050 /* JellyAmp Watch Watch App */,
 				4BEDE7CF2EA2BECB001E8050 /* JellyAmp Watch Watch AppTests */,
 				4BEDE7D92EA2BECB001E8050 /* JellyAmp Watch Watch AppUITests */,
-							FD4BD9C3401729B51957D526 /* JellyAmpComplicationExtension */,
-);
+				6D1D0D002F3A7AA100995579 /* JellyAmpComplicationExtension */,
+			);
 		};
 /* End PBXProject section */
 
@@ -619,7 +670,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		36C87EEB969888F6D982C622 /* Resources */ = {
+		6D1D0CFF2F3A7AA100995579 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -685,7 +736,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		40AC87966767A6FC9D9A40B4 /* Sources */ = {
+		6D1D0CFD2F3A7AA100995579 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -734,6 +785,11 @@
 			isa = PBXTargetDependency;
 			target = 4BEDE7C32EA2BEC6001E8050 /* JellyAmp Watch Watch App */;
 			targetProxy = 4BEDE7E22EA2BECB001E8050 /* PBXContainerItemProxy */;
+		};
+		6D1D0D102F3A7AA200995579 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6D1D0D002F3A7AA100995579 /* JellyAmpComplicationExtension */;
+			targetProxy = 6D1D0D0F2F3A7AA200995579 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -866,7 +922,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = JellyAmp/JellyAmp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -905,7 +961,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = JellyAmp/JellyAmp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -942,7 +998,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -964,7 +1020,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -985,7 +1041,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.1;
@@ -1005,7 +1061,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.1;
@@ -1026,7 +1082,7 @@
 			buildSettings = {
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1067,7 +1123,7 @@
 			buildSettings = {
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1107,7 +1163,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.1;
@@ -1127,7 +1183,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.1;
@@ -1150,7 +1206,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "JellyAmp Watch Watch App/JellyAmp_Watch_Watch_App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1187,7 +1243,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "JellyAmp Watch Watch App/JellyAmp_Watch_Watch_App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1222,7 +1278,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.1;
@@ -1245,7 +1301,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.1;
@@ -1267,7 +1323,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.1;
@@ -1289,7 +1345,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.1;
@@ -1307,66 +1363,71 @@
 			};
 			name = Release;
 		};
-		B96B92C4DFB1E22EC49DB225 /* Debug */ = {
+		6D1D0D132F3A7AA200995579 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = JellyAmpComplicationExtension/JellyAmpComplicationExtension.entitlements;
+				CODE_SIGN_ENTITLEMENTS = JellyAmpComplicationExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
-				
+				INFOPLIST_FILE = JellyAmpComplication/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = JellyAmpComplication;
-				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = jellyampos.Jellywatch.JellyAmp.watchkitapp.complication;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = jellyampos.Jellywatch.JellyAmp.watchkitapp.JellyAmpComplication;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
 			};
 			name = Debug;
 		};
-		A296639F4A1F67C5DB1B8A1F /* Release */ = {
+		6D1D0D142F3A7AA200995579 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = JellyAmpComplicationExtension/JellyAmpComplicationExtension.entitlements;
+				CODE_SIGN_ENTITLEMENTS = JellyAmpComplicationExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 55XV5874TM;
 				GENERATE_INFOPLIST_FILE = YES;
-				
+				INFOPLIST_FILE = JellyAmpComplication/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = JellyAmpComplication;
-				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = jellyampos.Jellywatch.JellyAmp.watchkitapp.complication;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = jellyampos.Jellywatch.JellyAmp.watchkitapp.JellyAmpComplication;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
 			};
 			name = Release;
 		};
@@ -1454,11 +1515,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2F28CE18CA6A668117C05D7A /* Build configuration list for PBXNativeTarget "JellyAmpComplicationExtension" */ = {
+		6D1D0D152F3A7AA200995579 /* Build configuration list for PBXNativeTarget "JellyAmpComplicationExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				B96B92C4DFB1E22EC49DB225 /* Debug */,
-				A296639F4A1F67C5DB1B8A1F /* Release */,
+				6D1D0D132F3A7AA200995579 /* Debug */,
+				6D1D0D142F3A7AA200995579 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
