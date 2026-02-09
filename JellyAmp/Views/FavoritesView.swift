@@ -11,6 +11,7 @@ struct FavoritesView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
     @ObservedObject var playerManager = PlayerManager.shared
     @ObservedObject var themeManager = ThemeManager.shared
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var favoriteTracks: [Track] = []
     @State private var favoriteAlbums: [Album] = []

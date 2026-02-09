@@ -48,6 +48,7 @@ enum SortOption: String, CaseIterable {
 struct LibraryView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
     @ObservedObject var themeManager = ThemeManager.shared
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var albums: [Album] = []
     @State private var artists: [Artist] = []
     @State private var playlists: [Playlist] = []
@@ -70,9 +71,11 @@ struct LibraryView: View {
     // Search debouncing
     @State private var searchDebounceTask: Task<Void, Never>?
 
-    let columns = [
-        GridItem(.adaptive(minimum: 130), spacing: 16)
-    ]
+    private var columns: [GridItem] {
+        sizeClass == .regular 
+            ? [GridItem(.adaptive(minimum: 180, maximum: 220), spacing: 16)]
+            : [GridItem(.adaptive(minimum: 130), spacing: 16)]
+    }
 
     var filteredAndSortedAlbums: [Album] {
         let filtered: [Album]

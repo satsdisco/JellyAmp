@@ -11,6 +11,7 @@ struct SearchView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
     @ObservedObject var themeManager = ThemeManager.shared
     @ObservedObject var playerManager = PlayerManager.shared
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var searchText = ""
     @State private var searchResults: [BaseItemDto] = []

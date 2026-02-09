@@ -19,6 +19,7 @@ struct ArtistDetailView: View {
     @ObservedObject var playerManager = PlayerManager.shared
     @ObservedObject var themeManager = ThemeManager.shared
     @Environment(\.dismiss) var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var albums: [Album] = []
     @State private var isLoadingAlbums = true
