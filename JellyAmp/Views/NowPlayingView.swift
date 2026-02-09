@@ -18,22 +18,24 @@ struct NowPlayingView: View {
     @State private var showQueue = false
     @State private var isFavorite = false
     @State private var showSleepTimer = false
+    @State private var dominantColor: Color?
     @ObservedObject var sleepTimer = SleepTimerManager.shared
     var namespace: Namespace.ID
 
     var body: some View {
         ZStack {
-            // Background with gradient
+            // Background with dynamic dominant color
             LinearGradient(
                 colors: [
+                    (dominantColor ?? Color.jellyAmpMidBackground).opacity(0.6),
                     Color.jellyAmpBackground,
-                    Color.jellyAmpMidBackground,
                     Color.jellyAmpBackground
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
+            .animation(.easeInOut(duration: 0.8), value: dominantColor != nil)
             .matchedGeometryEffect(id: "playerBg", in: namespace)
 
             // Content
@@ -69,10 +71,13 @@ struct NowPlayingView: View {
         .onChange(of: playerManager.currentTrack) { _, newTrack in
             // Update favorite status when track changes
             isFavorite = newTrack?.isFavorite ?? false
+            // Extract dominant color
+            extractDominantColor(for: newTrack)
         }
         .onAppear {
             // Set initial favorite status
             isFavorite = playerManager.currentTrack?.isFavorite ?? false
+            extractDominantColor(for: playerManager.currentTrack)
         }
     }
 
@@ -430,6 +435,35 @@ struct NowPlayingView: View {
             return "repeat"
         case .one:
             return "repeat.1"
+        }
+    }
+
+    // MARK: - Dominant Color Extraction
+    private func extractDominantColor(for track: Track?) {
+        guard let track = track,
+              let urlString = track.artworkURL,
+              let url = URL(string: urlString) else {
+            dominantColor = nil
+            return
+        }
+
+        Task {
+            // Try to get from image cache first
+            if let cachedImage = await ImageCache.shared.cachedImage(for: url) {
+                let color = await DominantColorExtractor.shared.dominantColor(from: cachedImage, trackId: track.id)
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.8)) {
+                        dominantColor = color
+                    }
+                }
+            } else if let img = try? await ImageCache.shared.loadImage(from: url) {
+                let color = await DominantColorExtractor.shared.dominantColor(from: img, trackId: track.id)
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.8)) {
+                        dominantColor = color
+                    }
+                }
+            }
         }
     }
 
