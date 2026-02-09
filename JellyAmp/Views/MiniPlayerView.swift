@@ -12,6 +12,8 @@ struct MiniPlayerView: View {
     @Binding var showNowPlaying: Bool
     var namespace: Namespace.ID
 
+    @ObservedObject var sleepTimer = SleepTimerManager.shared
+
     var body: some View {
         if let currentTrack = playerManager.currentTrack {
             miniPlayerButton(for: currentTrack)
@@ -69,6 +71,13 @@ struct MiniPlayerView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 12)
+
+            if sleepTimer.isActive {
+                Image(systemName: "moon.zzz.fill")
+                    .font(.caption2)
+                    .foregroundColor(.jellyAmpAccent)
+                    .padding(.trailing, 4)
+            }
 
             miniPlayerPlayButton
         }

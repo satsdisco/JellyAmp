@@ -17,6 +17,8 @@ struct NowPlayingView: View {
     @State private var sliderValue: Double = 0
     @State private var showQueue = false
     @State private var isFavorite = false
+    @State private var showSleepTimer = false
+    @ObservedObject var sleepTimer = SleepTimerManager.shared
     var namespace: Namespace.ID
 
     var body: some View {
@@ -367,15 +369,43 @@ struct NowPlayingView: View {
             }
             .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
 
-            // Queue
+            // Sleep Timer
             Button {
-                showQueue = true
+                showSleepTimer = true
             } label: {
-                Image(systemName: "list.bullet")
-                    .font(.title3)
-                    .foregroundColor(Color.jellyAmpText)
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: "moon.zzz")
+                        .font(.title3)
+                        .foregroundColor(sleepTimer.isActive ? .jellyAmpAccent : .secondary)
+                        .neonGlow(color: .neonCyan, radius: sleepTimer.isActive ? 6 : 0)
+
+                    if sleepTimer.isActive {
+                        Circle()
+                            .fill(Color.jellyAmpAccent)
+                            .frame(width: 8, height: 8)
+                            .offset(x: 4, y: -4)
+                    }
+                }
             }
-            .accessibilityLabel("View queue")
+            .accessibilityLabel("Sleep timer")
+            .confirmationDialog("Sleep Timer", isPresented: $showSleepTimer, titleVisibility: .visible) {
+                ForEach(SleepTimerOption.allCases) { option in
+                    Button(option.rawValue) {
+                        sleepTimer.start(option: option)
+                    }
+                }
+                if sleepTimer.isActive {
+                    Button("Cancel Timer", role: .destructive) {
+                        sleepTimer.cancel()
+                    }
+                }
+            } message: {
+                if sleepTimer.isActive {
+                    Text("Timer active: \(sleepTimer.formattedRemaining)")
+                } else {
+                    Text("Pause playback after...")
+                }
+            }
 
             // Repeat
             Button {
