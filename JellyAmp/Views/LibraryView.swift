@@ -223,6 +223,9 @@ struct LibraryView: View {
                                                         // Action now handled by NavigationLink
                                                     }
                                                 }
+                                                .accessibilityElement(children: .combine)
+                                                .accessibilityLabel("Album: \(album.name) by \(album.artistName)")
+                                                .accessibilityHint("Double tap to view album")
                                             }
                                         }
                                         .padding(.horizontal, 20)
@@ -234,6 +237,9 @@ struct LibraryView: View {
                                                         // Action now handled by NavigationLink
                                                     }
                                                 }
+                                                .accessibilityElement(children: .combine)
+                                                .accessibilityLabel("Album: \(album.name) by \(album.artistName)")
+                                                .accessibilityHint("Double tap to view album")
                                                 .padding(.horizontal, 20)
 
                                                 if album.id != favoriteAlbums.last?.id {
@@ -274,6 +280,9 @@ struct LibraryView: View {
                                                 // Action now handled by NavigationLink
                                             }
                                         }
+                                        .accessibilityElement(children: .combine)
+                                        .accessibilityLabel("Artist: \(artist.name)")
+                                        .accessibilityHint("Double tap to view artist albums")
                                     }
                                 }
                                 .padding(.horizontal, 20)
@@ -286,6 +295,9 @@ struct LibraryView: View {
                                                 // Action now handled by NavigationLink
                                             }
                                         }
+                                        .accessibilityElement(children: .combine)
+                                        .accessibilityLabel("Artist: \(artist.name)")
+                                        .accessibilityHint("Double tap to view artist albums")
                                         .padding(.horizontal, 20)
 
                                         if artist.id != filteredArtists.last?.id {
@@ -324,6 +336,9 @@ struct LibraryView: View {
                                                     // Action now handled by NavigationLink
                                                 }
                                             }
+                                            .accessibilityElement(children: .combine)
+                                            .accessibilityLabel("Playlist: \(playlist.name), \(playlist.trackCount) track\(playlist.trackCount == 1 ? "" : "s")")
+                                            .accessibilityHint("Double tap to view playlist")
                                         }
                                     }
                                     .padding(.horizontal, 20)
@@ -336,6 +351,9 @@ struct LibraryView: View {
                                                     // Action now handled by NavigationLink
                                                 }
                                             }
+                                            .accessibilityElement(children: .combine)
+                                            .accessibilityLabel("Playlist: \(playlist.name), \(playlist.trackCount) track\(playlist.trackCount == 1 ? "" : "s")")
+                                            .accessibilityHint("Double tap to view playlist")
                                             .padding(.horizontal, 20)
 
                                             if playlist.id != playlists.last?.id {
@@ -358,6 +376,9 @@ struct LibraryView: View {
                                                 // Action now handled by NavigationLink
                                             }
                                         }
+                                        .accessibilityElement(children: .combine)
+                                        .accessibilityLabel("Album: \(album.name) by \(album.artistName)")
+                                        .accessibilityHint("Double tap to view album")
                                     }
                                 }
                                 .padding(.horizontal, 20)
@@ -370,6 +391,9 @@ struct LibraryView: View {
                                                 // Action now handled by NavigationLink
                                             }
                                         }
+                                        .accessibilityElement(children: .combine)
+                                        .accessibilityLabel("Album: \(album.name) by \(album.artistName)")
+                                        .accessibilityHint("Double tap to view album")
                                         .padding(.horizontal, 20)
 
                                         if album.id != filteredAndSortedAlbums.last?.id {
@@ -407,6 +431,7 @@ struct LibraryView: View {
                         Image(systemName: "plus.circle.fill")
                             .foregroundColor(.neonPink)
                     }
+                    .accessibilityLabel("Create new playlist")
                 }
                 
                 // Sync button
@@ -424,6 +449,7 @@ struct LibraryView: View {
                             .foregroundColor(.jellyAmpAccent)
                     }
                 }
+                .accessibilityLabel(isSyncing ? "Syncing library" : "Sync library")
                 .disabled(isSyncing)
             }
         }
@@ -637,6 +663,7 @@ struct LibraryView: View {
             TextField("Search albums, artists...", text: $searchText)
                 .foregroundColor(Color.jellyAmpText)
                 .tint(.jellyAmpAccent)
+                .accessibilityLabel("Search albums and artists")
 
             if !searchText.isEmpty {
                 Button {
@@ -645,6 +672,7 @@ struct LibraryView: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("Clear search")
             }
         }
         .padding(12)
@@ -673,6 +701,9 @@ struct LibraryView: View {
                             selectedFilter = filter
                         }
                     }
+                    .accessibilityLabel("Filter: \(filter)")
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAddTraits(selectedFilter == filter ? .isSelected : [])
                 }
             }
             .padding(.horizontal, 20)
@@ -705,6 +736,7 @@ struct LibraryView: View {
                         .stroke(Color.jellyAmpSecondary.opacity(0.4), lineWidth: 1)
                 )
             }
+            .accessibilityLabel("Sort by \(sortOption.rawValue)")
             .confirmationDialog("Sort By", isPresented: $showSortMenu, titleVisibility: .visible) {
                 ForEach(SortOption.allCases, id: \.self) { option in
                     Button(option.rawValue) {
@@ -734,6 +766,8 @@ struct LibraryView: View {
                                     .fill(viewMode == mode ? Color.jellyAmpAccent : Color.clear)
                             )
                     }
+                    .accessibilityLabel("\(mode.rawValue) view")
+                    .accessibilityAddTraits(viewMode == mode ? .isSelected : [])
                 }
             }
             .background(

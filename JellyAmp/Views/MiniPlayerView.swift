@@ -120,6 +120,7 @@ struct MiniPlayerView: View {
                         }
                         .shadow(color: Color.neonPink.opacity(0.3), radius: 8, x: 0, y: 0)
                     }
+                    .accessibilityLabel(playerManager.isPlaying ? "Pause" : "Play")
                     .padding(.trailing, 12)
                 }
                 .frame(height: 64)
@@ -200,6 +201,9 @@ struct MiniPlayerView: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Now playing: \(currentTrack.name) by \(currentTrack.artistName)")
+            .accessibilityHint("Double tap for full player")
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: playerManager.currentTrack?.id)
         }

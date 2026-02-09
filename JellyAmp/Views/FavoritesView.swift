@@ -71,6 +71,7 @@ struct FavoritesView: View {
                             .fill(Color.jellyAmpSecondary)
                     )
                     .neonGlow(color: .jellyAmpSecondary, radius: 8)
+                    .accessibilityLabel("Retry loading favorites")
                 }
             } else if favoriteTracks.isEmpty && favoriteAlbums.isEmpty && favoriteArtists.isEmpty {
                 // Empty state

@@ -67,6 +67,7 @@ struct NowPlayingView: View {
                         )
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
                 .offset(x: 4, y: -4)
             }
 
@@ -166,6 +167,7 @@ struct NowPlayingView: View {
                     .frame(width: 40, height: 40)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Previous track")
 
             // Play/Pause - Large tap target for running
             Button {
@@ -188,6 +190,7 @@ struct NowPlayingView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(playerManager.isPlaying ? "Pause" : "Play")
 
             // Next
             Button {
@@ -198,6 +201,7 @@ struct NowPlayingView: View {
                     .frame(width: 40, height: 40)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Next track")
         }
         .foregroundColor(.white)
         .padding(.vertical, 2)

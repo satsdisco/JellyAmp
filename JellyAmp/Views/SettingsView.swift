@@ -156,6 +156,8 @@ struct SettingsView: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Select \(theme.displayName) theme")
+                    .accessibilityAddTraits(themeManager.currentTheme == theme ? .isSelected : [])
                 }
             }
         }
@@ -301,6 +303,7 @@ struct SettingsView: View {
                         )
                 )
             }
+            .accessibilityLabel("Sign out of account")
         }
     }
 }

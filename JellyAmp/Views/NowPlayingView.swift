@@ -83,6 +83,7 @@ struct NowPlayingView: View {
                     .foregroundColor(Color.jellyAmpText)
                     .frame(width: 44, height: 44)
             }
+            .accessibilityLabel("Close now playing")
 
             Spacer()
 
@@ -105,6 +106,7 @@ struct NowPlayingView: View {
                     .foregroundColor(Color.jellyAmpText)
                     .frame(width: 44, height: 44)
             }
+            .accessibilityLabel("View queue")
         }
         .sheet(isPresented: $showQueue) {
             QueueView()
@@ -252,6 +254,17 @@ struct NowPlayingView: View {
                             isDraggingSlider = false
                         }
                 )
+                .accessibilityElement()
+                .accessibilityLabel("Track progress")
+                .accessibilityValue("\(formatTime(isDraggingSlider ? sliderValue : playerManager.currentTime)) of \(formatTime(playerManager.duration))")
+                .accessibilityAdjustableAction { direction in
+                    let step = playerManager.duration * 0.05 // 5% of total duration
+                    let currentTime = isDraggingSlider ? sliderValue : playerManager.currentTime
+                    let newTime = direction == .increment ? 
+                        min(currentTime + step, playerManager.duration) : 
+                        max(currentTime - step, 0)
+                    playerManager.seek(to: newTime)
+                }
             }
             .frame(height: 6)
 
@@ -288,6 +301,7 @@ struct NowPlayingView: View {
                     .font(.title2)
                     .foregroundColor(Color.jellyAmpText)
             }
+            .accessibilityLabel("Previous track")
 
             // Play/Pause (prominent)
             Button {
@@ -310,6 +324,7 @@ struct NowPlayingView: View {
                         .foregroundColor(.black)
                 }
             }
+            .accessibilityLabel(playerManager.isPlaying ? "Pause" : "Play")
 
             // Next
             Button {
@@ -319,6 +334,7 @@ struct NowPlayingView: View {
                     .font(.title2)
                     .foregroundColor(Color.jellyAmpText)
             }
+            .accessibilityLabel("Next track")
         }
         .padding(.top, 30)
     }
@@ -335,6 +351,8 @@ struct NowPlayingView: View {
                     .foregroundColor(playerManager.shuffleEnabled ? .neonCyan : .secondary)
                     .neonGlow(color: .neonCyan, radius: playerManager.shuffleEnabled ? 6 : 0)
             }
+            .accessibilityLabel("Shuffle")
+            .accessibilityValue(playerManager.shuffleEnabled ? "On" : "Off")
 
             // Favorite
             Button {
@@ -345,6 +363,7 @@ struct NowPlayingView: View {
                     .foregroundColor(isFavorite ? .neonPink : .white)
                     .neonGlow(color: .neonPink, radius: isFavorite ? 6 : 0)
             }
+            .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
 
             // Queue
             Button {
@@ -354,6 +373,7 @@ struct NowPlayingView: View {
                     .font(.title3)
                     .foregroundColor(Color.jellyAmpText)
             }
+            .accessibilityLabel("View queue")
 
             // Repeat
             Button {
@@ -364,6 +384,8 @@ struct NowPlayingView: View {
                     .foregroundColor(playerManager.repeatMode != .off ? .neonCyan : .secondary)
                     .neonGlow(color: .neonCyan, radius: playerManager.repeatMode != .off ? 6 : 0)
             }
+            .accessibilityLabel("Repeat")
+            .accessibilityValue(playerManager.repeatMode == .off ? "Off" : playerManager.repeatMode == .all ? "All" : "One")
         }
         .padding(.top, 30)
     }

@@ -44,6 +44,8 @@ struct LibraryView: View {
                                     .foregroundColor(selectedTab == index ? .cyan : .secondary)
                             }
                             .buttonStyle(PlainButtonStyle())
+                            .accessibilityLabel("View \(tabs[index])")
+                            .accessibilityAddTraits(selectedTab == index ? .isSelected : [])
                         }
                     }
                     .padding(.horizontal, 4)
@@ -103,6 +105,8 @@ struct LibraryView: View {
                 }
                 .padding(.vertical, 4)
             }
+            .accessibilityLabel("Artist: \(artist.name)")
+            .accessibilityHint("Double tap to view artist albums")
         }
         .listStyle(PlainListStyle())
     }
@@ -135,6 +139,8 @@ struct LibraryView: View {
                 }
                 .padding(.vertical, 4)
             }
+            .accessibilityLabel("Album: \(album.name) by \(album.artist)")
+            .accessibilityHint("Double tap to view album")
         }
         .listStyle(PlainListStyle())
     }

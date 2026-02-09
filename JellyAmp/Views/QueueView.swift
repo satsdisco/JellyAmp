@@ -52,6 +52,10 @@ struct QueueView: View {
                                     }
                                 }
                             )
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("\(track.name) by \(track.artistName)\(index == playerManager.currentIndex ? " - Currently playing" : "")")
+                            .accessibilityHint("Double tap to play track")
+                            .accessibilityAddTraits(.isButton)
                             .listRowInsets(EdgeInsets())
                             .listRowBackground(Color.clear)
                         }
@@ -90,6 +94,7 @@ struct QueueView: View {
                             )
                             .neonGlow(color: .jellyAmpSecondary, radius: 8)
                     }
+                    .accessibilityLabel("Close queue")
                     .padding(.trailing, 20)
                     .padding(.top, 60)
                 }

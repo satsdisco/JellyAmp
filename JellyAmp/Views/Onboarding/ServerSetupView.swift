@@ -136,6 +136,7 @@ struct ServerSetupView: View {
                     .autocorrectionDisabled()
                     .keyboardType(.URL)
                     .tint(.jellyAmpAccent)
+                    .accessibilityLabel("Server URL")
 
                 if !serverURL.isEmpty {
                     Button {
@@ -144,6 +145,7 @@ struct ServerSetupView: View {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityLabel("Clear server URL")
                 }
             }
             .padding(16)
@@ -189,6 +191,7 @@ struct ServerSetupView: View {
             .neonGlow(color: serverURL.isEmpty ? .clear : .neonCyan, radius: 12)
         }
         .disabled(serverURL.isEmpty || isValidating)
+        .accessibilityLabel(isValidating ? "Connecting to server" : "Connect to server")
         .padding(.bottom, 20)
     }
 

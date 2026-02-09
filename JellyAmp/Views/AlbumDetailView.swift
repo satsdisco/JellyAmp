@@ -370,6 +370,7 @@ struct AlbumDetailView: View {
                 )
                 .neonGlow(color: albumTracks.isEmpty ? .clear : .neonCyan, radius: 12)
             }
+            .accessibilityLabel("Play all tracks")
             .disabled(albumTracks.isEmpty)
 
             // Shuffle Button
@@ -393,6 +394,7 @@ struct AlbumDetailView: View {
                     )
                     .neonGlow(color: .jellyAmpTertiary, radius: 8)
             }
+            .accessibilityLabel("Shuffle album")
             .disabled(albumTracks.isEmpty)
 
             // Favorite Button
@@ -413,6 +415,7 @@ struct AlbumDetailView: View {
                     )
                     .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 12 : 8)
             }
+            .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
 
             // Download Button
             Button {
@@ -453,6 +456,7 @@ struct AlbumDetailView: View {
                 }
                 .neonGlow(color: downloadIconColor, radius: albumDownloadState.isDownloaded ? 12 : 8)
             }
+            .accessibilityLabel(albumDownloadState.isDownloaded ? "Delete download" : "Download album")
             .disabled(albumTracks.isEmpty)
         }
         .padding(.horizontal, 20)
@@ -515,6 +519,9 @@ struct AlbumDetailView: View {
                             selectedTrackIds = [track.id]
                             showAddToPlaylist = true
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Track \(index + 1): \(track.name), \(track.durationFormatted)")
+                        .accessibilityHint("Double tap to play track")
                         .padding(.horizontal, 20)
 
                         if index < albumTracks.count - 1 {

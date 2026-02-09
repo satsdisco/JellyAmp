@@ -228,6 +228,7 @@ struct ArtistDetailView: View {
                         .neonGlow(color: .jellyAmpAccent, radius: 12)
                     }
                     .disabled(isShuffling)
+                    .accessibilityLabel("Shuffle all songs by artist")
 
                     // Favorite Button
                     Button {
@@ -247,6 +248,7 @@ struct ArtistDetailView: View {
                             )
                             .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 12 : 8)
                     }
+                    .accessibilityLabel(isFavorite ? "Remove artist from favorites" : "Add artist to favorites")
                 }
 
                 if artist.albumCount > 0 {

@@ -108,6 +108,7 @@ struct SearchView: View {
                 .foregroundColor(Color.jellyAmpText)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
+                .accessibilityLabel("Search music library")
                 .onChange(of: searchText) { _, newValue in
                     performSearch(query: newValue)
                 }
@@ -122,6 +123,7 @@ struct SearchView: View {
                         .font(.headline)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("Clear search")
             }
         }
         .padding(.horizontal, 16)
@@ -161,6 +163,8 @@ struct SearchView: View {
                                     .stroke(Color.jellyAmpAccent.opacity(0.3), lineWidth: 1)
                             )
                     }
+                    .accessibilityLabel("Filter: \(filter.rawValue)")
+                    .accessibilityAddTraits(selectedFilter == filter ? .isSelected : [])
                 }
             }
             .padding(.horizontal, 16)

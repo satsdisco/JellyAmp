@@ -39,6 +39,7 @@ struct SettingsView: View {
                     } label: {
                         Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                     }
+                    .accessibilityLabel("Sign out of account")
                 }
             } else {
                 // Not authenticated
