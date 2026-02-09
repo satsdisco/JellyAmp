@@ -402,6 +402,13 @@ struct FavoriteTrackRow: View {
             )
             .contentShape(Rectangle())
         }
+        .contextMenu {
+            Button {
+                playerManager.addToQueue(track: track)
+            } label: {
+                Label("Add to Queue", systemImage: "text.append")
+            }
+        }
     }
 
     private var placeholderArtwork: some View {

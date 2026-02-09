@@ -251,6 +251,16 @@ class PlayerManager: NSObject, ObservableObject {
         }
     }
 
+    /// Adds a track to the end of the queue
+    func addToQueue(track: Track) {
+        queue.append(track)
+        // If nothing playing, start playing
+        if currentTrack == nil {
+            currentIndex = queue.count - 1
+            playCurrentTrack()
+        }
+    }
+
     /// Seeks to specific time
     func seek(to time: Double) {
         guard let player = player else {

@@ -476,6 +476,13 @@ struct PlaylistTrackRow: View {
             .contentShape(Rectangle())
         }
         .contextMenu {
+            // Add to Queue
+            Button {
+                playerManager.addToQueue(track: track)
+            } label: {
+                Label("Add to Queue", systemImage: "text.append")
+            }
+
             // Download/Delete option
             if downloadManager.isDownloaded(trackId: track.id) {
                 Button(role: .destructive) {
