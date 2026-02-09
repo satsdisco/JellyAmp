@@ -109,11 +109,13 @@ struct SearchView: View {
                             .foregroundColor(selectedFilter == filter ? .black : .jellyAmpAccent)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 10)
-                            .background(
-                                selectedFilter == filter ? 
-                                    .jellyAmpAccent : .ultraThinMaterial,
-                                in: Capsule()
-                            )
+                            .background {
+                                if selectedFilter == filter {
+                                    Capsule().fill(Color.jellyAmpAccent)
+                                } else {
+                                    Capsule().fill(.ultraThinMaterial)
+                                }
+                            }
                     }
                     .accessibilityLabel("Filter: \(filter.rawValue)")
                     .accessibilityAddTraits(selectedFilter == filter ? .isSelected : [])

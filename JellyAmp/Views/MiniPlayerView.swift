@@ -13,83 +13,84 @@ struct MiniPlayerView: View {
 
     var body: some View {
         if let currentTrack = playerManager.currentTrack {
-            Button {
-                showNowPlaying = true
-            } label: {
-                HStack(spacing: 0) {
-                    // Album artwork (small)
-                    AsyncImage(url: URL(string: currentTrack.artworkURL ?? "")) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        case .empty, .failure, _:
-                            ZStack {
-                                Rectangle()
-                                    .fill(.regularMaterial)
-
-                                Image(systemName: "music.note")
-                                    .font(.body.weight(.medium))
-                                    .foregroundColor(.white.opacity(0.6))
-                            }
-                        }
-                    }
-                    .frame(width: 48, height: 48)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
-                    .padding(.leading, 12)
-
-                    // Track info with two lines
-                    VStack(spacing: 3) {
-                        // Song Title • Artist (top line)
-                        Text("\(currentTrack.name) • \(currentTrack.artistName)")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                            .frame(maxWidth: .infinity)
-
-                        // Album Name (bottom line, centered)
-                        Text(currentTrack.albumName)
-                            .font(.caption.weight(.medium))
-                            .foregroundColor(.white.opacity(0.65))
-                            .lineLimit(1)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 12)
-
-                    // Play/Pause button
-                    Button {
-                        playerManager.togglePlayPause()
-                    } label: {
-                        Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
-                            .font(.body.weight(.semibold))
-                            .foregroundColor(.neonPink)
-                            .frame(width: 40, height: 40)
-                            .background(.ultraThinMaterial, in: Circle())
-                            .overlay(Circle().stroke(.neonPink.opacity(0.3), lineWidth: 1))
-                    }
-                    .accessibilityLabel(playerManager.isPlaying ? "Pause" : "Play")
-                    .padding(.trailing, 12)
-                }
-                .frame(height: 64)
-                .background(.regularMaterial)
-                .overlay(
-                    // Subtle bottom divider
-                    Rectangle()
-                        .fill(Color.white.opacity(0.08))
-                        .frame(height: 0.5)
-                        .frame(maxHeight: .infinity, alignment: .bottom)
-                )
-            }
-            .buttonStyle(.plain)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Now playing: \(currentTrack.name) by \(currentTrack.artistName)")
-            .accessibilityHint("Double tap for full player")
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: playerManager.currentTrack?.id)
+            miniPlayerButton(for: currentTrack)
         }
+    }
+
+    private func miniPlayerButton(for currentTrack: Track) -> some View {
+        Button {
+            showNowPlaying = true
+        } label: {
+            miniPlayerContent(for: currentTrack)
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Now playing: \(currentTrack.name) by \(currentTrack.artistName)")
+        .accessibilityHint("Double tap for full player")
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: playerManager.currentTrack?.id)
+    }
+
+    private func miniPlayerContent(for currentTrack: Track) -> some View {
+        HStack(spacing: 0) {
+            miniPlayerArtwork(for: currentTrack)
+
+            // Track info
+            VStack(spacing: 3) {
+                Text("\(currentTrack.name) • \(currentTrack.artistName)")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity)
+
+                Text(currentTrack.albumName)
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(.white.opacity(0.65))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 12)
+
+            miniPlayerPlayButton
+        }
+        .frame(height: 64)
+        .background(.regularMaterial)
+    }
+
+    private func miniPlayerArtwork(for track: Track) -> some View {
+        AsyncImage(url: URL(string: track.artworkURL ?? "")) { phase in
+            switch phase {
+            case .success(let image):
+                image.resizable().aspectRatio(contentMode: .fill)
+            case .empty, .failure, _:
+                ZStack {
+                    Rectangle().fill(Color.jellyAmpMidBackground)
+                    Image(systemName: "music.note")
+                        .font(.body.weight(.medium))
+                        .foregroundColor(.white.opacity(0.6))
+                }
+            }
+        }
+        .frame(width: 48, height: 48)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
+        .padding(.leading, 12)
+    }
+
+    private var miniPlayerPlayButton: some View {
+        Button {
+            playerManager.togglePlayPause()
+        } label: {
+            Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
+                .font(.body.weight(.semibold))
+                .foregroundColor(.neonPink)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(.ultraThinMaterial))
+                .overlay(Circle().stroke(Color.neonPink.opacity(0.3), lineWidth: 1))
+        }
+        .accessibilityLabel(playerManager.isPlaying ? "Pause" : "Play")
+        .padding(.trailing, 12)
     }
 }
 
