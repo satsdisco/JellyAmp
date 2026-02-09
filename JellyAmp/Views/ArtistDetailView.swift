@@ -29,6 +29,7 @@ struct ArtistDetailView: View {
     @State private var isShuffling = false
     @State private var showNowPlaying = false
     @State private var isFavorite: Bool
+    @Namespace private var playerAnimation
 
     init(artist: Artist) {
         self.artist = artist
@@ -75,7 +76,7 @@ struct ArtistDetailView: View {
 
             // Mini Player (fixed at bottom)
             if playerManager.currentTrack != nil {
-                MiniPlayerView(showNowPlaying: $showNowPlaying)
+                MiniPlayerView(showNowPlaying: $showNowPlaying, namespace: playerAnimation)
             }
         }
         .ignoresSafeArea(.keyboard)
@@ -88,7 +89,7 @@ struct ArtistDetailView: View {
             AlbumDetailView(album: album)
         }
         .fullScreenCover(isPresented: $showNowPlaying) {
-            NowPlayingView()
+            NowPlayingView(namespace: playerAnimation)
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {

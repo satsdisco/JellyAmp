@@ -20,6 +20,7 @@ struct FavoritesView: View {
     @State private var errorMessage: String?
     // Navigation handled by NavigationStack
     @State private var showNowPlaying = false
+    @Namespace private var playerAnimation
 
     var body: some View {
         ZStack {
@@ -114,7 +115,7 @@ struct FavoritesView: View {
         .navigationTitle("Favorites")
         .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showNowPlaying) {
-            NowPlayingView()
+            NowPlayingView(namespace: playerAnimation)
         }
         .onAppear {
             if favoriteTracks.isEmpty && favoriteAlbums.isEmpty && favoriteArtists.isEmpty {

@@ -20,6 +20,7 @@ struct AlbumDetailView: View {
     @State private var showNowPlaying = false
     @State private var showAddToPlaylist = false
     @State private var selectedTrackIds: [String] = []
+    @Namespace private var playerAnimation
 
     init(album: Album) {
         self.album = album
@@ -96,7 +97,7 @@ struct AlbumDetailView: View {
 
             // Mini Player (fixed at bottom)
             if playerManager.currentTrack != nil {
-                MiniPlayerView(showNowPlaying: $showNowPlaying)
+                MiniPlayerView(showNowPlaying: $showNowPlaying, namespace: playerAnimation)
             }
         }
         .ignoresSafeArea(.keyboard)
@@ -106,7 +107,7 @@ struct AlbumDetailView: View {
             }
         }
         .sheet(isPresented: $showNowPlaying) {
-            NowPlayingView()
+            NowPlayingView(namespace: playerAnimation)
         }
         .sheet(isPresented: $showAddToPlaylist) {
             PlaylistSelectionSheet(trackIds: selectedTrackIds) {
