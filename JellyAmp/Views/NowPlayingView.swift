@@ -63,6 +63,9 @@ struct NowPlayingView: View {
                 // Bottom Actions
                 bottomActionsSection
 
+                // Up Next preview
+                upNextSection
+
                 Spacer()
             }
             .padding(.horizontal, 20)
@@ -248,70 +251,38 @@ struct NowPlayingView: View {
     // MARK: - Progress Section
     private var progressSection: some View {
         VStack(spacing: 8) {
-            // Progress Bar
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    // Track background
-                    Capsule()
-                        .fill(Color.white.opacity(0.1))
-
-                    // Progress fill
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.jellyAmpAccent, Color.jellyAmpSecondary],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(width: geometry.size.width * progress)
+            Slider(
+                value: Binding(
+                    get: { isDraggingSlider ? sliderValue : playerManager.currentTime },
+                    set: { newValue in
+                        isDraggingSlider = true
+                        sliderValue = newValue
+                    }
+                ),
+                in: 0...max(playerManager.duration, 1),
+                onEditingChanged: { editing in
+                    if !editing {
+                        playerManager.seek(to: sliderValue)
+                        isDraggingSlider = false
+                    }
                 }
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            isDraggingSlider = true
-                            let percent = min(max(0, value.location.x / geometry.size.width), 1)
-                            sliderValue = percent * playerManager.duration
-                        }
-                        .onEnded { _ in
-                            playerManager.seek(to: sliderValue)
-                            isDraggingSlider = false
-                        }
-                )
-                .accessibilityElement()
-                .accessibilityLabel("Track progress")
-                .accessibilityValue("\(formatTime(isDraggingSlider ? sliderValue : playerManager.currentTime)) of \(formatTime(playerManager.duration))")
-                .accessibilityAdjustableAction { direction in
-                    let step = playerManager.duration * 0.05 // 5% of total duration
-                    let currentTime = isDraggingSlider ? sliderValue : playerManager.currentTime
-                    let newTime = direction == .increment ? 
-                        min(currentTime + step, playerManager.duration) : 
-                        max(currentTime - step, 0)
-                    playerManager.seek(to: newTime)
-                }
-            }
-            .frame(height: 6)
+            )
+            .tint(Color.jellyAmpAccent)
+            .accessibilityLabel("Track progress")
+            .accessibilityValue("\(formatTime(isDraggingSlider ? sliderValue : playerManager.currentTime)) of \(formatTime(playerManager.duration))")
 
             // Time labels
             HStack {
                 Text(formatTime(isDraggingSlider ? sliderValue : playerManager.currentTime))
                     .font(.jellyAmpMono)
                     .foregroundColor(.neonCyan)
-
                 Spacer()
-
                 Text(formatTime(playerManager.duration))
                     .font(.jellyAmpMono)
                     .foregroundColor(.secondary)
             }
         }
         .padding(.top, 40)
-    }
-
-    var progress: Double {
-        guard playerManager.duration > 0 else { return 0 }
-        let time = isDraggingSlider ? sliderValue : playerManager.currentTime
-        return min(max(time / playerManager.duration, 0), 1)
     }
 
     // MARK: - Controls Section
@@ -471,6 +442,63 @@ struct NowPlayingView: View {
         case .one:
             return "repeat.1"
         }
+    }
+
+    // MARK: - Up Next Section
+    private var upNextSection: some View {
+        Group {
+            if playerManager.currentIndex < playerManager.queue.count - 1 {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Up Next")
+                        .font(.jellyAmpCaption)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 4)
+
+                    ForEach(nextTracks, id: \.id) { track in
+                        HStack(spacing: 12) {
+                            CachedAsyncImage(url: URL(string: track.artworkURL ?? "")) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image.resizable().aspectRatio(contentMode: .fill)
+                                default:
+                                    Rectangle().fill(Color.jellyAmpMidBackground)
+                                        .overlay(Image(systemName: "music.note").font(.caption).foregroundColor(.secondary))
+                                }
+                            }
+                            .frame(width: 36, height: 36)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(track.name)
+                                    .font(.caption.weight(.medium))
+                                    .foregroundColor(Color.jellyAmpText)
+                                    .lineLimit(1)
+                                Text(track.artistName)
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
+
+                            Spacer()
+
+                            Text(track.durationFormatted)
+                                .font(.system(.caption2, design: .monospaced))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                    }
+                }
+                .padding(.top, 16)
+            }
+        }
+    }
+
+    private var nextTracks: [Track] {
+        let startIdx = playerManager.currentIndex + 1
+        let endIdx = min(startIdx + 2, playerManager.queue.count)
+        guard startIdx < playerManager.queue.count else { return [] }
+        return Array(playerManager.queue[startIdx..<endIdx])
     }
 
     // MARK: - Dominant Color Extraction
