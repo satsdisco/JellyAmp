@@ -67,7 +67,7 @@ struct SettingsView: View {
                 .font(.jellyAmpTitle)
                 .foregroundColor(Color.jellyAmpText)
 
-            Text("Version 1.1 (5)")
+            Text("Version 1.1 (7)")
                 .font(.jellyAmpMono)
                 .foregroundColor(.secondary)
         }
