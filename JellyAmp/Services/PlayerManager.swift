@@ -33,6 +33,7 @@ class PlayerManager: NSObject, ObservableObject {
     @Published var currentIndex: Int = 0
     @Published var shuffleEnabled = false
     @Published var repeatMode: RepeatMode = .off
+    @Published var recentlyPlayedAlbumIds: [String] = []
 
     enum RepeatMode {
         case off
@@ -67,6 +68,7 @@ class PlayerManager: NSObject, ObservableObject {
 
     override init() {
         super.init()
+        recentlyPlayedAlbumIds = UserDefaults.standard.stringArray(forKey: "recentlyPlayedAlbumIds") ?? []
         setupNotifications()
         // Configure audio session immediately when PlayerManager is created
         configureAudioSession()
@@ -503,6 +505,7 @@ class PlayerManager: NSObject, ObservableObject {
         }
 
         currentTrack = track
+        trackRecentPlay()
 
         // Set duration from track metadata (Jellyfin API provides this)
         // Don't rely on stream duration as HTTP transcoded streams report isIndefinite
@@ -1027,6 +1030,18 @@ class PlayerManager: NSObject, ObservableObject {
                 break
             }
         }
+    }
+
+    // MARK: - Recently Played Tracking
+
+    private func trackRecentPlay() {
+        guard let track = currentTrack, let albumId = track.albumId, !albumId.isEmpty else { return }
+        recentlyPlayedAlbumIds.removeAll { $0 == albumId }
+        recentlyPlayedAlbumIds.insert(albumId, at: 0)
+        if recentlyPlayedAlbumIds.count > 20 {
+            recentlyPlayedAlbumIds = Array(recentlyPlayedAlbumIds.prefix(20))
+        }
+        UserDefaults.standard.set(recentlyPlayedAlbumIds, forKey: "recentlyPlayedAlbumIds")
     }
 
     // MARK: - Notifications
