@@ -390,6 +390,9 @@ struct LibraryView: View {
                 }
             }
         }
+        .refreshable {
+            await syncLibrary()
+        }
         .navigationDestination(for: Artist.self) { artist in
             ArtistDetailView(artist: artist)
         }
