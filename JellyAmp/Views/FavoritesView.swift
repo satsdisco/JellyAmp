@@ -363,15 +363,10 @@ struct FavoritesView: View {
 struct FavoriteTrackRow: View {
     let track: Track
     let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
         Button {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                action()
-            }
+            action()
         } label: {
             HStack(spacing: 12) {
                 // Album artwork
@@ -456,15 +451,10 @@ struct FavoriteTrackRow: View {
 struct FavoriteAlbumCard: View {
     let album: Album
     let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
         Button {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                action()
-            }
+            action()
         } label: {
             VStack(alignment: .leading, spacing: 8) {
                 // Album artwork
@@ -536,15 +526,10 @@ struct FavoriteAlbumCard: View {
 struct FavoriteArtistCard: View {
     let artist: Artist
     let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
         Button {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                action()
-            }
+            action()
         } label: {
             VStack(spacing: 8) {
                 // Artist artwork (circular)

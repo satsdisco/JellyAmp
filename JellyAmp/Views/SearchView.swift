@@ -333,15 +333,9 @@ struct SearchResultRow: View {
     let baseURL: String
     let onTap: () -> Void
 
-    @State private var isPressed = false
-
     var body: some View {
         Button {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                onTap()
-            }
+            onTap()
         } label: {
             HStack(spacing: 16) {
                 // Artwork/Icon

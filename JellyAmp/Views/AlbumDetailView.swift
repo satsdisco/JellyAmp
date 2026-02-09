@@ -597,16 +597,11 @@ struct AlbumTrackRow: View {
     let trackNumber: Int
     let action: () -> Void
     var onAddToPlaylist: (() -> Void)? = nil
-    @State private var isPressed = false
     @ObservedObject var downloadManager = DownloadManager.shared
 
     var body: some View {
         Button {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                action()
-            }
+            action()
         } label: {
             HStack(spacing: 16) {
                 // Track number
