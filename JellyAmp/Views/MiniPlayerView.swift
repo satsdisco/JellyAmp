@@ -33,6 +33,23 @@ struct MiniPlayerView: View {
     }
 
     private func miniPlayerContent(for currentTrack: Track) -> some View {
+        VStack(spacing: 0) {
+            // Progress bar
+            GeometryReader { geo in
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.jellyAmpAccent, .jellyAmpSecondary],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: geo.size.width * miniPlayerProgress)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(height: 2)
+            .animation(.linear(duration: 0.5), value: miniPlayerProgress)
+
         HStack(spacing: 0) {
             miniPlayerArtwork(for: currentTrack)
 
@@ -56,8 +73,14 @@ struct MiniPlayerView: View {
             miniPlayerPlayButton
         }
         .frame(height: 64)
+        }
         .background(.regularMaterial)
         .matchedGeometryEffect(id: "playerBg", in: namespace)
+    }
+
+    private var miniPlayerProgress: Double {
+        guard playerManager.duration > 0 else { return 0 }
+        return min(max(playerManager.currentTime / playerManager.duration, 0), 1)
     }
 
     private func miniPlayerArtwork(for track: Track) -> some View {
