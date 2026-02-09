@@ -42,7 +42,7 @@ struct MiniPlayerView: View {
                                     )
 
                                 Image(systemName: "music.note")
-                                    .font(.system(size: 16, weight: .medium))
+                                    .font(.body.weight(.medium))
                                     .foregroundColor(.white.opacity(0.6))
                             }
                         }
@@ -70,14 +70,14 @@ struct MiniPlayerView: View {
                     VStack(spacing: 3) {
                         // Song Title • Artist (top line)
                         Text("\(currentTrack.name) • \(currentTrack.artistName)")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundColor(.white)
                             .lineLimit(1)
                             .frame(maxWidth: .infinity)
 
                         // Album Name (bottom line, centered)
                         Text(currentTrack.albumName)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .font(.caption.weight(.medium))
                             .foregroundColor(.white.opacity(0.65))
                             .lineLimit(1)
                             .frame(maxWidth: .infinity)
@@ -115,7 +115,7 @@ struct MiniPlayerView: View {
                                 .frame(width: 40, height: 40)
 
                             Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.body.weight(.semibold))
                                 .foregroundColor(.neonPink)
                         }
                         .shadow(color: Color.neonPink.opacity(0.3), radius: 8, x: 0, y: 0)
@@ -222,7 +222,7 @@ struct TickerText: View {
             HStack(spacing: 0) {
                 // First copy of text
                 Text(text)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(.white)
                     .fixedSize()
                     .background(
@@ -237,12 +237,12 @@ struct TickerText: View {
                 if needsScrolling {
                     // Separator
                     Text("  •  ")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.body.weight(.bold))
                         .foregroundColor(.white.opacity(0.5))
 
                     // Second copy of text for seamless loop
                     Text(text)
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .font(.body.weight(.semibold))
                         .foregroundColor(.white)
                         .fixedSize()
                 }

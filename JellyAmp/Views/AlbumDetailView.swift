@@ -320,7 +320,7 @@ struct AlbumDetailView: View {
             // Album Title & Artist
             VStack(spacing: 8) {
                 Text(album.name)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.title2.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
                     .neonGlow(color: .jellyAmpAccent, radius: 10)
                     .multilineTextAlignment(.center)
@@ -367,7 +367,7 @@ struct AlbumDetailView: View {
             .neonGlow(color: .jellyAmpSecondary, radius: 20)
             .overlay(
                 Image(systemName: "music.note")
-                    .font(.system(size: 80))
+                    .font(.title)
                     .foregroundColor(.white.opacity(0.3))
             )
     }
@@ -407,7 +407,7 @@ struct AlbumDetailView: View {
                 showNowPlaying = true
             } label: {
                 Image(systemName: "shuffle")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundColor(Color.jellyAmpText)
                     .frame(width: 56, height: 56)
                     .background(
@@ -427,7 +427,7 @@ struct AlbumDetailView: View {
                 toggleFavorite()
             } label: {
                 Image(systemName: isFavorite ? "heart.fill" : "heart")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundColor(isFavorite ? .neonPink : .white)
                     .frame(width: 56, height: 56)
                     .background(
@@ -468,13 +468,13 @@ struct AlbumDetailView: View {
                                 .rotationEffect(.degrees(-90))
 
                             Text("\(Int(progress * 100))%")
-                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .font(.system(.caption2, design: .monospaced).weight(.bold))
                                 .foregroundColor(downloadIconColor)
                         }
                         .frame(width: 36, height: 36)
                     } else {
                         Image(systemName: downloadIconName)
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.title3.weight(.semibold))
                             .foregroundColor(downloadIconColor)
                     }
                 }
@@ -579,7 +579,7 @@ struct InfoBadge: View {
                 .foregroundColor(.neonCyan)
 
             Text(value)
-                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                .font(.system(.caption, design: .monospaced).weight(.medium))
                 .foregroundColor(Color.jellyAmpText)
         }
         .padding(.horizontal, 12)
@@ -615,7 +615,7 @@ struct AlbumTrackRow: View {
             HStack(spacing: 16) {
                 // Track number
                 Text("\(trackNumber)")
-                    .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    .font(.system(.body, design: .monospaced).weight(.bold))
                     .foregroundColor(.neonCyan)
                     .frame(width: 28, alignment: .trailing)
 

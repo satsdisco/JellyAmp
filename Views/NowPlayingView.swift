@@ -129,7 +129,7 @@ struct NowPlayingView: View {
 
             // Album icon overlay
             Image(systemName: "music.note")
-                .font(.system(size: 80))
+                .font(.title)
                 .foregroundColor(.white.opacity(0.3))
         }
     }
@@ -210,7 +210,7 @@ struct NowPlayingView: View {
                 // Previous track
             } label: {
                 Image(systemName: "backward.fill")
-                    .font(.system(size: 32))
+                    .font(.title2)
                     .foregroundColor(.white)
             }
 
@@ -231,7 +231,7 @@ struct NowPlayingView: View {
                         .neonGlow(color: .neonCyan, radius: 20)
 
                     Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 36))
+                        .font(.title)
                         .foregroundColor(.black)
                 }
             }
@@ -241,7 +241,7 @@ struct NowPlayingView: View {
                 // Next track
             } label: {
                 Image(systemName: "forward.fill")
-                    .font(.system(size: 32))
+                    .font(.title2)
                     .foregroundColor(.white)
             }
         }

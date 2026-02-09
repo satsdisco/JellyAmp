@@ -37,7 +37,7 @@ struct AlbumArtworkView: View {
                         .tint(.white)
                 } else {
                     Image(systemName: "music.note")
-                        .font(.system(size: size * 0.4))
+                        .font(.title)
                         .foregroundColor(.white.opacity(0.6))
                 }
             }

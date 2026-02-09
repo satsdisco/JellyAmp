@@ -48,7 +48,7 @@ struct NewPlaylistSheet: View {
                             .frame(width: 100, height: 100)
 
                         Image(systemName: "music.note.list")
-                            .font(.system(size: 48))
+                            .font(.title)
                             .foregroundColor(.neonPink)
                     }
                     .neonGlow(color: .neonPink, radius: 20)
@@ -57,7 +57,7 @@ struct NewPlaylistSheet: View {
                     // Title
                     VStack(spacing: 8) {
                         Text("New Playlist")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.title2.weight(.bold))
                             .foregroundColor(Color.jellyAmpText)
                             .neonGlow(color: .neonPink, radius: 8)
 

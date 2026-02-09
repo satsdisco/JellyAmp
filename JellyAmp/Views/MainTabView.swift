@@ -183,11 +183,11 @@ struct TabBarButton: View {
         Button(action: action) {
             VStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 22, weight: .medium))
+                    .font(.title3.weight(.medium))
                     .foregroundColor(isSelected ? .jellyAmpAccent : .white.opacity(0.6))
 
                 Text(label)
-                    .font(.system(size: 10, weight: isSelected ? .semibold : .regular))
+                    .font(.caption2.weight(isSelected ? .semibold : .regular))
                     .foregroundColor(isSelected ? .jellyAmpAccent : .white.opacity(0.6))
             }
             .frame(maxWidth: .infinity)
@@ -375,11 +375,11 @@ struct StaticTabButton: View {
         Button(action: action) {
             VStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 22, weight: .medium))
+                    .font(.title3.weight(.medium))
                     .foregroundColor(.white.opacity(0.6))
 
                 Text(label)
-                    .font(.system(size: 10))
+                    .font(.caption2)
                     .foregroundColor(.white.opacity(0.6))
             }
             .frame(maxWidth: .infinity)
@@ -404,7 +404,7 @@ struct SearchTabPlaceholder: View {
 
             VStack(spacing: 16) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 60))
+                    .font(.title)
                     .foregroundColor(.neonCyan)
                     .neonGlow(color: .neonCyan, radius: 20)
 
@@ -427,7 +427,7 @@ struct FavoritesTabPlaceholder: View {
 
             VStack(spacing: 16) {
                 Image(systemName: "heart.fill")
-                    .font(.system(size: 60))
+                    .font(.title)
                     .foregroundColor(.neonPink)
                     .neonGlow(color: .neonPink, radius: 20)
 
@@ -452,7 +452,7 @@ struct DownloadsTabPlaceholder: View {
 
             VStack(spacing: 16) {
                 Image(systemName: "arrow.down.circle.fill")
-                    .font(.system(size: 60))
+                    .font(.title)
                     .foregroundColor(.jellyAmpSuccess)
                     .neonGlow(color: .jellyAmpSuccess, radius: 20)
 

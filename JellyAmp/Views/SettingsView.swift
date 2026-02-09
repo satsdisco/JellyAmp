@@ -68,7 +68,7 @@ struct SettingsView: View {
                     .blur(radius: 20)
 
                 Image(systemName: "music.note")
-                    .font(.system(size: 40, weight: .bold))
+                    .font(.title.weight(.bold))
                     .foregroundColor(.white)
                     .neonGlow(color: .jellyAmpAccent, radius: 10)
             }
@@ -109,7 +109,7 @@ struct SettingsView: View {
                                     .frame(width: 44, height: 44)
 
                                 Image(systemName: themeIcon(for: theme))
-                                    .font(.system(size: 20, weight: .semibold))
+                                    .font(.title3.weight(.semibold))
                                     .foregroundColor(themeIconColor(for: theme))
                             }
 
@@ -128,7 +128,7 @@ struct SettingsView: View {
                             // Checkmark if selected
                             if themeManager.currentTheme == theme {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 24))
+                                    .font(.title2)
                                     .foregroundColor(.jellyAmpAccent)
                             }
                         }

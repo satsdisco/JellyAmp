@@ -49,7 +49,7 @@ struct FavoritesView: View {
                 // Error state
                 VStack(spacing: 16) {
                     Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: 50))
+                        .font(.title)
                         .foregroundColor(.neonPink)
                     Text("Error Loading Favorites")
                         .font(.jellyAmpHeadline)
@@ -127,14 +127,14 @@ struct FavoritesView: View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Favorites")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .font(.title.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
                     .neonGlow(color: .jellyAmpSecondary, radius: 12)
 
                 let totalCount = favoriteTracks.count + favoriteAlbums.count + favoriteArtists.count
                 if totalCount > 0 {
                     Text("\(totalCount) favorite\(totalCount == 1 ? "" : "s")")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.subheadline.weight(.medium))
                         .foregroundColor(.secondary)
                 }
             }
@@ -150,16 +150,16 @@ struct FavoritesView: View {
     private var emptyStateView: some View {
         VStack(spacing: 24) {
             Image(systemName: "heart.slash")
-                .font(.system(size: 70))
+                .font(.title)
                 .foregroundColor(.neonPink.opacity(0.5))
                 .neonGlow(color: .jellyAmpSecondary, radius: 20)
 
             Text("No Favorites Yet")
-                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .font(.title2.weight(.bold))
                 .foregroundColor(Color.jellyAmpText)
 
             Text("Tap the heart icon on tracks, albums, and artists to add them to your favorites")
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 50)
@@ -171,11 +171,11 @@ struct FavoritesView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Favorite Tracks")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.title3.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
 
                 Text("\(favoriteTracks.count)")
-                    .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    .font(.system(.body, design: .monospaced).weight(.bold))
                     .foregroundColor(.neonPink)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
@@ -193,9 +193,9 @@ struct FavoritesView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "play.fill")
-                            .font(.system(size: 14))
+                            .font(.subheadline)
                         Text("Play All")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                     }
                     .foregroundColor(.black)
                     .padding(.horizontal, 14)
@@ -237,7 +237,7 @@ struct FavoritesView: View {
 
             if favoriteTracks.count > 10 {
                 Text("Showing 10 of \(favoriteTracks.count) tracks")
-                    .font(.system(size: 13))
+                    .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 20)
             }
@@ -249,11 +249,11 @@ struct FavoritesView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Favorite Albums")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.title3.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
 
                 Text("\(favoriteAlbums.count)")
-                    .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    .font(.system(.body, design: .monospaced).weight(.bold))
                     .foregroundColor(.neonCyan)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
@@ -282,11 +282,11 @@ struct FavoritesView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Favorite Artists")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.title3.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
 
                 Text("\(favoriteArtists.count)")
-                    .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    .font(.system(.body, design: .monospaced).weight(.bold))
                     .foregroundColor(.neonPurple)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
@@ -390,18 +390,18 @@ struct FavoriteTrackRow: View {
                 // Track info
                 VStack(alignment: .leading, spacing: 4) {
                     Text(track.name)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
 
                     HStack(spacing: 4) {
                         Text(track.artistName)
-                            .font(.system(size: 14))
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
                         Text("•")
                             .foregroundColor(.secondary.opacity(0.5))
                         Text(track.albumName)
-                            .font(.system(size: 14))
+                            .font(.subheadline)
                             .foregroundColor(.secondary.opacity(0.8))
                     }
                     .lineLimit(1)
@@ -412,7 +412,7 @@ struct FavoriteTrackRow: View {
                 // Duration and play button
                 HStack(spacing: 12) {
                     Text(track.durationFormatted)
-                        .font(.system(size: 13, design: .monospaced))
+                        .font(.system(.caption, design: .monospaced))
                         .foregroundColor(.secondary.opacity(0.7))
 
                     Image(systemName: "play.circle.fill")
@@ -440,7 +440,7 @@ struct FavoriteTrackRow: View {
                 .frame(width: 50, height: 50)
 
             Image(systemName: "music.note")
-                .font(.system(size: 20))
+                .font(.title3)
                 .foregroundColor(.white.opacity(0.6))
         }
     }
@@ -487,12 +487,12 @@ struct FavoriteAlbumCard: View {
                 // Album info
                 VStack(alignment: .leading, spacing: 2) {
                     Text(album.name)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
 
                     Text(album.artistName)
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
@@ -520,7 +520,7 @@ struct FavoriteAlbumCard: View {
                 )
 
             Image(systemName: "music.note")
-                .font(.system(size: 40))
+                .font(.title)
                 .foregroundColor(.white.opacity(0.4))
         }
     }
@@ -558,13 +558,13 @@ struct FavoriteArtistCard: View {
                         )
 
                     Image(systemName: "person.circle.fill")
-                        .font(.system(size: 50))
+                        .font(.title)
                         .foregroundColor(.white.opacity(0.4))
                 }
 
                 // Artist name
                 Text(artist.name)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundColor(Color.jellyAmpText)
                     .lineLimit(1)
                     .frame(width: 120)

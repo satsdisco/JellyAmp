@@ -198,11 +198,11 @@ extension Color {
 
 // MARK: - Typography
 extension Font {
-    static let jellyAmpTitle = Font.system(size: 32, weight: .bold, design: .rounded)
-    static let jellyAmpHeadline = Font.system(size: 20, weight: .semibold, design: .rounded)
-    static let jellyAmpBody = Font.system(size: 16, weight: .regular, design: .default)
-    static let jellyAmpCaption = Font.system(size: 13, weight: .regular, design: .default)
-    static let jellyAmpMono = Font.system(size: 14, weight: .medium, design: .monospaced)
+    static let jellyAmpTitle = Font.largeTitle.weight(.bold)
+    static let jellyAmpHeadline = Font.title3.weight(.semibold)
+    static let jellyAmpBody = Font.body
+    static let jellyAmpCaption = Font.caption
+    static let jellyAmpMono = Font.system(.caption, design: .monospaced).weight(.medium)
 }
 
 // MARK: - Glass Effect Styles

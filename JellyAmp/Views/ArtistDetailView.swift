@@ -210,7 +210,7 @@ struct ArtistDetailView: View {
             // Artist Name & Stats
             VStack(spacing: 20) {
                 Text(artist.name)
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .font(.title.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
                     .multilineTextAlignment(.center)
                     .neonGlow(color: .jellyAmpAccent, radius: 12)
@@ -230,10 +230,10 @@ struct ArtistDetailView: View {
                                     .scaleEffect(0.9)
                             } else {
                                 Image(systemName: "shuffle")
-                                    .font(.system(size: 18, weight: .semibold))
+                                    .font(.headline.weight(.semibold))
                             }
                             Text(isShuffling ? "LOADING..." : "SHUFFLE")
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .font(.body.weight(.bold))
                         }
                         .foregroundColor(.black)
                         .frame(maxWidth: .infinity)
@@ -261,7 +261,7 @@ struct ArtistDetailView: View {
                         toggleFavorite()
                     } label: {
                         Image(systemName: isFavorite ? "heart.fill" : "heart")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.title3.weight(.semibold))
                             .foregroundColor(isFavorite ? .neonPink : .white)
                             .frame(width: 56, height: 56)
                             .background(
@@ -282,7 +282,7 @@ struct ArtistDetailView: View {
                             .font(.caption)
                             .foregroundColor(.neonCyan)
                         Text("\(artist.albumCount) album\(artist.albumCount == 1 ? "" : "s")")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .font(.subheadline.weight(.medium))
                             .foregroundColor(.secondary)
                     }
                     .padding(.horizontal, 16)
@@ -310,12 +310,12 @@ struct ArtistDetailView: View {
                     .font(.caption)
                     .foregroundColor(.neonCyan)
                 Text("About")
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .font(.headline.weight(.semibold))
                     .foregroundColor(Color.jellyAmpText)
             }
 
             Text(bio)
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundColor(.secondary)
                 .lineSpacing(8)
                 .fixedSize(horizontal: false, vertical: true)
@@ -350,7 +350,7 @@ struct ArtistDetailView: View {
 
             // Artist icon overlay
             Image(systemName: "person.circle.fill")
-                .font(.system(size: 120))
+                .font(.largeTitle)
                 .foregroundColor(.white.opacity(0.3))
         }
     }
@@ -362,7 +362,7 @@ struct ArtistDetailView: View {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Discography")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.title3.weight(.bold))
                         .foregroundColor(Color.jellyAmpText)
 
                     if !albums.isEmpty {
@@ -383,7 +383,7 @@ struct ArtistDetailView: View {
                             }
                         } label: {
                             Image(systemName: "list.bullet")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.body.weight(.semibold))
                                 .foregroundColor(viewMode == .allAlbums ? .black : .neonCyan)
                                 .frame(width: 36, height: 36)
                                 .background(
@@ -402,7 +402,7 @@ struct ArtistDetailView: View {
                             }
                         } label: {
                             Image(systemName: "calendar")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.body.weight(.semibold))
                                 .foregroundColor(viewMode == .byYear ? .black : .neonPink)
                                 .frame(width: 36, height: 36)
                                 .background(
@@ -438,7 +438,7 @@ struct ArtistDetailView: View {
                     Spacer()
                     VStack(spacing: 8) {
                         Image(systemName: "music.note.list")
-                            .font(.system(size: 48))
+                            .font(.title)
                             .foregroundColor(.secondary.opacity(0.5))
                         Text("No albums found")
                             .font(.jellyAmpBody)
@@ -556,7 +556,7 @@ struct StatBadge: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.system(size: 20, weight: .bold, design: .monospaced))
+                .font(.system(.title3, design: .monospaced).weight(.bold))
                 .foregroundColor(.neonCyan)
 
             Text(label)
@@ -597,7 +597,7 @@ struct YearSection: View {
                 HStack(alignment: .center) {
                     // Year Text
                     Text(yearString)
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .font(.title.weight(.bold))
                         .foregroundColor(Color.jellyAmpText)
 
                     Spacer()
@@ -605,10 +605,10 @@ struct YearSection: View {
                     // Album count badge
                     HStack(spacing: 8) {
                         Text("\(albums.count)")
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .font(.headline.weight(.bold))
                             .foregroundColor(.neonCyan)
                         Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.right.circle.fill")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.title3.weight(.semibold))
                             .foregroundColor(.neonCyan)
                     }
                     .padding(.horizontal, 16)

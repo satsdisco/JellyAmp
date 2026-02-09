@@ -50,7 +50,7 @@ struct PlaylistSelectionSheet: View {
                         // Empty state
                         VStack(spacing: 20) {
                             Image(systemName: "music.note.list")
-                                .font(.system(size: 64))
+                                .font(.title)
                                 .foregroundColor(.secondary.opacity(0.5))
 
                             Text("No Playlists")
@@ -213,7 +213,7 @@ struct PlaylistSelectionRow: View {
                         .frame(width: 50, height: 50)
 
                     Image(systemName: "music.note.list")
-                        .font(.system(size: 20))
+                        .font(.title3)
                         .foregroundColor(.white.opacity(0.6))
                 }
 

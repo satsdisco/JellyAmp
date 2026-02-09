@@ -57,7 +57,7 @@ struct DownloadsView: View {
     private var emptyStateView: some View {
         VStack(spacing: 20) {
             Image(systemName: "arrow.down.circle")
-                .font(.system(size: 64))
+                .font(.title)
                 .foregroundColor(.jellyAmpAccent)
                 .neonGlow(color: .jellyAmpAccent, radius: 20)
 
@@ -87,7 +87,7 @@ struct DownloadsView: View {
                         .foregroundColor(.secondary)
 
                     Text(downloadManager.formatBytes(downloadManager.totalStorageUsed))
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.title2.weight(.bold))
                         .foregroundColor(Color.jellyAmpText)
                         .neonGlow(color: .jellyAmpAccent, radius: 8)
                 }
@@ -100,7 +100,7 @@ struct DownloadsView: View {
                         .foregroundColor(.secondary)
 
                     Text("\(downloadManager.downloadedAlbumCount)")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.title2.weight(.bold))
                         .foregroundColor(.jellyAmpSecondary)
                 }
             }
@@ -201,7 +201,7 @@ struct DownloadedTrackRow: View {
             HStack(spacing: 12) {
                 // Music icon (playable)
                 Image(systemName: "play.circle.fill")
-                    .font(.system(size: 32))
+                    .font(.title2)
                     .foregroundColor(.jellyAmpAccent)
                     .symbolRenderingMode(.hierarchical)
 
@@ -279,7 +279,7 @@ struct DownloadedAlbumRow: View {
                         .frame(width: 80, height: 80)
                         .overlay(
                             Image(systemName: "music.note")
-                                .font(.system(size: 32))
+                                .font(.title2)
                                 .foregroundColor(.white.opacity(0.6))
                         )
                 }
@@ -424,7 +424,7 @@ struct DownloadedAlbumDetailView: View {
                         .frame(width: 200, height: 200)
                         .overlay(
                             Image(systemName: "music.note")
-                                .font(.system(size: 64))
+                                .font(.title)
                                 .foregroundColor(.white.opacity(0.6))
                         )
                         .neonGlow(color: .jellyAmpAccent, radius: 20)

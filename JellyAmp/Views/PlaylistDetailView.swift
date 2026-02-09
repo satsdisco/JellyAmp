@@ -237,7 +237,7 @@ struct PlaylistDetailView: View {
             // Playlist Title
             VStack(spacing: 8) {
                 Text(playlist.name)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.title2.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
                     .neonGlow(color: .neonPink, radius: 10)
                     .multilineTextAlignment(.center)
@@ -285,7 +285,7 @@ struct PlaylistDetailView: View {
             .neonGlow(color: .neonPink, radius: 20)
             .overlay(
                 Image(systemName: "music.note.list")
-                    .font(.system(size: 80))
+                    .font(.title)
                     .foregroundColor(.white.opacity(0.3))
             )
     }
@@ -325,7 +325,7 @@ struct PlaylistDetailView: View {
                 showNowPlaying = true
             } label: {
                 Image(systemName: "shuffle")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundColor(Color.jellyAmpText)
                     .frame(width: 56, height: 56)
                     .background(
@@ -345,7 +345,7 @@ struct PlaylistDetailView: View {
                 toggleFavorite()
             } label: {
                 Image(systemName: isFavorite ? "heart.fill" : "heart")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundColor(isFavorite ? .neonPink : .white)
                     .frame(width: 56, height: 56)
                     .background(
@@ -403,7 +403,7 @@ struct PlaylistDetailView: View {
                     Spacer()
                     VStack(spacing: 12) {
                         Image(systemName: "music.note.list")
-                            .font(.system(size: 48))
+                            .font(.title)
                             .foregroundColor(.secondary.opacity(0.5))
                         Text("No tracks in playlist")
                             .font(.jellyAmpBody)
@@ -469,7 +469,7 @@ struct PlaylistTrackRow: View {
             HStack(spacing: 16) {
                 // Track number
                 Text("\(trackNumber)")
-                    .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    .font(.system(.body, design: .monospaced).weight(.bold))
                     .foregroundColor(.neonPink)
                     .frame(width: 28, alignment: .trailing)
 

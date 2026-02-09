@@ -75,13 +75,13 @@ struct SearchView: View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Search")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .font(.title.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
                     .neonGlow(color: .jellyAmpAccent, radius: 12)
 
                 if !searchResults.isEmpty {
                     Text("\(filteredResults.count) result\(filteredResults.count == 1 ? "" : "s")")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.subheadline.weight(.medium))
                         .foregroundColor(.secondary)
                 }
             }
@@ -98,12 +98,12 @@ struct SearchView: View {
         HStack(spacing: 12) {
             // Search Icon
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.headline.weight(.semibold))
                 .foregroundColor(.neonCyan)
 
             // Text Field
             TextField("Search artists, albums, tracks...", text: $searchText)
-                .font(.system(size: 17))
+                .font(.body)
                 .foregroundColor(Color.jellyAmpText)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
@@ -118,7 +118,7 @@ struct SearchView: View {
                     searchResults = []
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 18))
+                        .font(.headline)
                         .foregroundColor(.secondary)
                 }
             }
@@ -147,7 +147,7 @@ struct SearchView: View {
                         }
                     } label: {
                         Text(filter.rawValue)
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .font(.subheadline.weight(.bold))
                             .foregroundColor(selectedFilter == filter ? .black : .neonCyan)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 10)
@@ -192,15 +192,15 @@ struct SearchView: View {
     private var emptySearchView: some View {
         VStack(spacing: 20) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 64))
+                .font(.title)
                 .foregroundColor(.neonCyan.opacity(0.5))
 
             Text("Search Your Library")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.title3.weight(.bold))
                 .foregroundColor(Color.jellyAmpText)
 
             Text("Find artists, albums, and tracks")
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -214,7 +214,7 @@ struct SearchView: View {
                 .scaleEffect(1.5)
 
             Text("Searching...")
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -224,15 +224,15 @@ struct SearchView: View {
     private var noResultsView: some View {
         VStack(spacing: 20) {
             Image(systemName: "music.note.list")
-                .font(.system(size: 64))
+                .font(.title)
                 .foregroundColor(.secondary.opacity(0.5))
 
             Text("No Results")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.title3.weight(.bold))
                 .foregroundColor(Color.jellyAmpText)
 
             Text("Try a different search term")
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -357,14 +357,14 @@ struct SearchResultRow: View {
                 // Item Info
                 VStack(alignment: .leading, spacing: 6) {
                     Text(item.name ?? "Unknown")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
 
                     HStack(spacing: 8) {
                         // Type Badge
                         Text(itemTypeLabel)
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .font(.caption.weight(.bold))
                             .foregroundColor(itemTypeColor)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
@@ -378,14 +378,14 @@ struct SearchResultRow: View {
                             // Show album count for artists
                             if let albumCount = item.AlbumCount {
                                 Text("\(albumCount) album\(albumCount == 1 ? "" : "s")")
-                                    .font(.system(size: 15))
+                                    .font(.subheadline)
                                     .foregroundColor(.secondary)
                                     .lineLimit(1)
                             }
                         } else if let artist = item.artists?.first {
                             // Show artist name for albums/tracks
                             Text(artist)
-                                .font(.system(size: 15))
+                                .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
                         }
@@ -396,7 +396,7 @@ struct SearchResultRow: View {
 
                 // Chevron
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundColor(.secondary)
             }
             .padding(.horizontal, 20)
@@ -423,7 +423,7 @@ struct SearchResultRow: View {
                 .frame(width: 60, height: 60)
 
             Image(systemName: itemTypeIcon)
-                .font(.system(size: 24))
+                .font(.title2)
                 .foregroundColor(.white.opacity(0.6))
         }
     }

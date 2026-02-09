@@ -145,7 +145,7 @@ struct LibraryView: View {
                     Spacer()
                     VStack(spacing: 16) {
                         Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 50))
+                            .font(.title)
                             .foregroundColor(.neonPink)
                         Text("Error Loading Library")
                             .font(.jellyAmpHeadline)
@@ -246,7 +246,7 @@ struct LibraryView: View {
                                 if filteredArtists.isEmpty && favoriteAlbums.isEmpty {
                                     VStack(spacing: 16) {
                                         Image(systemName: "heart.slash")
-                                            .font(.system(size: 60))
+                                            .font(.title)
                                             .foregroundColor(.secondary.opacity(0.5))
                                         Text("No Favorites Yet")
                                             .font(.jellyAmpHeadline)
@@ -295,7 +295,7 @@ struct LibraryView: View {
                             if playlists.isEmpty {
                                 VStack(spacing: 16) {
                                     Image(systemName: "music.note.list")
-                                        .font(.system(size: 60))
+                                        .font(.title)
                                         .foregroundColor(.secondary.opacity(0.5))
                                     Text("No Playlists Yet")
                                         .font(.jellyAmpHeadline)
@@ -540,7 +540,7 @@ struct LibraryView: View {
                             )
 
                         Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.title3.weight(.semibold))
                             .foregroundColor(.neonPink)
                     }
                     .neonGlow(color: .neonPink, radius: 8)
@@ -568,7 +568,7 @@ struct LibraryView: View {
                             .scaleEffect(0.8)
                     } else {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.headline.weight(.semibold))
                             .foregroundColor(.jellyAmpAccent)
                     }
                 }
@@ -765,7 +765,7 @@ struct AlbumCard: View {
 
                 if let year = album.year {
                     Text(String(year))
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(.caption2, design: .monospaced))
                         .foregroundColor(.neonCyan.opacity(0.6))
                 }
             }
@@ -812,7 +812,7 @@ struct AlbumCard: View {
             .neonGlow(color: .jellyAmpAccent, radius: isPressed ? 8 : 12)
             .overlay(
                 Image(systemName: "music.note")
-                    .font(.system(size: 40))
+                    .font(.title)
                     .foregroundColor(.white.opacity(0.4))
             )
     }
@@ -875,13 +875,13 @@ struct AlbumListRow: View {
                 VStack(alignment: .leading, spacing: 6) {
                     // Album name - bold and prominent
                     Text(album.name)
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .font(.headline.weight(.bold))
                         .foregroundColor(Color.jellyAmpText)
                         .lineLimit(2)
 
                     // Artist name - secondary
                     Text(album.artistName)
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.subheadline.weight(.medium))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
 
@@ -890,10 +890,10 @@ struct AlbumListRow: View {
                         if let year = album.year {
                             HStack(spacing: 4) {
                                 Image(systemName: "calendar")
-                                    .font(.system(size: 11))
+                                    .font(.caption2)
                                     .foregroundColor(.neonCyan)
                                 Text(String(year))
-                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                    .font(.subheadline.weight(.bold))
                                     .foregroundColor(.neonCyan)
                             }
                         }
@@ -901,10 +901,10 @@ struct AlbumListRow: View {
                         if let trackCount = album.trackCount {
                             HStack(spacing: 4) {
                                 Image(systemName: "music.note.list")
-                                    .font(.system(size: 11))
+                                    .font(.caption2)
                                     .foregroundColor(.neonPink.opacity(0.8))
                                 Text("\(trackCount)")
-                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .font(.subheadline.weight(.semibold))
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -914,7 +914,7 @@ struct AlbumListRow: View {
 
                 // Chevron
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundColor(.neonCyan.opacity(0.6))
             }
             .padding(.vertical, 12)
@@ -954,7 +954,7 @@ struct AlbumListRow: View {
                 )
 
             Image(systemName: "music.note")
-                .font(.system(size: 28))
+                .font(.title2)
                 .foregroundColor(.white.opacity(0.4))
         }
     }
@@ -1086,7 +1086,7 @@ struct ArtistCard: View {
 
             // Artist icon
             Image(systemName: "person.circle.fill")
-                .font(.system(size: 48))
+                .font(.title)
                 .foregroundColor(.white.opacity(0.4))
         }
     }
@@ -1145,7 +1145,7 @@ struct ArtistListRow: View {
                 // Artist info
                 VStack(alignment: .leading, spacing: 4) {
                     Text(artist.name)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
                 }
@@ -1154,7 +1154,7 @@ struct ArtistListRow: View {
 
                 // Chevron
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundColor(.neonPurple.opacity(0.6))
             }
             .padding(.vertical, 14)
@@ -1190,7 +1190,7 @@ struct ArtistListRow: View {
                 )
 
             Image(systemName: "person.circle.fill")
-                .font(.system(size: 28))
+                .font(.title2)
                 .foregroundColor(.white.opacity(0.4))
         }
     }
@@ -1299,7 +1299,7 @@ struct PlaylistCard: View {
             .neonGlow(color: .neonPink, radius: isPressed ? 8 : 12)
             .overlay(
                 Image(systemName: "music.note.list")
-                    .font(.system(size: 40))
+                    .font(.title)
                     .foregroundColor(.white.opacity(0.4))
             )
     }
@@ -1351,23 +1351,23 @@ struct PlaylistListRow: View {
                 VStack(alignment: .leading, spacing: 8) {
                     // Playlist name - bold and prominent
                     Text(playlist.name)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundColor(Color.jellyAmpText)
                         .lineLimit(1)
 
                     // Track count and date
                     HStack(spacing: 0) {
                         Text("\(playlist.trackCount) track\(playlist.trackCount == 1 ? "" : "s")")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.caption.weight(.medium))
                             .foregroundColor(.secondary.opacity(0.8))
 
                         if let dateCreated = playlist.dateCreated {
                             Text("  •  ")
-                                .font(.system(size: 13))
+                                .font(.caption)
                                 .foregroundColor(.secondary.opacity(0.5))
 
                             Text(dateCreated, style: .date)
-                                .font(.system(size: 13))
+                                .font(.caption)
                                 .foregroundColor(.secondary.opacity(0.6))
                         }
                     }
@@ -1377,7 +1377,7 @@ struct PlaylistListRow: View {
 
                 // Chevron
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundColor(.neonPink.opacity(0.6))
             }
             .padding(.vertical, 14)
@@ -1402,7 +1402,7 @@ struct PlaylistListRow: View {
                 .frame(width: 64, height: 64)
 
             Image(systemName: "music.note.list")
-                .font(.system(size: 20))
+                .font(.title3)
                 .foregroundColor(.white.opacity(0.4))
         }
     }

@@ -107,12 +107,12 @@ struct QueueView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Up Next")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.title.weight(.bold))
                         .foregroundColor(Color.jellyAmpText)
                         .neonGlow(color: .jellyAmpAccent, radius: 12)
 
                     Text("\(playerManager.queue.count) track\(playerManager.queue.count == 1 ? "" : "s")")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.subheadline.weight(.medium))
                         .foregroundColor(.secondary)
                 }
                 .padding(.leading, 20)
@@ -130,9 +130,9 @@ struct QueueView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: editMode == .active ? "checkmark" : "slider.horizontal.3")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                         Text(editMode == .active ? "Done" : "Edit")
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .font(.subheadline.weight(.bold))
                     }
                     .foregroundColor(.neonCyan)
                     .padding(.horizontal, 16)
@@ -156,9 +156,9 @@ struct QueueView: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "trash")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.subheadline.weight(.semibold))
                             Text("Clear")
-                                .font(.system(size: 15, weight: .bold, design: .rounded))
+                                .font(.subheadline.weight(.bold))
                         }
                         .foregroundColor(.neonPink)
                         .padding(.horizontal, 16)
@@ -186,15 +186,15 @@ struct QueueView: View {
     private var emptyQueueView: some View {
         VStack(spacing: 20) {
             Image(systemName: "music.note.list")
-                .font(.system(size: 64))
+                .font(.title)
                 .foregroundColor(.neonCyan.opacity(0.5))
 
             Text("Queue is Empty")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.title3.weight(.bold))
                 .foregroundColor(Color.jellyAmpText)
 
             Text("Play some music to see it here")
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -223,12 +223,12 @@ struct QueueTrackRow: View {
                 // Now Playing Indicator
                 if isCurrentTrack {
                     Image(systemName: "waveform")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.headline.weight(.semibold))
                         .foregroundColor(.neonCyan)
                         .frame(width: 28)
                 } else {
                     Text("\(index + 1)")
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .font(.body.weight(.medium))
                         .foregroundColor(.secondary)
                         .frame(width: 28)
                 }
@@ -236,12 +236,12 @@ struct QueueTrackRow: View {
                 // Track Info
                 VStack(alignment: .leading, spacing: 6) {
                     Text(track.name)
-                        .font(.system(size: 17, weight: isCurrentTrack ? .bold : .semibold))
+                        .font(.body.weight(isCurrentTrack ? .bold : .semibold))
                         .foregroundColor(isCurrentTrack ? .neonCyan : .white)
                         .lineLimit(1)
 
                     Text(track.artistName)
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
@@ -253,7 +253,7 @@ struct QueueTrackRow: View {
                     onDelete()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 22))
+                        .font(.title3)
                         .foregroundColor(.neonPink.opacity(0.6))
                 }
                 .buttonStyle(.plain)

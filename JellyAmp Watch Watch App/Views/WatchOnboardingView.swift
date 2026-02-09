@@ -13,7 +13,7 @@ struct WatchOnboardingView: View {
             Spacer()
             
             Image(systemName: "iphone.and.watch")
-                .font(.system(size: 40))
+                .font(.title)
                 .foregroundColor(.blue)
             
             Text("Sign In Required")

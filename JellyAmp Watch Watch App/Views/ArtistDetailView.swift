@@ -35,11 +35,11 @@ struct ArtistDetailView: View {
                         }) {
                             VStack(spacing: 2) {
                                 Image(systemName: tabs[index].icon)
-                                    .font(.system(size: 14))
+                                    .font(.subheadline)
                                     .foregroundColor(selectedTab == index ? .cyan : .secondary)
 
                                 Text(tabs[index].label)
-                                    .font(.system(size: 10, weight: selectedTab == index ? .medium : .regular))
+                                    .font(.caption2.weight(selectedTab == index ? .medium : .regular))
                                     .foregroundColor(selectedTab == index ? .cyan : .secondary)
                             }
                             .frame(minWidth: 50)
@@ -91,7 +91,7 @@ struct ArtistDetailView: View {
                             if let year = selectedYear {
                                 HStack {
                                     Text("Year: \(String(year))")
-                                        .font(.system(size: 12, weight: .medium))
+                                        .font(.caption.weight(.medium))
                                         .foregroundColor(.pink)
 
                                     Spacer()
@@ -100,7 +100,7 @@ struct ArtistDetailView: View {
                                         selectedYear = nil
                                     }) {
                                         Image(systemName: "xmark.circle.fill")
-                                            .font(.system(size: 14))
+                                            .font(.subheadline)
                                             .foregroundColor(.secondary)
                                     }
                                     .buttonStyle(PlainButtonStyle())
@@ -153,17 +153,17 @@ struct ArtistDetailView: View {
                                         .frame(width: 32, height: 32)
 
                                     Image(systemName: "play.fill")
-                                        .font(.system(size: 14))
+                                        .font(.subheadline)
                                         .foregroundColor(.cyan)
                                 }
 
                                 Text("Play All")
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(.subheadline.weight(.medium))
 
                                 Spacer()
 
                                 Text("\(tracks.count) tracks")
-                                    .font(.system(size: 12))
+                                    .font(.caption)
                                     .foregroundColor(.secondary)
                             }
                             .padding(.vertical, 4)
@@ -177,17 +177,17 @@ struct ArtistDetailView: View {
                             }) {
                                 HStack {
                                     Text("\(index + 1)")
-                                        .font(.system(size: 12, weight: .medium))
+                                        .font(.caption.weight(.medium))
                                         .foregroundColor(.cyan)
                                         .frame(width: 25, alignment: .trailing)
 
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(track.name)
-                                            .font(.system(size: 14, weight: .medium))
+                                            .font(.subheadline.weight(.medium))
                                             .lineLimit(1)
 
                                         Text(track.album)
-                                            .font(.system(size: 11))
+                                            .font(.caption2)
                                             .foregroundColor(.secondary)
                                             .lineLimit(1)
                                     }
@@ -225,13 +225,13 @@ struct ArtistDetailView: View {
                             }) {
                                 HStack {
                                     Image(systemName: "calendar.badge.clock")
-                                        .font(.system(size: 14))
+                                        .font(.subheadline)
                                         .foregroundColor(.pink)
                                     Text("All Years")
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(.subheadline.weight(.medium))
                                     Spacer()
                                     Text("\(albums.count)")
-                                        .font(.system(size: 12))
+                                        .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                                 .padding(.horizontal, 12)
@@ -251,14 +251,14 @@ struct ArtistDetailView: View {
                                 }) {
                                     HStack {
                                         Image(systemName: "calendar")
-                                            .font(.system(size: 12))
+                                            .font(.caption)
                                             .foregroundColor(.pink.opacity(0.7))
                                         Text(String(year))
-                                            .font(.system(size: 14, weight: .medium))
+                                            .font(.subheadline.weight(.medium))
                                         Spacer()
                                         let albumCount = albums.filter { $0.year == year }.count
                                         Text("\(albumCount)")
-                                            .font(.system(size: 12))
+                                            .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
                                     .padding(.horizontal, 12)

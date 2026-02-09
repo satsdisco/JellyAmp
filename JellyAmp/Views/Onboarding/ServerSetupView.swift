@@ -95,7 +95,7 @@ struct ServerSetupView: View {
                 .neonGlow(color: .jellyAmpAccent, radius: 20)
 
             Image(systemName: "waveform")
-                .font(.system(size: 50))
+                .font(.title)
                 .foregroundColor(Color.jellyAmpText)
         }
         .padding(.bottom, 40)
@@ -105,7 +105,7 @@ struct ServerSetupView: View {
     private var titleSection: some View {
         VStack(spacing: 12) {
             Text("Welcome to JellyAmp")
-                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .font(.title2.weight(.bold))
                 .foregroundColor(Color.jellyAmpText)
                 .neonGlow(color: .jellyAmpAccent, radius: 10)
 
@@ -201,7 +201,7 @@ struct ServerSetupView: View {
                     .font(.caption)
 
                 Text("Enter your Jellyfin server URL (e.g., https://jellyfin.example.com:8096)")
-                    .font(.system(size: 13))
+                    .font(.caption)
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

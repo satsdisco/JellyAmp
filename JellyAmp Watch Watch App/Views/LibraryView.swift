@@ -93,7 +93,7 @@ struct LibraryView: View {
             NavigationLink(destination: ArtistDetailView(artist: artist)) {
                 HStack {
                     Image(systemName: "music.mic")
-                        .font(.system(size: 16))
+                        .font(.body)
                         .foregroundColor(.cyan)
                         .frame(width: 30)
 

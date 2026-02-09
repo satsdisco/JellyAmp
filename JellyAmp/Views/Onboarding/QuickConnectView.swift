@@ -167,7 +167,7 @@ struct QuickConnectView: View {
                 .neonGlow(color: .jellyAmpTertiary, radius: 20)
 
             Image(systemName: "qrcode")
-                .font(.system(size: 40))
+                .font(.title)
                 .foregroundColor(Color.jellyAmpText)
         }
         .padding(.bottom, 30)
@@ -177,7 +177,7 @@ struct QuickConnectView: View {
     private var titleSection: some View {
         VStack(spacing: 12) {
             Text("Quick Connect")
-                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .font(.title2.weight(.bold))
                 .foregroundColor(Color.jellyAmpText)
                 .neonGlow(color: .jellyAmpSecondary, radius: 10)
 
@@ -194,7 +194,7 @@ struct QuickConnectView: View {
         VStack(spacing: 16) {
             // Code
             Text(quickConnectCode)
-                .font(.system(size: 56, weight: .bold, design: .monospaced))
+                .font(.system(.title, design: .monospaced).weight(.bold))
                 .foregroundColor(.neonCyan)
                 .tracking(8)
                 .neonGlow(color: .jellyAmpAccent, radius: 15)
@@ -269,7 +269,7 @@ struct QuickConnectView: View {
     private func instructionStep(number: String, text: String) -> some View {
         HStack(spacing: 16) {
             Text(number)
-                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                .font(.system(.headline, design: .monospaced).weight(.bold))
                 .foregroundColor(.neonPink)
                 .frame(width: 32, height: 32)
                 .background(
@@ -278,7 +278,7 @@ struct QuickConnectView: View {
                 )
 
             Text(text)
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundColor(Color.jellyAmpText)
         }
     }

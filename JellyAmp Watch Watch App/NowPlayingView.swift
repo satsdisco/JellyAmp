@@ -57,7 +57,7 @@ struct NowPlayingView: View {
                     toggleFavorite(track: track)
                 } label: {
                     Image(systemName: isFavorite ? "heart.fill" : "heart")
-                        .font(.system(size: 14))
+                        .font(.subheadline)
                         .foregroundColor(.pink)
                         .padding(6)
                         .background(
@@ -72,13 +72,13 @@ struct NowPlayingView: View {
 
             // Track name
             Text(track.name)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.caption.weight(.semibold))
                 .lineLimit(1)
                 .multilineTextAlignment(.center)
 
             // Artist
             Text(track.artist)
-                .font(.system(size: 11))
+                .font(.caption2)
                 .foregroundColor(.secondary)
                 .lineLimit(1)
         }
@@ -90,7 +90,7 @@ struct NowPlayingView: View {
     private var placeholderView: some View {
         VStack(spacing: 12) {
             Image(systemName: "music.note.list")
-                .font(.system(size: 40))
+                .font(.title)
                 .foregroundColor(.secondary)
 
             Text("Nothing Playing")
@@ -133,14 +133,14 @@ struct NowPlayingView: View {
             // Time labels
             HStack {
                 Text(formatTime(playerManager.currentTime))
-                    .font(.system(size: 9))
+                    .font(.caption2)
                     .monospacedDigit()
                     .foregroundColor(.cyan)
 
                 Spacer()
 
                 Text(formatTime(playerManager.duration))
-                    .font(.system(size: 9))
+                    .font(.caption2)
                     .monospacedDigit()
                     .foregroundColor(.secondary)
             }
@@ -162,7 +162,7 @@ struct NowPlayingView: View {
                 playerManager.playPrevious()
             } label: {
                 Image(systemName: "backward.fill")
-                    .font(.system(size: 20))
+                    .font(.title3)
                     .frame(width: 40, height: 40)
             }
             .buttonStyle(.plain)
@@ -183,7 +183,7 @@ struct NowPlayingView: View {
                         .frame(width: 48, height: 48)
 
                     Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 20))
+                        .font(.title3)
                         .foregroundColor(.black)
                 }
             }
@@ -194,7 +194,7 @@ struct NowPlayingView: View {
                 playerManager.playNext()
             } label: {
                 Image(systemName: "forward.fill")
-                    .font(.system(size: 20))
+                    .font(.title3)
                     .frame(width: 40, height: 40)
             }
             .buttonStyle(.plain)
