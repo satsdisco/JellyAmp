@@ -37,7 +37,6 @@ struct MiniPlayerView: View {
                     }
                     .frame(width: 48, height: 48)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(.white.opacity(0.1), lineWidth: 0.5))
                     .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
                     .padding(.leading, 12)
 

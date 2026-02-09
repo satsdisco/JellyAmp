@@ -267,20 +267,6 @@ struct AlbumDetailView: View {
                                 .frame(width: 260, height: 260)
                                 .clipped()
                                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .stroke(
-                                            LinearGradient(
-                                                colors: [
-                                                    Color.jellyAmpAccent.opacity(0.8),
-                                                    Color.jellyAmpSecondary.opacity(0.8)
-                                                ],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            ),
-                                            lineWidth: 2
-                                        )
-                                )
                                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                         case .failure:
                             placeholderArtwork
