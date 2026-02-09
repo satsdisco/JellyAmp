@@ -42,9 +42,6 @@ struct SearchView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                searchHeader
-
                 // Filter Tabs
                 filterTabs
 
@@ -72,28 +69,6 @@ struct SearchView: View {
         }
         .navigationTitle("Search")
         .navigationBarTitleDisplayMode(.large)
-    }
-
-    // MARK: - Header
-    private var searchHeader: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Search")
-                    .font(.title.weight(.bold))
-                    .foregroundColor(Color.jellyAmpText)
-
-                if !searchResults.isEmpty {
-                    Text("\(filteredResults.count) result\(filteredResults.count == 1 ? "" : "s")")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(.leading, 20)
-
-            Spacer()
-        }
-        .padding(.top, 60)
-        .padding(.bottom, 20)
     }
 
     // MARK: - Filter Tabs

@@ -82,9 +82,6 @@ struct FavoritesView: View {
                 // Content
                 ScrollView {
                     VStack(alignment: .leading, spacing: 32) {
-                        // Header
-                        headerSection
-
                         // Favorite Tracks
                         if !favoriteTracks.isEmpty {
                             favoriteTracksSection
@@ -124,29 +121,6 @@ struct FavoritesView: View {
                 }
             }
         }
-    }
-
-    // MARK: - Header Section
-    private var headerSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Favorites")
-                    .font(.title.weight(.bold))
-                    .foregroundColor(Color.jellyAmpText)
-
-                let totalCount = favoriteTracks.count + favoriteAlbums.count + favoriteArtists.count
-                if totalCount > 0 {
-                    Text("\(totalCount) favorite\(totalCount == 1 ? "" : "s")")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(.leading, 20)
-
-            Spacer()
-        }
-        .padding(.top, 60)
-        .padding(.bottom, 10)
     }
 
     // MARK: - Empty State
