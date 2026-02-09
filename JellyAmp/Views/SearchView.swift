@@ -314,7 +314,7 @@ struct SearchView: View {
         switch item.type {
         case "Audio":
             // Play track
-            let track = Track(from: item, baseURL: baseURL)
+            let track = Track(from: item, baseURL: jellyfinService.baseURL)
             playerManager.play(tracks: [track])
 
         default:
