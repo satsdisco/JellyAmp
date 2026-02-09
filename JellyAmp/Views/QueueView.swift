@@ -114,7 +114,7 @@ struct QueueView: View {
                     Text("Up Next")
                         .font(.title.weight(.bold))
                         .foregroundColor(Color.jellyAmpText)
-                        .neonGlow(color: .jellyAmpAccent, radius: 12)
+                        .neonGlow(color: .jellyAmpAccent, radius: 6)
 
                     Text("\(playerManager.queue.count) track\(playerManager.queue.count == 1 ? "" : "s")")
                         .font(.subheadline.weight(.medium))

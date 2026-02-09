@@ -536,7 +536,6 @@ struct LibraryView: View {
                 Text("Library")
                     .font(.jellyAmpTitle)
                     .foregroundColor(Color.jellyAmpText)
-                    .neonGlow(color: .jellyAmpAccent, radius: 10)
 
                 Text("\(albums.count) Albums · \(artists.count) Artists")
                     .font(.jellyAmpCaption)
@@ -563,7 +562,6 @@ struct LibraryView: View {
                             .font(.title3.weight(.semibold))
                             .foregroundColor(.neonPink)
                     }
-                    .neonGlow(color: .neonPink, radius: 8)
                 }
             }
 
@@ -592,7 +590,6 @@ struct LibraryView: View {
                             .foregroundColor(.jellyAmpAccent)
                     }
                 }
-                .neonGlow(color: .jellyAmpAccent, radius: 8)
             }
             .disabled(isSyncing)
         }
@@ -737,7 +734,7 @@ struct AlbumCard: View {
                                 lineWidth: 1.5
                             )
                     )
-                    .neonGlow(color: .jellyAmpAccent, radius: 12)
+                    .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 } else {
                     placeholderArtwork
                 }
@@ -792,7 +789,7 @@ struct AlbumCard: View {
                         lineWidth: 1.5
                     )
             )
-            .neonGlow(color: .jellyAmpAccent, radius: 12)
+            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
             .overlay(
                 Image(systemName: "music.note")
                     .font(.title)
@@ -953,7 +950,6 @@ struct FilterPill: View {
                     Capsule()
                         .stroke(Color.jellyAmpAccent.opacity(isSelected ? 0.8 : 0.3), lineWidth: 1)
                 )
-                .neonGlow(color: .jellyAmpAccent, radius: isSelected ? 8 : 0)
         }
     }
 }
@@ -990,7 +986,7 @@ struct ArtistCard: View {
                                             lineWidth: 1.5
                                         )
                                 )
-                                .neonGlow(color: .jellyAmpTertiary, radius: 12)
+                                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                         case .failure:
                             placeholderArtwork
                         @unknown default:
@@ -1041,7 +1037,7 @@ struct ArtistCard: View {
                             lineWidth: 1.5
                         )
                 )
-                .neonGlow(color: .jellyAmpTertiary, radius: 12)
+                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
 
             // Artist icon
             Image(systemName: "person.circle.fill")
@@ -1183,7 +1179,7 @@ struct PlaylistCard: View {
                                 lineWidth: 1.5
                             )
                     )
-                    .neonGlow(color: .neonPink, radius: 12)
+                    .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 } else {
                     placeholderArtwork
                 }
@@ -1232,7 +1228,7 @@ struct PlaylistCard: View {
                         lineWidth: 1.5
                     )
             )
-            .neonGlow(color: .neonPink, radius: 12)
+            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
             .overlay(
                 Image(systemName: "music.note.list")
                     .font(.title)

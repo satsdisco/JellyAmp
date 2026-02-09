@@ -281,7 +281,7 @@ struct AlbumDetailView: View {
                                             lineWidth: 2
                                         )
                                 )
-                                .neonGlow(color: .jellyAmpSecondary, radius: 20)
+                                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                         case .failure:
                             placeholderArtwork
                         @unknown default:
@@ -311,14 +311,12 @@ struct AlbumDetailView: View {
                 Text(album.name)
                     .font(.title2.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
-                    .neonGlow(color: .jellyAmpAccent, radius: 10)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 20)
 
                 Text(album.artistName)
                     .font(.jellyAmpHeadline)
                     .foregroundColor(.neonPink)
-                    .neonGlow(color: .jellyAmpSecondary, radius: 6)
             }
             .padding(.top, -40)
             .padding(.bottom, 20)
@@ -353,7 +351,7 @@ struct AlbumDetailView: View {
                         lineWidth: 2
                     )
             )
-            .neonGlow(color: .jellyAmpSecondary, radius: 20)
+            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
             .overlay(
                 Image(systemName: "music.note")
                     .font(.title)
@@ -384,7 +382,7 @@ struct AlbumDetailView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(albumTracks.isEmpty ? Color.gray : Color.jellyAmpAccent)
                 )
-                .neonGlow(color: albumTracks.isEmpty ? .clear : .neonCyan, radius: 12)
+                .neonGlow(color: albumTracks.isEmpty ? .clear : .neonCyan, radius: 6)
             }
             .accessibilityLabel("Play all tracks")
             .disabled(albumTracks.isEmpty)
@@ -408,7 +406,7 @@ struct AlbumDetailView: View {
                                     .stroke(Color.jellyAmpTertiary.opacity(0.5), lineWidth: 1)
                             )
                     )
-                    .neonGlow(color: .jellyAmpTertiary, radius: 8)
+                    .neonGlow(color: .jellyAmpTertiary, radius: 4)
             }
             .accessibilityLabel("Shuffle album")
             .disabled(albumTracks.isEmpty)
@@ -429,7 +427,7 @@ struct AlbumDetailView: View {
                                     .stroke(Color.jellyAmpSecondary.opacity(isFavorite ? 0.8 : 0.5), lineWidth: 1)
                             )
                     )
-                    .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 12 : 8)
+                    .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 6 : 4)
             }
             .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
 
@@ -470,7 +468,7 @@ struct AlbumDetailView: View {
                             .foregroundColor(downloadIconColor)
                     }
                 }
-                .neonGlow(color: downloadIconColor, radius: albumDownloadState.isDownloaded ? 12 : 8)
+                .neonGlow(color: downloadIconColor, radius: albumDownloadState.isDownloaded ? 6 : 4)
             }
             .accessibilityLabel(albumDownloadState.isDownloaded ? "Delete download" : "Download album")
             .disabled(albumTracks.isEmpty)

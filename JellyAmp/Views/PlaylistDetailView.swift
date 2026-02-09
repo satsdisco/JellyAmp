@@ -184,7 +184,7 @@ struct PlaylistDetailView: View {
                                             lineWidth: 2
                                         )
                                 )
-                                .neonGlow(color: .neonPink, radius: 20)
+                                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                         case .failure:
                             placeholderArtwork
                         @unknown default:
@@ -212,7 +212,7 @@ struct PlaylistDetailView: View {
                 Text(playlist.name)
                     .font(.title2.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
-                    .neonGlow(color: .neonPink, radius: 10)
+                    .neonGlow(color: .neonPink, radius: 4)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 20)
 
@@ -255,7 +255,7 @@ struct PlaylistDetailView: View {
                         lineWidth: 2
                     )
             )
-            .neonGlow(color: .neonPink, radius: 20)
+            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
             .overlay(
                 Image(systemName: "music.note.list")
                     .font(.title)
@@ -286,7 +286,7 @@ struct PlaylistDetailView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(playlistTracks.isEmpty ? Color.gray : Color.neonPink)
                 )
-                .neonGlow(color: playlistTracks.isEmpty ? .clear : .neonPink, radius: 12)
+                .neonGlow(color: playlistTracks.isEmpty ? .clear : .neonPink, radius: 6)
             }
             .disabled(playlistTracks.isEmpty)
 
@@ -329,7 +329,7 @@ struct PlaylistDetailView: View {
                                     .stroke(Color.neonPink.opacity(isFavorite ? 0.8 : 0.5), lineWidth: 1)
                             )
                     )
-                    .neonGlow(color: .neonPink, radius: isFavorite ? 12 : 8)
+                    .neonGlow(color: .neonPink, radius: isFavorite ? 6 : 4)
             }
         }
         .padding(.horizontal, 20)

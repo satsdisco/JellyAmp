@@ -202,7 +202,7 @@ struct ArtistDetailView: View {
                     .font(.title.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
                     .multilineTextAlignment(.center)
-                    .neonGlow(color: .jellyAmpAccent, radius: 12)
+                    .neonGlow(color: .jellyAmpAccent, radius: 6)
                     .padding(.top, -40)
                     .padding(.horizontal, 20)
 
@@ -241,7 +241,7 @@ struct ArtistDetailView: View {
                             Capsule()
                                 .stroke(Color.white.opacity(0.3), lineWidth: 1)
                         )
-                        .neonGlow(color: .jellyAmpAccent, radius: 12)
+                        .neonGlow(color: .jellyAmpAccent, radius: 6)
                     }
                     .disabled(isShuffling)
                     .accessibilityLabel("Shuffle all songs by artist")
@@ -262,7 +262,7 @@ struct ArtistDetailView: View {
                                             .stroke(Color.jellyAmpSecondary.opacity(isFavorite ? 0.8 : 0.5), lineWidth: 1)
                                     )
                             )
-                            .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 12 : 8)
+                            .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 6 : 4)
                     }
                     .accessibilityLabel(isFavorite ? "Remove artist from favorites" : "Add artist to favorites")
                 }

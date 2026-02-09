@@ -400,7 +400,7 @@ struct DownloadedAlbumDetailView: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 200, height: 200)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .neonGlow(color: .jellyAmpAccent, radius: 20)
+                        .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 } else {
                     RoundedRectangle(cornerRadius: 20)
                         .fill(
@@ -416,7 +416,7 @@ struct DownloadedAlbumDetailView: View {
                                 .font(.title)
                                 .foregroundColor(.white.opacity(0.6))
                         )
-                        .neonGlow(color: .jellyAmpAccent, radius: 20)
+                        .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 }
             }
 

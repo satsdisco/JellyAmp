@@ -51,7 +51,7 @@ struct NewPlaylistSheet: View {
                             .font(.title)
                             .foregroundColor(.neonPink)
                     }
-                    .neonGlow(color: .neonPink, radius: 20)
+                    .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                     .padding(.top, 20)
 
                     // Title

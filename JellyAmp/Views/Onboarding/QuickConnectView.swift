@@ -164,7 +164,7 @@ struct QuickConnectView: View {
                             lineWidth: 2
                         )
                 )
-                .neonGlow(color: .jellyAmpTertiary, radius: 20)
+                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
 
             Image(systemName: "qrcode")
                 .font(.title)
@@ -179,7 +179,7 @@ struct QuickConnectView: View {
             Text("Quick Connect")
                 .font(.title2.weight(.bold))
                 .foregroundColor(Color.jellyAmpText)
-                .neonGlow(color: .jellyAmpSecondary, radius: 10)
+                .neonGlow(color: .jellyAmpSecondary, radius: 4)
 
             Text("Enter this code on your Jellyfin server")
                 .font(.jellyAmpBody)
@@ -197,7 +197,7 @@ struct QuickConnectView: View {
                 .font(.system(.title, design: .monospaced).weight(.bold))
                 .foregroundColor(.neonCyan)
                 .tracking(8)
-                .neonGlow(color: .jellyAmpAccent, radius: 15)
+                .neonGlow(color: .jellyAmpAccent, radius: 6)
                 .padding(.vertical, 30)
                 .frame(maxWidth: .infinity)
                 .background(

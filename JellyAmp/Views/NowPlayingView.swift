@@ -143,7 +143,7 @@ struct NowPlayingView: View {
                                         lineWidth: 3
                                     )
                             )
-                            .neonGlow(color: .neonCyan, radius: 30)
+                            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                     case .failure:
                         placeholderArtwork
                     @unknown default:
@@ -186,7 +186,7 @@ struct NowPlayingView: View {
                             lineWidth: 2
                         )
                 )
-                .neonGlow(color: .neonCyan, radius: 20)
+                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
 
             // Album icon overlay
             Image(systemName: "music.note")
@@ -202,7 +202,6 @@ struct NowPlayingView: View {
                 Text(track.name)
                     .font(.jellyAmpTitle)
                     .foregroundColor(Color.jellyAmpText)
-                    .neonGlow(color: .neonCyan, radius: 10)
 
                 Text(track.artistName)
                     .font(.jellyAmpHeadline)
@@ -240,7 +239,6 @@ struct NowPlayingView: View {
                             )
                         )
                         .frame(width: geometry.size.width * progress)
-                        .neonGlow(color: .neonCyan, radius: 4)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -317,7 +315,7 @@ struct NowPlayingView: View {
                             )
                         )
                         .frame(width: 80, height: 80)
-                        .neonGlow(color: .neonCyan, radius: 20)
+                        .neonGlow(color: .neonCyan, radius: 8)
 
                     Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
                         .font(.title)

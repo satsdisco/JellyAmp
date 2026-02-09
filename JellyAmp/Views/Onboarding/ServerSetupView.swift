@@ -92,7 +92,7 @@ struct ServerSetupView: View {
                             lineWidth: 2
                         )
                 )
-                .neonGlow(color: .jellyAmpAccent, radius: 20)
+                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
 
             Image(systemName: "waveform")
                 .font(.title)
@@ -107,7 +107,7 @@ struct ServerSetupView: View {
             Text("Welcome to JellyAmp")
                 .font(.title2.weight(.bold))
                 .foregroundColor(Color.jellyAmpText)
-                .neonGlow(color: .jellyAmpAccent, radius: 10)
+                .neonGlow(color: .jellyAmpAccent, radius: 4)
 
             Text("Connect to your Jellyfin server")
                 .font(.jellyAmpBody)
@@ -188,7 +188,7 @@ struct ServerSetupView: View {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(serverURL.isEmpty ? Color.gray : Color.jellyAmpAccent)
             )
-            .neonGlow(color: serverURL.isEmpty ? .clear : .neonCyan, radius: 12)
+            .neonGlow(color: serverURL.isEmpty ? .clear : .neonCyan, radius: 6)
         }
         .disabled(serverURL.isEmpty || isValidating)
         .accessibilityLabel(isValidating ? "Connecting to server" : "Connect to server")

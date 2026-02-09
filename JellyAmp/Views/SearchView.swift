@@ -79,7 +79,7 @@ struct SearchView: View {
                 Text("Search")
                     .font(.title.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
-                    .neonGlow(color: .jellyAmpAccent, radius: 12)
+                    .neonGlow(color: .jellyAmpAccent, radius: 6)
 
                 if !searchResults.isEmpty {
                     Text("\(filteredResults.count) result\(filteredResults.count == 1 ? "" : "s")")

@@ -70,7 +70,7 @@ struct FavoritesView: View {
                         Capsule()
                             .fill(Color.jellyAmpSecondary)
                     )
-                    .neonGlow(color: .jellyAmpSecondary, radius: 8)
+                    .neonGlow(color: .jellyAmpSecondary, radius: 4)
                     .accessibilityLabel("Retry loading favorites")
                 }
             } else if favoriteTracks.isEmpty && favoriteAlbums.isEmpty && favoriteArtists.isEmpty {
@@ -131,7 +131,6 @@ struct FavoritesView: View {
                 Text("Favorites")
                     .font(.title.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
-                    .neonGlow(color: .jellyAmpSecondary, radius: 12)
 
                 let totalCount = favoriteTracks.count + favoriteAlbums.count + favoriteArtists.count
                 if totalCount > 0 {
@@ -195,7 +194,7 @@ struct FavoritesView: View {
                         Capsule()
                             .fill(Color.jellyAmpSecondary)
                     )
-                    .neonGlow(color: .jellyAmpSecondary, radius: 6)
+                    .neonGlow(color: .jellyAmpSecondary, radius: 4)
                 }
             }
             .padding(.horizontal, 20)

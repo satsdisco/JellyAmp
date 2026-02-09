@@ -249,7 +249,7 @@ extension View {
         modifier(GlassCard(tint: tint, intensity: intensity))
     }
 
-    func neonGlow(color: Color = .jellyAmpAccent, radius: CGFloat = 8) -> some View {
+    func neonGlow(color: Color = .jellyAmpAccent, radius: CGFloat = 4) -> some View {
         modifier(NeonGlow(color: color, radius: radius))
     }
 }
