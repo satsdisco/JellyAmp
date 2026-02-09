@@ -47,6 +47,7 @@ enum SortOption: String, CaseIterable {
 
 struct LibraryView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
+    @ObservedObject var playerManager = PlayerManager.shared
     @ObservedObject var themeManager = ThemeManager.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var albums: [Album] = []
@@ -55,7 +56,7 @@ struct LibraryView: View {
     @State private var searchText = ""
     @State private var selectedFilter = "Artists"
     @State private var viewMode: ViewMode = .list
-    @State private var sortOption: SortOption = .nameAsc
+    @AppStorage("librarySortOption") private var sortOption: SortOption = .nameAsc
     @State private var showSortMenu = false
     // Navigation handled by NavigationStack and NavigationLink
     @State private var isLoading = true
@@ -87,6 +88,14 @@ struct LibraryView: View {
                 album.artistName.localizedCaseInsensitiveContains(searchText)
             }
         }
+
+        // Recently played ordering
+        if selectedFilter == "Recent" {
+            let recentIds = playerManager.recentlyPlayedAlbumIds
+            let recentAlbums = recentIds.compactMap { id in filtered.first { $0.id == id } }
+            return recentAlbums
+        }
+
         return sortOption.sort(filtered)
     }
 
