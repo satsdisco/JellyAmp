@@ -8,7 +8,7 @@
 import Foundation
 
 // MARK: - Track Model
-struct Track: Identifiable, Codable, Equatable {
+struct Track: Identifiable, Codable, Equatable, Hashable {
     let id: String
     let name: String
     let artistName: String
@@ -99,7 +99,7 @@ extension Track {
 }
 
 // MARK: - Album Model
-struct Album: Identifiable, Codable {
+struct Album: Identifiable, Codable, Hashable {
     let id: String
     let name: String
     let artistName: String
@@ -148,7 +148,7 @@ extension Album {
 }
 
 // MARK: - Artist Model
-struct Artist: Identifiable, Codable {
+struct Artist: Identifiable, Codable, Hashable {
     let id: String
     let name: String
     let bio: String?
@@ -163,6 +163,25 @@ struct Artist: Identifiable, Codable {
     // Codable conformance - exclude albums and topTracks from encoding
     enum CodingKeys: String, CodingKey {
         case id, name, bio, albumCount, artworkURL, isFavorite
+    }
+    
+    // Hashable conformance - exclude albums and topTracks from hashing
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(name)
+        hasher.combine(bio)
+        hasher.combine(albumCount)
+        hasher.combine(artworkURL)
+        hasher.combine(isFavorite)
+    }
+    
+    static func == (lhs: Artist, rhs: Artist) -> Bool {
+        return lhs.id == rhs.id &&
+               lhs.name == rhs.name &&
+               lhs.bio == rhs.bio &&
+               lhs.albumCount == rhs.albumCount &&
+               lhs.artworkURL == rhs.artworkURL &&
+               lhs.isFavorite == rhs.isFavorite
     }
 
     // Initialize from Jellyfin BaseItemDto
@@ -200,7 +219,7 @@ extension Artist {
 }
 
 // MARK: - Playlist Model
-struct Playlist: Identifiable, Codable {
+struct Playlist: Identifiable, Codable, Hashable {
     let id: String
     let name: String
     var trackCount: Int
