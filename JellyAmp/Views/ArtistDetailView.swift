@@ -439,9 +439,7 @@ struct ArtistDetailView: View {
         VStack(spacing: 0) {
             ForEach(albums.sorted(by: { ($0.year ?? 0) > ($1.year ?? 0) })) { album in
                 NavigationLink(value: album) {
-                    AlbumListRow(album: album) {
-                        // Action now handled by NavigationLink
-                    }
+                    AlbumListRow(album: album)
                 }
                 .background(Color.jellyAmpMidBackground.opacity(0.3))
             }
@@ -623,9 +621,7 @@ struct YearSection: View {
                 VStack(spacing: 0) {
                     ForEach(albums.sorted(by: { ($0.year ?? 0) > ($1.year ?? 0) })) { album in
                         NavigationLink(value: album) {
-                            AlbumListRow(album: album) {
-                                // Action now handled by NavigationLink
-                            }
+                            AlbumListRow(album: album)
                         }
                         .background(Color.jellyAmpMidBackground.opacity(0.2))
                     }

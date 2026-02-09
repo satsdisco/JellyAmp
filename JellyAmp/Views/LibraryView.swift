@@ -181,9 +181,7 @@ struct LibraryView: View {
                                         LazyVGrid(columns: columns, spacing: 16) {
                                             ForEach(filteredArtists) { artist in
                                                 NavigationLink(value: artist) {
-                                                    ArtistCard(artist: artist) {
-                                                        // Action now handled by NavigationLink
-                                                    }
+                                                    ArtistCard(artist: artist)
                                                 }
                                             }
                                         }
@@ -192,9 +190,7 @@ struct LibraryView: View {
                                         LazyVStack(spacing: 0) {
                                             ForEach(filteredArtists) { artist in
                                                 NavigationLink(value: artist) {
-                                                    ArtistListRow(artist: artist) {
-                                                        // Action now handled by NavigationLink
-                                                    }
+                                                    ArtistListRow(artist: artist)
                                                 }
                                                 .padding(.horizontal, 20)
 
@@ -219,9 +215,7 @@ struct LibraryView: View {
                                         LazyVGrid(columns: columns, spacing: 16) {
                                             ForEach(favoriteAlbums) { album in
                                                 NavigationLink(value: album) {
-                                                    AlbumCard(album: album) {
-                                                        // Action now handled by NavigationLink
-                                                    }
+                                                    AlbumCard(album: album)
                                                 }
                                                 .accessibilityElement(children: .combine)
                                                 .accessibilityLabel("Album: \(album.name) by \(album.artistName)")
@@ -233,9 +227,7 @@ struct LibraryView: View {
                                         LazyVStack(spacing: 0) {
                                             ForEach(favoriteAlbums) { album in
                                                 NavigationLink(value: album) {
-                                                    AlbumListRow(album: album) {
-                                                        // Action now handled by NavigationLink
-                                                    }
+                                                    AlbumListRow(album: album)
                                                 }
                                                 .accessibilityElement(children: .combine)
                                                 .accessibilityLabel("Album: \(album.name) by \(album.artistName)")
@@ -276,9 +268,7 @@ struct LibraryView: View {
                                 LazyVGrid(columns: columns, spacing: 16) {
                                     ForEach(filteredArtists) { artist in
                                         NavigationLink(value: artist) {
-                                            ArtistCard(artist: artist) {
-                                                // Action now handled by NavigationLink
-                                            }
+                                            ArtistCard(artist: artist)
                                         }
                                         .accessibilityElement(children: .combine)
                                         .accessibilityLabel("Artist: \(artist.name)")
@@ -291,9 +281,7 @@ struct LibraryView: View {
                                 LazyVStack(spacing: 0) {
                                     ForEach(filteredArtists) { artist in
                                         NavigationLink(value: artist) {
-                                            ArtistListRow(artist: artist) {
-                                                // Action now handled by NavigationLink
-                                            }
+                                            ArtistListRow(artist: artist)
                                         }
                                         .accessibilityElement(children: .combine)
                                         .accessibilityLabel("Artist: \(artist.name)")
@@ -332,9 +320,7 @@ struct LibraryView: View {
                                     LazyVGrid(columns: columns, spacing: 16) {
                                         ForEach(playlists) { playlist in
                                             NavigationLink(value: playlist) {
-                                                PlaylistCard(playlist: playlist) {
-                                                    // Action now handled by NavigationLink
-                                                }
+                                                PlaylistCard(playlist: playlist)
                                             }
                                             .accessibilityElement(children: .combine)
                                             .accessibilityLabel("Playlist: \(playlist.name), \(playlist.trackCount) track\(playlist.trackCount == 1 ? "" : "s")")
@@ -347,9 +333,7 @@ struct LibraryView: View {
                                     LazyVStack(spacing: 0) {
                                         ForEach(playlists) { playlist in
                                             NavigationLink(value: playlist) {
-                                                PlaylistListRow(playlist: playlist) {
-                                                    // Action now handled by NavigationLink
-                                                }
+                                                PlaylistListRow(playlist: playlist)
                                             }
                                             .accessibilityElement(children: .combine)
                                             .accessibilityLabel("Playlist: \(playlist.name), \(playlist.trackCount) track\(playlist.trackCount == 1 ? "" : "s")")
@@ -372,9 +356,7 @@ struct LibraryView: View {
                                 LazyVGrid(columns: columns, spacing: 16) {
                                     ForEach(filteredAndSortedAlbums) { album in
                                         NavigationLink(value: album) {
-                                            AlbumCard(album: album) {
-                                                // Action now handled by NavigationLink
-                                            }
+                                            AlbumCard(album: album)
                                         }
                                         .accessibilityElement(children: .combine)
                                         .accessibilityLabel("Album: \(album.name) by \(album.artistName)")
@@ -387,9 +369,7 @@ struct LibraryView: View {
                                 LazyVStack(spacing: 0) {
                                     ForEach(filteredAndSortedAlbums) { album in
                                         NavigationLink(value: album) {
-                                            AlbumListRow(album: album) {
-                                                // Action now handled by NavigationLink
-                                            }
+                                            AlbumListRow(album: album)
                                         }
                                         .accessibilityElement(children: .combine)
                                         .accessibilityLabel("Album: \(album.name) by \(album.artistName)")
@@ -787,8 +767,6 @@ struct LibraryView: View {
 // MARK: - Album Card Component
 struct AlbumCard: View {
     let album: Album
-    let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -826,7 +804,7 @@ struct AlbumCard: View {
                                 lineWidth: 1.5
                             )
                     )
-                    .neonGlow(color: .jellyAmpAccent, radius: isPressed ? 8 : 12)
+                    .neonGlow(color: .jellyAmpAccent, radius: 12)
                 } else {
                     placeholderArtwork
                 }
@@ -849,15 +827,6 @@ struct AlbumCard: View {
                         .font(.system(.caption2, design: .monospaced))
                         .foregroundColor(.neonCyan.opacity(0.6))
                 }
-            }
-        }
-        .scaleEffect(isPressed ? 0.95 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
-        .onTapGesture {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                action()
             }
         }
     }
@@ -890,7 +859,7 @@ struct AlbumCard: View {
                         lineWidth: 1.5
                     )
             )
-            .neonGlow(color: .jellyAmpAccent, radius: isPressed ? 8 : 12)
+            .neonGlow(color: .jellyAmpAccent, radius: 12)
             .overlay(
                 Image(systemName: "music.note")
                     .font(.title)
@@ -902,17 +871,8 @@ struct AlbumCard: View {
 // MARK: - Album List Row Component
 struct AlbumListRow: View {
     let album: Album
-    let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
-        Button {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                action()
-            }
-        } label: {
             HStack(spacing: 16) {
                 // Album artwork (square, larger and properly centered)
                 if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
@@ -999,9 +959,6 @@ struct AlbumListRow: View {
                     .foregroundColor(.neonCyan.opacity(0.6))
             }
             .padding(.vertical, 12)
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
-        }
     }
 
     private var placeholderArtwork: some View {
@@ -1071,17 +1028,8 @@ struct FilterPill: View {
 // MARK: - Artist Card Component
 struct ArtistCard: View {
     let artist: Artist
-    let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
-        Button(action: {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                action()
-            }
-        }) {
             VStack(alignment: .leading, spacing: 8) {
                 // Artist artwork (circular with photo if available)
                 if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
@@ -1109,7 +1057,7 @@ struct ArtistCard: View {
                                             lineWidth: 1.5
                                         )
                                 )
-                                .neonGlow(color: .jellyAmpTertiary, radius: isPressed ? 8 : 12)
+                                .neonGlow(color: .jellyAmpTertiary, radius: 12)
                         case .failure:
                             placeholderArtwork
                         @unknown default:
@@ -1129,9 +1077,6 @@ struct ArtistCard: View {
                         .lineLimit(1)
                 }
             }
-            .scaleEffect(isPressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
-        }
     }
 
     private var placeholderArtwork: some View {
@@ -1163,7 +1108,7 @@ struct ArtistCard: View {
                             lineWidth: 1.5
                         )
                 )
-                .neonGlow(color: .jellyAmpTertiary, radius: isPressed ? 8 : 12)
+                .neonGlow(color: .jellyAmpTertiary, radius: 12)
 
             // Artist icon
             Image(systemName: "person.circle.fill")
@@ -1176,17 +1121,8 @@ struct ArtistCard: View {
 // MARK: - Artist List Row Component
 struct ArtistListRow: View {
     let artist: Artist
-    let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
-        Button(action: {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                action()
-            }
-        }) {
             HStack(spacing: 16) {
                 // Artist artwork (circular with photo if available)
                 if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
@@ -1239,9 +1175,6 @@ struct ArtistListRow: View {
                     .foregroundColor(.neonPurple.opacity(0.6))
             }
             .padding(.vertical, 14)
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
-        }
     }
 
     private var placeholderArtistArt: some View {
@@ -1280,8 +1213,6 @@ struct ArtistListRow: View {
 // MARK: - Playlist Card Component
 struct PlaylistCard: View {
     let playlist: Playlist
-    let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -1319,7 +1250,7 @@ struct PlaylistCard: View {
                                 lineWidth: 1.5
                             )
                     )
-                    .neonGlow(color: .neonPink, radius: isPressed ? 8 : 12)
+                    .neonGlow(color: .neonPink, radius: 12)
                 } else {
                     placeholderArtwork
                 }
@@ -1336,15 +1267,6 @@ struct PlaylistCard: View {
                     .font(.jellyAmpCaption)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
-            }
-        }
-        .scaleEffect(isPressed ? 0.95 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
-        .onTapGesture {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                action()
             }
         }
     }
@@ -1377,7 +1299,7 @@ struct PlaylistCard: View {
                         lineWidth: 1.5
                     )
             )
-            .neonGlow(color: .neonPink, radius: isPressed ? 8 : 12)
+            .neonGlow(color: .neonPink, radius: 12)
             .overlay(
                 Image(systemName: "music.note.list")
                     .font(.title)
@@ -1389,17 +1311,8 @@ struct PlaylistCard: View {
 // MARK: - Playlist List Row Component
 struct PlaylistListRow: View {
     let playlist: Playlist
-    let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
-        Button {
-            isPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-                action()
-            }
-        } label: {
             HStack(spacing: 16) {
                 // Playlist artwork (square)
                 if let artworkURL = playlist.artworkURL, let url = URL(string: artworkURL) {
@@ -1462,9 +1375,6 @@ struct PlaylistListRow: View {
                     .foregroundColor(.neonPink.opacity(0.6))
             }
             .padding(.vertical, 14)
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
-        }
     }
 
     private var placeholderArtwork: some View {
