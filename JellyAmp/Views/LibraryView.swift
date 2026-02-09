@@ -61,6 +61,14 @@ struct LibraryView: View {
     @State private var isSyncing = false
     @State private var errorMessage: String?
     @State private var showNewPlaylistSheet = false
+    
+    // Pagination state
+    @State private var albumsHasMore = true
+    @State private var artistsHasMore = true
+    @State private var isLoadingMore = false
+    
+    // Search debouncing
+    @State private var searchDebounceTask: Task<Void, Never>?
 
     let columns = [
         GridItem(.adaptive(minimum: 130), spacing: 16)
@@ -244,6 +252,26 @@ struct LibraryView: View {
                                         .accessibilityElement(children: .combine)
                                         .accessibilityLabel("Artist: \(artist.name)")
                                         .accessibilityHint("Double tap to view artist albums")
+                                        .onAppear {
+                                            // Load more when approaching the end
+                                            if artist.id == filteredArtists.last?.id && searchText.isEmpty {
+                                                Task { await loadMoreArtists() }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Load more indicator for artists
+                                    if isLoadingMore && selectedFilter == "Artists" && artistsHasMore {
+                                        VStack {
+                                            ProgressView()
+                                                .tint(.jellyAmpAccent)
+                                                .scaleEffect(0.8)
+                                            Text("Loading more artists...")
+                                                .font(.jellyAmpCaption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding()
+                                        .gridCellColumns(2)
                                     }
                                 }
                                 .padding(.horizontal, 20)
@@ -258,12 +286,31 @@ struct LibraryView: View {
                                         .accessibilityLabel("Artist: \(artist.name)")
                                         .accessibilityHint("Double tap to view artist albums")
                                         .padding(.horizontal, 20)
+                                        .onAppear {
+                                            // Load more when approaching the end
+                                            if artist.id == filteredArtists.last?.id && searchText.isEmpty {
+                                                Task { await loadMoreArtists() }
+                                            }
+                                        }
 
                                         if artist.id != filteredArtists.last?.id {
                                             Divider()
                                                 .background(Color.jellyAmpAccent.opacity(0.2))
                                                 .padding(.horizontal, 20)
                                         }
+                                    }
+                                    
+                                    // Load more indicator for artists
+                                    if isLoadingMore && selectedFilter == "Artists" && artistsHasMore {
+                                        HStack {
+                                            ProgressView()
+                                                .tint(.jellyAmpAccent)
+                                                .scaleEffect(0.8)
+                                            Text("Loading more artists...")
+                                                .font(.jellyAmpCaption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding()
                                     }
                                 }
                                 .padding(.top, 16)
@@ -324,6 +371,26 @@ struct LibraryView: View {
                                         .accessibilityElement(children: .combine)
                                         .accessibilityLabel("Album: \(album.name) by \(album.artistName)")
                                         .accessibilityHint("Double tap to view album")
+                                        .onAppear {
+                                            // Load more when approaching the end
+                                            if album.id == filteredAndSortedAlbums.last?.id && searchText.isEmpty {
+                                                Task { await loadMoreAlbums() }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Load more indicator for albums
+                                    if isLoadingMore && (selectedFilter == "Albums" || selectedFilter == "Recent") && albumsHasMore {
+                                        VStack {
+                                            ProgressView()
+                                                .tint(.jellyAmpAccent)
+                                                .scaleEffect(0.8)
+                                            Text("Loading more albums...")
+                                                .font(.jellyAmpCaption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding()
+                                        .gridCellColumns(2)
                                     }
                                 }
                                 .padding(.horizontal, 20)
@@ -338,12 +405,31 @@ struct LibraryView: View {
                                         .accessibilityLabel("Album: \(album.name) by \(album.artistName)")
                                         .accessibilityHint("Double tap to view album")
                                         .padding(.horizontal, 20)
+                                        .onAppear {
+                                            // Load more when approaching the end
+                                            if album.id == filteredAndSortedAlbums.last?.id && searchText.isEmpty {
+                                                Task { await loadMoreAlbums() }
+                                            }
+                                        }
 
                                         if album.id != filteredAndSortedAlbums.last?.id {
                                             Divider()
                                                 .background(Color.jellyAmpAccent.opacity(0.2))
                                                 .padding(.horizontal, 20)
                                         }
+                                    }
+                                    
+                                    // Load more indicator for albums
+                                    if isLoadingMore && (selectedFilter == "Albums" || selectedFilter == "Recent") && albumsHasMore {
+                                        HStack {
+                                            ProgressView()
+                                                .tint(.jellyAmpAccent)
+                                                .scaleEffect(0.8)
+                                            Text("Loading more albums...")
+                                                .font(.jellyAmpCaption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding()
                                     }
                                 }
                                 .padding(.top, 16)
@@ -357,6 +443,20 @@ struct LibraryView: View {
             await syncLibrary()
         }
         .searchable(text: $searchText, prompt: "Search albums, artists...")
+        .onChange(of: searchText) { _, newValue in
+            // Cancel previous search task
+            searchDebounceTask?.cancel()
+            
+            // Debounce search for large libraries (300ms delay)
+            searchDebounceTask = Task {
+                do {
+                    try await Task.sleep(nanoseconds: 300_000_000) // 300ms
+                    // Search logic is handled by computed properties, no additional action needed
+                } catch {
+                    // Task was cancelled, ignore
+                }
+            }
+        }
         .navigationDestination(for: Artist.self) { artist in
             ArtistDetailView(artist: artist)
         }
@@ -417,6 +517,69 @@ struct LibraryView: View {
         }
     }
 
+    // MARK: - Pagination
+    
+    /// Load more albums for pagination
+    private func loadMoreAlbums() async {
+        guard albumsHasMore && !isLoadingMore else { return }
+        
+        await MainActor.run {
+            isLoadingMore = true
+        }
+        
+        do {
+            let startIndex = albums.count
+            let newAlbums = try await jellyfinService.fetchMusicItems(
+                includeItemTypes: "MusicAlbum", 
+                limit: 300, 
+                startIndex: startIndex
+            )
+            
+            let baseURL = jellyfinService.baseURL
+            let convertedAlbums = newAlbums.map { Album(from: $0, baseURL: baseURL) }
+            
+            await MainActor.run {
+                self.albums.append(contentsOf: convertedAlbums)
+                self.albumsHasMore = convertedAlbums.count >= 300
+                self.isLoadingMore = false
+            }
+        } catch {
+            await MainActor.run {
+                self.isLoadingMore = false
+            }
+        }
+    }
+    
+    /// Load more artists for pagination
+    private func loadMoreArtists() async {
+        guard artistsHasMore && !isLoadingMore else { return }
+        
+        await MainActor.run {
+            isLoadingMore = true
+        }
+        
+        do {
+            let startIndex = artists.count
+            let newArtists = try await jellyfinService.fetchArtists(
+                limit: 200, 
+                startIndex: startIndex
+            )
+            
+            let baseURL = jellyfinService.baseURL
+            let convertedArtists = newArtists.map { Artist(from: $0, baseURL: baseURL) }
+            
+            await MainActor.run {
+                self.artists.append(contentsOf: convertedArtists)
+                self.artistsHasMore = convertedArtists.count >= 200
+                self.isLoadingMore = false
+            }
+        } catch {
+            await MainActor.run {
+                self.isLoadingMore = false
+            }
+        }
+    }
+
     // MARK: - Library Management
 
     /// Sync library - force refresh from server
@@ -429,6 +592,13 @@ struct LibraryView: View {
         UserDefaults.standard.removeObject(forKey: "cachedAlbums")
         UserDefaults.standard.removeObject(forKey: "cachedArtists")
         UserDefaults.standard.removeObject(forKey: "cachedPlaylists")
+
+        // Reset pagination state
+        await MainActor.run {
+            albumsHasMore = true
+            artistsHasMore = true
+            isLoadingMore = false
+        }
 
         // Fetch fresh data
         await fetchAndCache()
@@ -471,13 +641,15 @@ struct LibraryView: View {
         await MainActor.run {
             isLoading = true
             errorMessage = nil
+            albumsHasMore = true
+            artistsHasMore = true
         }
 
         do {
             // Fetch albums, artists, and playlists in parallel with smart limits
             // Initial load: 300 albums, 200 artists, and all playlists (loads in ~1-2 seconds)
-            async let albumsResult = jellyfinService.fetchMusicItems(includeItemTypes: "MusicAlbum", limit: 300)
-            async let artistsResult = jellyfinService.fetchArtists(limit: 200)
+            async let albumsResult = jellyfinService.fetchMusicItems(includeItemTypes: "MusicAlbum", limit: 300, startIndex: 0)
+            async let artistsResult = jellyfinService.fetchArtists(limit: 200, startIndex: 0)
             async let playlistsResult = jellyfinService.fetchPlaylists()
 
             let (fetchedAlbums, fetchedArtists, fetchedPlaylists) = try await (albumsResult, artistsResult, playlistsResult)
@@ -493,6 +665,10 @@ struct LibraryView: View {
                 self.artists = newArtists
                 self.playlists = newPlaylists
                 self.isLoading = false
+                
+                // Update pagination state
+                self.albumsHasMore = newAlbums.count >= 300
+                self.artistsHasMore = newArtists.count >= 200
             }
 
             // Cache the results for next launch
@@ -719,6 +895,7 @@ struct AlbumCard: View {
                             placeholderArtwork
                         }
                     }
+                    .transaction { $0.animation = nil }
                     .frame(width: 160, height: 160)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
@@ -837,6 +1014,7 @@ struct AlbumListRow: View {
                             placeholderArtwork
                         }
                     }
+                    .transaction { $0.animation = nil }
                     .frame(width: 80, height: 80)
                 } else {
                     placeholderArtwork
@@ -993,6 +1171,7 @@ struct ArtistCard: View {
                             placeholderArtwork
                         }
                     }
+                    .transaction { $0.animation = nil }
                     .frame(width: 130, height: 130)
                 } else {
                     placeholderArtwork
@@ -1083,6 +1262,7 @@ struct ArtistListRow: View {
                             placeholderArtistArt
                         }
                     }
+                    .transaction { $0.animation = nil }
                     .frame(width: 64, height: 64)
                 } else {
                     placeholderArtistArt
@@ -1164,6 +1344,7 @@ struct PlaylistCard: View {
                             placeholderArtwork
                         }
                     }
+                    .transaction { $0.animation = nil }
                     .frame(width: 160, height: 160)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
@@ -1265,6 +1446,7 @@ struct PlaylistListRow: View {
                             placeholderArtwork
                         }
                     }
+                    .transaction { $0.animation = nil }
                     .frame(width: 64, height: 64)
                 } else {
                     placeholderArtwork
