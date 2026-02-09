@@ -419,23 +419,36 @@ struct PlaylistTrackRow: View {
     let action: () -> Void
     var onAddToPlaylist: (() -> Void)? = nil
     @ObservedObject var downloadManager = DownloadManager.shared
+    @ObservedObject var playerManager = PlayerManager.shared
+
+    private var isCurrentlyPlaying: Bool {
+        playerManager.currentTrack?.id == track.id
+    }
 
     var body: some View {
         Button {
             action()
         } label: {
             HStack(spacing: 16) {
-                // Track number
-                Text("\(trackNumber)")
-                    .font(.system(.body, design: .monospaced).weight(.bold))
-                    .foregroundColor(.neonPink)
-                    .frame(width: 28, alignment: .trailing)
+                // Track number or waveform indicator
+                if isCurrentlyPlaying {
+                    Image(systemName: "waveform")
+                        .font(.body.weight(.bold))
+                        .foregroundColor(.jellyAmpAccent)
+                        .symbolEffect(.variableColor.iterative, isActive: playerManager.isPlaying)
+                        .frame(width: 28, alignment: .trailing)
+                } else {
+                    Text("\(trackNumber)")
+                        .font(.system(.body, design: .monospaced).weight(.bold))
+                        .foregroundColor(.neonPink)
+                        .frame(width: 28, alignment: .trailing)
+                }
 
                 // Track info
                 VStack(alignment: .leading, spacing: 4) {
                     Text(track.name)
                         .font(.jellyAmpBody)
-                        .foregroundColor(Color.jellyAmpText)
+                        .foregroundColor(isCurrentlyPlaying ? .jellyAmpAccent : Color.jellyAmpText)
                         .lineLimit(1)
 
                     HStack(spacing: 8) {
@@ -461,6 +474,13 @@ struct PlaylistTrackRow: View {
                     .foregroundColor(.neonPink)
             }
             .padding(.vertical, 12)
+            .background(
+                isCurrentlyPlaying ?
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.jellyAmpAccent.opacity(0.08))
+                        .padding(.horizontal, -8)
+                    : nil
+            )
             .contentShape(Rectangle())
         }
         .contextMenu {

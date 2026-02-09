@@ -353,6 +353,11 @@ struct FavoritesView: View {
 struct FavoriteTrackRow: View {
     let track: Track
     let action: () -> Void
+    @ObservedObject var playerManager = PlayerManager.shared
+
+    private var isCurrentlyPlaying: Bool {
+        playerManager.currentTrack?.id == track.id
+    }
 
     var body: some View {
         Button {
@@ -378,11 +383,20 @@ struct FavoriteTrackRow: View {
                     placeholderArtwork
                 }
 
+                // Waveform indicator for currently playing
+                if isCurrentlyPlaying {
+                    Image(systemName: "waveform")
+                        .font(.caption.weight(.bold))
+                        .foregroundColor(.jellyAmpAccent)
+                        .symbolEffect(.variableColor.iterative, isActive: playerManager.isPlaying)
+                        .frame(width: 20)
+                }
+
                 // Track info
                 VStack(alignment: .leading, spacing: 4) {
                     Text(track.name)
                         .font(.body.weight(.semibold))
-                        .foregroundColor(Color.jellyAmpText)
+                        .foregroundColor(isCurrentlyPlaying ? .jellyAmpAccent : Color.jellyAmpText)
                         .lineLimit(1)
 
                     HStack(spacing: 4) {
@@ -412,6 +426,13 @@ struct FavoriteTrackRow: View {
                 }
             }
             .padding(.vertical, 10)
+            .background(
+                isCurrentlyPlaying ?
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.jellyAmpAccent.opacity(0.08))
+                        .padding(.horizontal, -8)
+                    : nil
+            )
             .contentShape(Rectangle())
         }
     }
