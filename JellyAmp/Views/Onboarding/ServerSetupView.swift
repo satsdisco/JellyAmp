@@ -224,6 +224,11 @@ struct ServerSetupView: View {
         // Basic URL validation
         var urlString = serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
 
+        // Remove trailing slash
+        while urlString.hasSuffix("/") {
+            urlString = String(urlString.dropLast())
+        }
+
         // Add https:// if no protocol specified
         if !urlString.hasPrefix("http://") && !urlString.hasPrefix("https://") {
             urlString = "https://" + urlString
@@ -240,16 +245,15 @@ struct ServerSetupView: View {
         // Save URL
         jellyfinService.baseURL = urlString
 
-        // Test connection by checking Quick Connect availability
+        // Test connection by hitting public system info endpoint
         do {
-            let isQuickConnectEnabled = try await jellyfinService.checkQuickConnect()
+            let isReachable = try await jellyfinService.checkServerConnectivity()
 
-            if isQuickConnectEnabled {
-                // Success! Move to Quick Connect
+            if isReachable {
                 isValidating = false
                 onSuccess()
             } else {
-                errorMessage = "Quick Connect is not enabled on this server. Please enable it in your Jellyfin admin settings."
+                errorMessage = "Server responded but may not be a Jellyfin server. Please check the URL."
                 showError = true
                 isValidating = false
             }

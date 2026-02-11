@@ -2,7 +2,7 @@
 //  OnboardingView.swift
 //  JellyAmp
 //
-//  Onboarding flow coordinator - iOS 26 Liquid Glass + Cypherpunk
+//  Onboarding flow coordinator
 //
 
 import SwiftUI
@@ -13,7 +13,9 @@ struct OnboardingView: View {
 
     enum OnboardingStep {
         case serverSetup
+        case authChoice
         case quickConnect
+        case passwordLogin
     }
 
     var body: some View {
@@ -22,7 +24,7 @@ struct OnboardingView: View {
             case .serverSetup:
                 ServerSetupView {
                     withAnimation(.spring(response: 0.4)) {
-                        currentStep = .quickConnect
+                        currentStep = .authChoice
                     }
                 }
                 .transition(.asymmetric(
@@ -30,13 +32,48 @@ struct OnboardingView: View {
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
 
+            case .authChoice:
+                AuthChoiceView(
+                    onQuickConnect: {
+                        withAnimation(.spring(response: 0.4)) {
+                            currentStep = .quickConnect
+                        }
+                    },
+                    onPasswordLogin: {
+                        withAnimation(.spring(response: 0.4)) {
+                            currentStep = .passwordLogin
+                        }
+                    },
+                    onBack: {
+                        withAnimation(.spring(response: 0.4)) {
+                            currentStep = .serverSetup
+                        }
+                    }
+                )
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
+
             case .quickConnect:
                 QuickConnectView {
-                    // Authentication successful - JellyfinService updates isAuthenticated
-                    // ContentView will automatically switch to MainTabView
+                    // Success
                 } onBack: {
                     withAnimation(.spring(response: 0.4)) {
-                        currentStep = .serverSetup
+                        currentStep = .authChoice
+                    }
+                }
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
+
+            case .passwordLogin:
+                PasswordLoginView {
+                    // Success — JellyfinService updates isAuthenticated
+                } onBack: {
+                    withAnimation(.spring(response: 0.4)) {
+                        currentStep = .authChoice
                     }
                 }
                 .transition(.asymmetric(
@@ -49,7 +86,6 @@ struct OnboardingView: View {
     }
 }
 
-// MARK: - Preview
 #Preview {
     OnboardingView()
 }

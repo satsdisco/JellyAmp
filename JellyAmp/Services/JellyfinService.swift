@@ -181,6 +181,63 @@ class JellyfinService: ObservableObject {
         return false
     }
 
+    /// Authenticate with username and password
+    func authenticateByName(username: String, password: String) async throws {
+        let url = URL(string: "\(baseURL)/Users/AuthenticateByName")!
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(generateAuthorizationHeader(token: nil), forHTTPHeaderField: "X-Emby-Authorization")
+
+        let body: [String: String] = ["Username": username, "Pw": password]
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw JellyfinError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200:
+            let authResult = try JSONDecoder().decode(AuthenticationResult.self, from: data)
+            if let token = authResult.AccessToken {
+                KeychainService.shared.saveAccessToken(token)
+                self.isAuthenticated = true
+                self.currentUser = authResult.User
+
+                if let userId = authResult.User?.Id {
+                    UserDefaults.standard.set(userId, forKey: "jellyfinUserId")
+                }
+
+                // Sync to watch
+                PhoneConnectivityManager.shared.syncCredentialsToWatch()
+            } else {
+                throw JellyfinError.invalidResponse
+            }
+        case 401:
+            throw JellyfinError.unauthorized
+        default:
+            throw JellyfinError.invalidResponse
+        }
+    }
+
+    /// Check server connectivity (returns true if server is reachable)
+    func checkServerConnectivity() async throws -> Bool {
+        let url = URL(string: "\(baseURL)/System/Info/Public")!
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 10
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            return false
+        }
+        return true
+    }
+
     /// Check if Quick Connect is enabled on the server
     func checkQuickConnect() async throws -> Bool {
         let url = URL(string: "\(baseURL)/QuickConnect/Enabled")!
