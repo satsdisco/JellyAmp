@@ -27,6 +27,9 @@ struct NowPlayingView: View {
     var body: some View {
         ZStack {
             // Background with dynamic dominant color
+            Color.jellyAmpBackground
+                .ignoresSafeArea()
+            
             LinearGradient(
                 colors: [
                     (dominantColor ?? Color.jellyAmpMidBackground).opacity(0.6),
@@ -70,7 +73,6 @@ struct NowPlayingView: View {
                 Spacer()
             }
             .padding(.horizontal, 20)
-            .padding(.top, 60)
             .padding(.bottom, 40)
         }
         .offset(y: max(0, dragOffset))
