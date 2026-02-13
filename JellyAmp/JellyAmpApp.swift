@@ -17,6 +17,7 @@ struct JellyAmpApp: App {
     private let watchConnectivity = PhoneConnectivityManager.shared
 
     init() {
+        // Brand kit fonts: Chakra Petch, Sora, JetBrains Mono (registered via Info.plist)
         // Request notification permissions for download completion alerts
         requestNotificationPermissions()
     }
