@@ -454,7 +454,7 @@ struct LibraryView: View {
         .refreshable {
             await syncLibrary()
         }
-        .searchable(text: $searchText, prompt: "Search albums, artists...")
+        // Search moved inline to filterSection
         .onChange(of: searchText) { _, newValue in
             // Cancel previous search task
             searchDebounceTask?.cancel()
@@ -809,25 +809,51 @@ struct LibraryView: View {
 
     // MARK: - Filter Section
     private var filterSection: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(["Artists", "Albums", "Playlists", "Favorites", "Recent"], id: \.self) { filter in
-                    FilterPill(
-                        title: filter,
-                        isSelected: selectedFilter == filter
-                    ) {
-                        withAnimation(.spring(response: 0.3)) {
-                            selectedFilter = filter
-                        }
+        VStack(spacing: 10) {
+            // Inline search
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.caption)
+                    .foregroundColor(.jellyAmpTextSecondary)
+                TextField("Search", text: $searchText)
+                    .font(.subheadline)
+                    .foregroundColor(Color.jellyAmpText)
+                    .autocorrectionDisabled()
+                if !searchText.isEmpty {
+                    Button { searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.jellyAmpTextSecondary)
                     }
-                    .accessibilityLabel("Filter: \(filter)")
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityAddTraits(selectedFilter == filter ? .isSelected : [])
                 }
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.white.opacity(0.06))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
             .padding(.horizontal, 20)
+
+            // Filter pills
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(["Artists", "Albums", "Playlists", "Favorites", "Recent"], id: \.self) { filter in
+                        FilterPill(
+                            title: filter,
+                            isSelected: selectedFilter == filter
+                        ) {
+                            withAnimation(.spring(response: 0.3)) {
+                                selectedFilter = filter
+                            }
+                        }
+                        .accessibilityLabel("Filter: \(filter)")
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityAddTraits(selectedFilter == filter ? .isSelected : [])
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
         }
-        .padding(.bottom, 16)
+        .padding(.bottom, 8)
     }
 
     // MARK: - View Controls Section
