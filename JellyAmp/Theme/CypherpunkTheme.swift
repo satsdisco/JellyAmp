@@ -12,22 +12,10 @@ import Combine
 
 enum AppTheme: String, CaseIterable, Identifiable {
     case cypherpunk = "Cypherpunk"
-    case sleek = "Sleek"
 
     var id: String { rawValue }
-
-    var displayName: String {
-        rawValue
-    }
-
-    var description: String {
-        switch self {
-        case .cypherpunk:
-            return "Neon accents with dark backgrounds"
-        case .sleek:
-            return "Gold, brass, and deep blue tones"
-        }
-    }
+    var displayName: String { rawValue }
+    var description: String { "Neon accents with dark backgrounds" }
 }
 
 // MARK: - Theme Manager
@@ -81,111 +69,51 @@ extension Color {
 
     // Semantic Colors (Theme-aware)
     static var jellyAmpAccent: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return neonCyan
-        case .sleek:
-            return goldBrass  // Primary: Gold/brass instead of orange
-        }
+        return neonCyan
     }
 
     static var jellyAmpSecondary: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return neonPink
-        case .sleek:
-            return deepBlue  // Secondary: Deep blue
-        }
+        return neonPink
     }
 
     static var jellyAmpSuccess: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return neonGreen
-        case .sleek:
-            return cyphernyuk  // Success: Dark teal
-        }
+        return neonGreen
     }
 
     static var jellyAmpWarning: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return neonOrange
-        case .sleek:
-            return mattaze  // Warning: Rust/terracotta
-        }
+        return neonOrange
     }
 
     static var jellyAmpError: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return Color.red
-        case .sleek:
-            return Color.red
-        }
+        return Color.red
     }
 
     static var jellyAmpBackground: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return darkBackground
-        case .sleek:
-            return matteBlack
-        }
+        return darkBackground
     }
 
     static var jellyAmpMidBackground: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return darkMid
-        case .sleek:
-            return steelyGray
-        }
+        return darkMid
     }
 
     static var jellyAmpElevated: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return darkElevated
-        case .sleek:
-            return steelyGray.opacity(0.8)
-        }
+        return darkElevated
     }
 
     static var jellyAmpText: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return Color(hex: "F0F0F5")  // Brand primary text
-        case .sleek:
-            return lightGray
-        }
+        return Color(hex: "F0F0F5")  // Brand primary text
     }
 
     static var jellyAmpTextSecondary: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return Color(hex: "8888A0")  // Brand secondary text
-        case .sleek:
-            return Color(hex: "8888A0")
-        }
+        return Color(hex: "8888A0")  // Brand secondary text
     }
 
     static var jellyAmpTextMuted: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return Color(hex: "555570")  // Brand muted text
-        case .sleek:
-            return Color(hex: "555570")
-        }
+        return Color(hex: "555570")  // Brand muted text
     }
 
     static var jellyAmpTertiary: Color {
-        switch ThemeManager.shared.currentTheme {
-        case .cypherpunk:
-            return neonPurple
-        case .sleek:
-            return bronze
-        }
+        return neonPurple
     }
 
     // Helper for hex colors

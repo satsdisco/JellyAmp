@@ -2,7 +2,7 @@
 //  FavoritesView.swift
 //  JellyAmp
 //
-//  Dedicated Favorites tab showing favorite tracks, albums, and artists
+//  Favorites page — redesigned to match PWA with filter pills and sections
 //
 
 import SwiftUI
@@ -10,7 +10,6 @@ import SwiftUI
 struct FavoritesView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
     @ObservedObject var playerManager = PlayerManager.shared
-    @ObservedObject var themeManager = ThemeManager.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var favoriteTracks: [Track] = []
@@ -18,24 +17,22 @@ struct FavoritesView: View {
     @State private var favoriteArtists: [Artist] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
-    // Navigation handled by NavigationStack
+    @State private var selectedFilter = "All"
+
+    private let filters = ["All", "Artists", "Albums", "Tracks"]
+
+    private var columns: [GridItem] {
+        sizeClass == .regular
+            ? [GridItem(.adaptive(minimum: 180, maximum: 220), spacing: 16)]
+            : [GridItem(.adaptive(minimum: 130), spacing: 16)]
+    }
 
     var body: some View {
         ZStack {
-            // Background
-            LinearGradient(
-                colors: [
-                    Color.jellyAmpBackground,
-                    Color.jellyAmpMidBackground,
-                    Color.jellyAmpBackground
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            Color.jellyAmpBackground
+                .ignoresSafeArea()
 
             if isLoading {
-                // Loading state
                 VStack(spacing: 16) {
                     ProgressView()
                         .tint(.neonPink)
@@ -45,10 +42,9 @@ struct FavoritesView: View {
                         .foregroundColor(.jellyAmpTextSecondary)
                 }
             } else if let error = errorMessage {
-                // Error state
                 VStack(spacing: 16) {
                     Image(systemName: "exclamationmark.triangle")
-                        .font(.title)
+                        .font(.largeTitle)
                         .foregroundColor(.neonPink)
                     Text("Error Loading Favorites")
                         .font(.jellyAmpHeadline)
@@ -59,43 +55,42 @@ struct FavoritesView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                     Button("Try Again") {
-                        Task {
-                            await fetchFavorites()
-                        }
+                        Task { await fetchFavorites() }
                     }
                     .foregroundColor(.black)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
-                    .background(
-                        Capsule()
-                            .fill(Color.jellyAmpSecondary)
-                    )
-                    .neonGlow(color: .jellyAmpSecondary, radius: 4)
-                    .accessibilityLabel("Retry loading favorites")
+                    .background(Capsule().fill(Color.neonPink))
                 }
             } else if favoriteTracks.isEmpty && favoriteAlbums.isEmpty && favoriteArtists.isEmpty {
-                // Empty state
                 emptyStateView
             } else {
-                // Content
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 32) {
-                        // Favorite Tracks
-                        if !favoriteTracks.isEmpty {
-                            favoriteTracksSection
-                        }
+                    VStack(alignment: .leading, spacing: 0) {
+                        // Header
+                        headerSection
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 16)
 
-                        // Favorite Albums
-                        if !favoriteAlbums.isEmpty {
-                            favoriteAlbumsSection
-                        }
+                        // Filter pills
+                        filterPills
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 24)
 
-                        // Favorite Artists
-                        if !favoriteArtists.isEmpty {
-                            favoriteArtistsSection
+                        // Sections
+                        VStack(alignment: .leading, spacing: 32) {
+                            if showArtists {
+                                artistsSection
+                            }
+                            if showAlbums {
+                                albumsSection
+                            }
+                            if showTracks {
+                                tracksSection
+                            }
                         }
+                        .padding(.horizontal, 20)
 
-                        // Bottom padding for mini player
                         Color.clear.frame(height: 100)
                     }
                 }
@@ -111,179 +106,196 @@ struct FavoritesView: View {
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             if favoriteTracks.isEmpty && favoriteAlbums.isEmpty && favoriteArtists.isEmpty {
-                Task {
-                    await fetchFavorites()
+                Task { await fetchFavorites() }
+            }
+        }
+    }
+
+    // MARK: - Computed
+    private var showArtists: Bool { selectedFilter == "All" || selectedFilter == "Artists" }
+    private var showAlbums: Bool { selectedFilter == "All" || selectedFilter == "Albums" }
+    private var showTracks: Bool { selectedFilter == "All" || selectedFilter == "Tracks" }
+
+    // MARK: - Header
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if !isLoading {
+                Text("\(favoriteArtists.count) artists · \(favoriteAlbums.count) albums · \(favoriteTracks.count) tracks")
+                    .font(.jellyAmpMono)
+                    .foregroundColor(.jellyAmpTextSecondary)
+            }
+        }
+    }
+
+    // MARK: - Filter Pills
+    private var filterPills: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(filters, id: \.self) { filter in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedFilter = filter
+                        }
+                    } label: {
+                        Text(filter)
+                            .font(.jellyAmpCaption)
+                            .fontWeight(.medium)
+                            .foregroundColor(selectedFilter == filter ? .black : .jellyAmpTextSecondary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule()
+                                    .fill(selectedFilter == filter ? Color.neonCyan : Color.white.opacity(0.08))
+                            )
+                            .overlay(
+                                Capsule()
+                                    .stroke(selectedFilter == filter ? Color.clear : Color.white.opacity(0.1), lineWidth: 1)
+                            )
+                    }
                 }
             }
         }
+    }
+
+    // MARK: - Artists Section
+    private var artistsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if selectedFilter == "All" {
+                sectionHeader(title: "Favorite Artists", count: favoriteArtists.count)
+            }
+
+            if favoriteArtists.isEmpty {
+                sectionEmpty("No favorite artists yet")
+            } else {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(favoriteArtists) { artist in
+                        NavigationLink(value: artist) {
+                            ArtistCard(artist: artist)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Albums Section
+    private var albumsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if selectedFilter == "All" {
+                sectionHeader(title: "Favorite Albums", count: favoriteAlbums.count)
+            }
+
+            if favoriteAlbums.isEmpty {
+                sectionEmpty("No favorite albums yet")
+            } else {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(favoriteAlbums) { album in
+                        NavigationLink(value: album) {
+                            AlbumCard(album: album)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Tracks Section
+    private var tracksSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if selectedFilter == "All" {
+                HStack {
+                    sectionHeader(title: "Favorite Tracks", count: favoriteTracks.count)
+                    Spacer()
+                    if !favoriteTracks.isEmpty {
+                        Button {
+                            playerManager.play(tracks: favoriteTracks)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "play.fill")
+                                    .font(.caption2)
+                                Text("Play All")
+                                    .font(.jellyAmpCaption)
+                                    .fontWeight(.medium)
+                            }
+                            .foregroundColor(.jellyAmpTextSecondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.white.opacity(0.08))
+                            )
+                        }
+                    }
+                }
+            }
+
+            if favoriteTracks.isEmpty {
+                sectionEmpty("No favorite tracks yet")
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(favoriteTracks.enumerated()), id: \.element.id) { index, track in
+                        FavoriteTrackRow(track: track) {
+                            playerManager.play(tracks: favoriteTracks, startingAt: index)
+                        }
+
+                        if index < favoriteTracks.count - 1 {
+                            Divider()
+                                .background(Color.white.opacity(0.06))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Section Components
+    private func sectionHeader(title: String, count: Int) -> some View {
+        HStack(spacing: 8) {
+            Text(title)
+                .font(.jellyAmpHeadline)
+                .foregroundColor(Color.jellyAmpText)
+            Text("(\(count))")
+                .font(.jellyAmpCaption)
+                .foregroundColor(.jellyAmpTextMuted)
+        }
+    }
+
+    private func sectionEmpty(_ text: String) -> some View {
+        Text(text)
+            .font(.jellyAmpCaption)
+            .foregroundColor(.jellyAmpTextMuted)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 24)
     }
 
     // MARK: - Empty State
     private var emptyStateView: some View {
-        ContentUnavailableView {
-            Label("No Favorites Yet", systemImage: "heart.slash")
-        } description: {
-            Text("Tap the heart icon on tracks, albums, and artists to add them to your favorites")
+        VStack(spacing: 16) {
+            Image(systemName: "heart")
+                .font(.system(size: 48))
+                .foregroundColor(.white.opacity(0.2))
+            Text("No Favorites Yet")
+                .font(.jellyAmpTitle)
+                .foregroundColor(Color.jellyAmpText)
+            Text("Tap the heart on albums, artists, and tracks to add them here.")
+                .font(.jellyAmpBody)
+                .foregroundColor(.jellyAmpTextSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
         }
     }
 
-    // MARK: - Favorite Tracks Section
-    private var favoriteTracksSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Favorite Tracks")
-                    .font(.title3.weight(.bold))
-                    .foregroundColor(Color.jellyAmpText)
-
-                Text("\(favoriteTracks.count)")
-                    .font(.system(.body, design: .monospaced).weight(.bold))
-                    .foregroundColor(.neonPink)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule()
-                            .fill(Color.jellyAmpSecondary.opacity(0.2))
-                    )
-
-                Spacer()
-
-                // Play All button
-                Button {
-                    playerManager.play(tracks: favoriteTracks)
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "play.fill")
-                            .font(.subheadline)
-                        Text("Play All")
-                            .font(.subheadline.weight(.semibold))
-                    }
-                    .foregroundColor(.black)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(
-                        Capsule()
-                            .fill(Color.jellyAmpSecondary)
-                    )
-                    .neonGlow(color: .jellyAmpSecondary, radius: 4)
-                }
-            }
-            .padding(.horizontal, 20)
-
-            VStack(spacing: 0) {
-                ForEach(Array(favoriteTracks.prefix(10).enumerated()), id: \.element.id) { index, track in
-                    FavoriteTrackRow(track: track) {
-                        playerManager.play(tracks: favoriteTracks, startingAt: index)
-                    }
-                    .padding(.horizontal, 20)
-
-                    if index < min(9, favoriteTracks.count - 1) {
-                        Divider()
-                            .background(Color.white.opacity(0.1))
-                            .padding(.horizontal, 20)
-                    }
-                }
-            }
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white.opacity(0.05))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.jellyAmpSecondary.opacity(0.2), lineWidth: 1)
-                    )
-            )
-            .padding(.horizontal, 20)
-
-            if favoriteTracks.count > 10 {
-                Text("Showing 10 of \(favoriteTracks.count) tracks")
-                    .font(.caption)
-                    .foregroundColor(.jellyAmpTextSecondary)
-                    .padding(.horizontal, 20)
-            }
-        }
-    }
-
-    // MARK: - Favorite Albums Section
-    private var favoriteAlbumsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Favorite Albums")
-                    .font(.title3.weight(.bold))
-                    .foregroundColor(Color.jellyAmpText)
-
-                Text("\(favoriteAlbums.count)")
-                    .font(.system(.body, design: .monospaced).weight(.bold))
-                    .foregroundColor(.neonCyan)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule()
-                            .fill(Color.jellyAmpAccent.opacity(0.2))
-                    )
-            }
-            .padding(.horizontal, 20)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
-                    ForEach(favoriteAlbums.prefix(10)) { album in
-                        NavigationLink(value: album) {
-                            FavoriteAlbumCard(album: album) {
-                                // Action now handled by NavigationLink
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, 20)
-            }
-        }
-    }
-
-    // MARK: - Favorite Artists Section
-    private var favoriteArtistsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Favorite Artists")
-                    .font(.title3.weight(.bold))
-                    .foregroundColor(Color.jellyAmpText)
-
-                Text("\(favoriteArtists.count)")
-                    .font(.system(.body, design: .monospaced).weight(.bold))
-                    .foregroundColor(.neonPurple)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule()
-                            .fill(Color.jellyAmpTertiary.opacity(0.2))
-                    )
-            }
-            .padding(.horizontal, 20)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
-                    ForEach(favoriteArtists.prefix(10)) { artist in
-                        NavigationLink(value: artist) {
-                            FavoriteArtistCard(artist: artist) {
-                                // Action now handled by NavigationLink
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, 20)
-            }
-        }
-    }
-
-    // MARK: - Fetch Favorites
+    // MARK: - Fetch
     private func fetchFavorites() async {
         isLoading = true
         errorMessage = nil
 
         do {
-            // Fetch all favorites from Jellyfin
             let items = try await jellyfinService.fetchFavorites(includeItemTypes: "Audio,MusicAlbum,MusicArtist")
             let baseURL = jellyfinService.baseURL
 
-            // Separate into tracks, albums, and artists
             var tracks: [Track] = []
             var albums: [Album] = []
             var artists: [Artist] = []
@@ -302,9 +314,9 @@ struct FavoritesView: View {
             }
 
             await MainActor.run {
-                self.favoriteTracks = tracks
-                self.favoriteAlbums = albums
-                self.favoriteArtists = artists
+                self.favoriteTracks = tracks.sorted { $0.artistName < $1.artistName }
+                self.favoriteAlbums = albums.sorted { $0.artistName < $1.artistName }
+                self.favoriteArtists = artists.sorted { $0.name < $1.name }
                 self.isLoading = false
             }
         } catch {
@@ -316,7 +328,7 @@ struct FavoritesView: View {
     }
 }
 
-// MARK: - Favorite Track Row Component
+// MARK: - Favorite Track Row
 struct FavoriteTrackRow: View {
     let track: Track
     let action: () -> Void
@@ -327,225 +339,72 @@ struct FavoriteTrackRow: View {
     }
 
     var body: some View {
-        Button {
-            action()
-        } label: {
+        Button(action: action) {
             HStack(spacing: 12) {
-                // Album artwork
+                // Artwork
                 if let artworkURL = track.artworkURL, let url = URL(string: artworkURL) {
                     CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 50, height: 50)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            image.resizable().aspectRatio(contentMode: .fill)
                         default:
-                            placeholderArtwork
+                            Rectangle().fill(Color.jellyAmpMidBackground)
+                                .overlay(Image(systemName: "music.note").font(.caption).foregroundColor(.white.opacity(0.3)))
                         }
                     }
-                    .frame(width: 50, height: 50)
-                } else {
-                    placeholderArtwork
+                    .frame(width: 44, height: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
                 }
 
-                // Waveform indicator for currently playing
+                // Now playing indicator
                 if isCurrentlyPlaying {
                     Image(systemName: "waveform")
                         .font(.caption.weight(.bold))
-                        .foregroundColor(.jellyAmpAccent)
+                        .foregroundColor(.neonCyan)
                         .symbolEffect(.variableColor.iterative, isActive: playerManager.isPlaying)
-                        .frame(width: 20)
+                        .frame(width: 16)
                 }
 
-                // Track info
-                VStack(alignment: .leading, spacing: 4) {
+                // Info
+                VStack(alignment: .leading, spacing: 2) {
                     Text(track.name)
-                        .font(.body.weight(.semibold))
-                        .foregroundColor(isCurrentlyPlaying ? .jellyAmpAccent : Color.jellyAmpText)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundColor(isCurrentlyPlaying ? .neonCyan : .white.opacity(0.7))
                         .lineLimit(1)
-
-                    HStack(spacing: 4) {
-                        Text(track.artistName)
-                            .font(.subheadline)
-                            .foregroundColor(.jellyAmpTextSecondary)
-                        Text("•")
-                            .foregroundColor(.secondary.opacity(0.5))
-                        Text(track.albumName)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary.opacity(0.8))
-                    }
-                    .lineLimit(1)
+                    Text(track.artistName)
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.35))
+                        .lineLimit(1)
                 }
 
                 Spacer()
 
-                // Duration and play button
-                HStack(spacing: 12) {
-                    Text(track.durationFormatted)
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(.secondary.opacity(0.7))
-
-                    Image(systemName: "play.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.neonPink)
-                }
+                Text(track.durationFormatted)
+                    .font(.jellyAmpMono)
+                    .foregroundColor(.white.opacity(0.3))
             }
-            .padding(.vertical, 10)
-            .background(
-                isCurrentlyPlaying ?
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.jellyAmpAccent.opacity(0.08))
-                        .padding(.horizontal, -8)
-                    : nil
-            )
+            .padding(.vertical, 8)
             .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .contextMenu {
-            Button {
-                playerManager.playNext(track: track)
-            } label: {
+            Button { playerManager.playNext(track: track) } label: {
                 Label("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward")
             }
-
-            Button {
-                playerManager.playLast(track: track)
-            } label: {
+            Button { playerManager.playLast(track: track) } label: {
                 Label("Play Last", systemImage: "text.line.last.and.arrowtriangle.forward")
             }
-
-            Button {
-                playerManager.addToQueue(track: track)
-            } label: {
+            Button { playerManager.addToQueue(track: track) } label: {
                 Label("Add to Queue", systemImage: "text.append")
             }
         }
     }
-
-    private var placeholderArtwork: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.jellyAmpSecondary.opacity(0.3), Color.jellyAmpTertiary.opacity(0.3)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 50, height: 50)
-
-            Image(systemName: "music.note")
-                .font(.title3)
-                .foregroundColor(.white.opacity(0.6))
-        }
-    }
 }
 
-// MARK: - Favorite Album Card Component
-struct FavoriteAlbumCard: View {
-    let album: Album
-    let action: () -> Void
-
-    var body: some View {
-        Button {
-            action()
-        } label: {
-            VStack(alignment: .leading, spacing: 8) {
-                // Album artwork
-                if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
-                    CachedAsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 140, height: 140)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        default:
-                            placeholderArtwork
-                        }
-                    }
-                    .frame(width: 140, height: 140)
-                } else {
-                    placeholderArtwork
-                }
-
-                // Album info
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(album.name)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(Color.jellyAmpText)
-                        .lineLimit(1)
-
-                    Text(album.artistName)
-                        .font(.caption)
-                        .foregroundColor(.jellyAmpTextSecondary)
-                        .lineLimit(1)
-                }
-                .frame(width: 140)
-            }
-        }
-    }
-
-    private var placeholderArtwork: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.jellyAmpAccent.opacity(0.4), Color.jellyAmpTertiary.opacity(0.4)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 140, height: 140)
-
-            Image(systemName: "music.note")
-                .font(.title)
-                .foregroundColor(.white.opacity(0.4))
-        }
-    }
-}
-
-// MARK: - Favorite Artist Card Component
-struct FavoriteArtistCard: View {
-    let artist: Artist
-    let action: () -> Void
-
-    var body: some View {
-        Button {
-            action()
-        } label: {
-            VStack(spacing: 8) {
-                // Artist artwork (circular)
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.jellyAmpTertiary.opacity(0.5), Color.jellyAmpSecondary.opacity(0.5)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 120, height: 120)
-
-                    Image(systemName: "person.circle.fill")
-                        .font(.title)
-                        .foregroundColor(.white.opacity(0.4))
-                }
-
-                // Artist name
-                Text(artist.name)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(Color.jellyAmpText)
-                    .lineLimit(1)
-                    .frame(width: 120)
-            }
-        }
-    }
-}
-
-// MARK: - Preview
 #Preview {
     FavoritesView()
 }

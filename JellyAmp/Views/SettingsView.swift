@@ -255,30 +255,15 @@ struct SettingsView: View {
 
     // Helper functions for theme icons
     private func themeIcon(for theme: AppTheme) -> String {
-        switch theme {
-        case .cypherpunk:
-            return "bolt.fill"
-        case .sleek:
-            return "circle.hexagongrid.fill"
-        }
+        return "bolt.fill"
     }
 
     private func themeIconColor(for theme: AppTheme) -> Color {
-        switch theme {
-        case .cypherpunk:
-            return .neonCyan
-        case .sleek:
-            return .goldBrass
-        }
+        return .neonCyan
     }
 
     private func themeIconBackground(for theme: AppTheme) -> Color {
-        switch theme {
-        case .cypherpunk:
-            return .neonCyan.opacity(0.2)
-        case .sleek:
-            return .goldBrass.opacity(0.2)
-        }
+        return .neonCyan.opacity(0.2)
     }
     
     // Helper functions for appearance setting
