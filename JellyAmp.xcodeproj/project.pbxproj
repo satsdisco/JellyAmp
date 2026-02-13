@@ -102,7 +102,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				3606C286A2EC6A9873717694 /* JellyAmp Watch Watch App.app in Embed Watch Content */,
+				// 3606C286A2EC6A9873717694 /* JellyAmp Watch Watch App.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
