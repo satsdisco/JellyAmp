@@ -13,11 +13,64 @@ struct MiniPlayerView: View {
     var namespace: Namespace.ID
 
     @ObservedObject var sleepTimer = SleepTimerManager.shared
+    @State private var isCollapsed = false
+    @State private var dragOffset: CGFloat = 0
 
     var body: some View {
         if let currentTrack = playerManager.currentTrack {
-            miniPlayerButton(for: currentTrack)
+            if isCollapsed {
+                collapsedPill(for: currentTrack)
+            } else {
+                miniPlayerButton(for: currentTrack)
+            }
         }
+    }
+
+    // MARK: - Collapsed pill (mini-mini mode)
+    private func collapsedPill(for currentTrack: Track) -> some View {
+        Button {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                isCollapsed = false
+            }
+        } label: {
+            HStack(spacing: 8) {
+                // Tiny progress ring
+                ZStack {
+                    Circle()
+                        .stroke(Color.white.opacity(0.15), lineWidth: 2.5)
+                    Circle()
+                        .trim(from: 0, to: miniPlayerProgress)
+                        .stroke(Color.jellyAmpAccent, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                }
+                .frame(width: 24, height: 24)
+
+                // Play/pause
+                Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(.regularMaterial)
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(Color.white.opacity(0.1), lineWidth: 1))
+            .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+        }
+        .buttonStyle(.plain)
+        .gesture(
+            DragGesture(minimumDistance: 10)
+                .onEnded { value in
+                    if value.translation.height < -30 {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            isCollapsed = false
+                        }
+                    }
+                }
+        )
+        .transition(.scale(scale: 0.8).combined(with: .opacity))
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.trailing, 16)
     }
 
     private func miniPlayerButton(for currentTrack: Track) -> some View {
@@ -29,7 +82,28 @@ struct MiniPlayerView: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Now playing: \(currentTrack.name) by \(currentTrack.artistName)")
-        .accessibilityHint("Double tap for full player")
+        .accessibilityHint("Double tap for full player. Swipe down to minimize.")
+        .offset(y: max(0, dragOffset))
+        .gesture(
+            DragGesture(minimumDistance: 10)
+                .onChanged { value in
+                    if value.translation.height > 0 {
+                        dragOffset = value.translation.height
+                    }
+                }
+                .onEnded { value in
+                    if value.translation.height > 50 {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            isCollapsed = true
+                            dragOffset = 0
+                        }
+                    } else {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            dragOffset = 0
+                        }
+                    }
+                }
+        )
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: playerManager.currentTrack?.id)
     }

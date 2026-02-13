@@ -478,26 +478,36 @@ struct LibraryView: View {
         .navigationDestination(for: Playlist.self) { playlist in
             PlaylistDetailView(playlist: playlist)
         }
-        .navigationTitle("Library")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                // New Playlist button (only show when Playlists filter is selected)
+        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .top) {
+            // Custom top bar: logo + Library + sync
+            HStack(spacing: 10) {
+                Image("JellyAmpLogo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)
+                
+                Text("Library")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(Color.jellyAmpText)
+                
+                Spacer()
+                
+                // New Playlist button
                 if selectedFilter == "Playlists" {
                     Button {
                         showNewPlaylistSheet = true
                     } label: {
                         Image(systemName: "plus.circle.fill")
+                            .font(.title3)
                             .foregroundColor(.neonPink)
                     }
-                    .accessibilityLabel("Create new playlist")
                 }
                 
                 // Sync button
                 Button {
-                    Task {
-                        await syncLibrary()
-                    }
+                    Task { await syncLibrary() }
                 } label: {
                     if isSyncing {
                         ProgressView()
@@ -505,13 +515,17 @@ struct LibraryView: View {
                             .scaleEffect(0.8)
                     } else {
                         Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.title3)
                             .foregroundColor(.jellyAmpAccent)
                     }
                 }
-                .accessibilityLabel(isSyncing ? "Syncing library" : "Sync library")
                 .disabled(isSyncing)
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            .background(Color.jellyAmpBackground.opacity(0.95))
         }
+        .toolbar(.visible, for: .tabBar)
         .sheet(isPresented: $showNewPlaylistSheet) {
             NewPlaylistSheet { playlistId in
                 // Refresh playlists after creation
@@ -721,9 +735,16 @@ struct LibraryView: View {
     private var headerSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Library")
-                    .font(.jellyAmpTitle)
-                    .foregroundColor(Color.jellyAmpText)
+                HStack(spacing: 10) {
+                    Image("JellyAmpLogo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 28, height: 28)
+                    
+                    Text("Library")
+                        .font(.jellyAmpTitle)
+                        .foregroundColor(Color.jellyAmpText)
+                }
 
                 Text("\(albums.count) Albums · \(artists.count) Artists")
                     .font(.jellyAmpCaption)
