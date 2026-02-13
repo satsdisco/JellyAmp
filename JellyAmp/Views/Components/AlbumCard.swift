@@ -28,6 +28,10 @@ struct AlbumCard: View {
                     .transaction { $0.animation = nil }
                     .aspectRatio(1, contentMode: .fit)
                     .frame(maxWidth: .infinity)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                    )
                     .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 } else {
                     placeholderArtwork
@@ -46,13 +50,18 @@ struct AlbumCard: View {
                     .foregroundColor(.secondary)
                     .lineLimit(1)
 
-                if let year = album.year {
+                if let showDate = ShowDateParser.parse(album.name) {
+                    Text(ShowDateParser.format(showDate))
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundColor(.neonCyan.opacity(0.6))
+                } else if let year = album.year {
                     Text(String(year))
                         .font(.system(.caption2, design: .monospaced))
                         .foregroundColor(.neonCyan.opacity(0.6))
                 }
             }
         }
+        .contentShape(Rectangle())
     }
 
     private var placeholderArtwork: some View {
@@ -69,6 +78,10 @@ struct AlbumCard: View {
                 )
             )
             .aspectRatio(1, contentMode: .fit)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.05), lineWidth: 1)
+            )
             .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
             .overlay(
                 Image(systemName: "music.note")
@@ -77,4 +90,3 @@ struct AlbumCard: View {
             )
     }
 }
-

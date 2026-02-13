@@ -22,7 +22,13 @@ class PlayerManager: NSObject, ObservableObject {
 
     // MARK: - Published Properties
     @Published var currentTrack: Track?
-    @Published var isPlaying = false
+    @Published var isPlaying = false {
+        didSet {
+            if isPlaying && playbackRate != 1.0 {
+                player?.rate = playbackRate
+            }
+        }
+    }
     @Published var currentTime: Double = 0
     @Published var duration: Double = 0
     @Published var isBuffering = false
@@ -35,6 +41,7 @@ class PlayerManager: NSObject, ObservableObject {
     @Published var shuffleEnabled = false
     @Published var repeatMode: RepeatMode = .off
     @Published var recentlyPlayedAlbumIds: [String] = []
+    @Published var playbackRate: Float = 1.0
 
     enum RepeatMode {
         case off
@@ -397,6 +404,18 @@ class PlayerManager: NSObject, ObservableObject {
         case .one:
             repeatMode = .off
         }
+    }
+
+    func setPlaybackRate(_ rate: Float) {
+        playbackRate = rate
+        player?.rate = isPlaying ? rate : 0
+    }
+
+    func cyclePlaybackRate() {
+        let rates: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+        let currentIdx = rates.firstIndex(of: playbackRate) ?? 2
+        let nextIdx = (currentIdx + 1) % rates.count
+        setPlaybackRate(rates[nextIdx])
     }
 
     // MARK: - Queue Management

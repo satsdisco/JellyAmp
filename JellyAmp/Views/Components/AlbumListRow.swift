@@ -46,7 +46,16 @@ struct AlbumListRow: View {
 
                     // Year and track count - clear and separated
                     HStack(spacing: 8) {
-                        if let year = album.year {
+                        if let showDate = ShowDateParser.parse(album.name) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "calendar")
+                                    .font(.caption2)
+                                    .foregroundColor(.neonCyan)
+                                Text(ShowDateParser.format(showDate))
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundColor(.neonCyan)
+                            }
+                        } else if let year = album.year {
                             HStack(spacing: 4) {
                                 Image(systemName: "calendar")
                                     .font(.caption2)

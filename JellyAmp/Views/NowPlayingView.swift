@@ -417,9 +417,33 @@ struct NowPlayingView: View {
         }
     }
 
-    // MARK: - Secondary Actions (sleep timer)
+    // MARK: - Secondary Actions
     private var secondaryActionsSection: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
+            // Playback Speed
+            Button {
+                playerManager.cyclePlaybackRate()
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "speedometer")
+                        .font(.caption)
+                    Text(playerManager.playbackRate == 1.0 ? "1x" : String(format: "%.2gx", playerManager.playbackRate))
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                }
+                .foregroundColor(playerManager.playbackRate != 1.0 ? .neonCyan : .white.opacity(0.4))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(playerManager.playbackRate != 1.0 ? Color.neonCyan.opacity(0.15) : Color.white.opacity(0.1))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(playerManager.playbackRate != 1.0 ? Color.neonCyan.opacity(0.3) : Color.clear, lineWidth: 1)
+                )
+            }
+            .accessibilityLabel("Playback speed: \(playerManager.playbackRate)x")
+
             // Sleep Timer
             Button {
                 showSleepTimer = true
