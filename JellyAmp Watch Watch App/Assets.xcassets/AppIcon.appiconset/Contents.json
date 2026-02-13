@@ -3,7 +3,7 @@
     {
       "filename" : "watchOS_AppStore_1024x1024.png",
       "idiom" : "universal",
-      "platform" : "ios",
+      "platform" : "watchos",
       "size" : "1024x1024"
     }
   ],
