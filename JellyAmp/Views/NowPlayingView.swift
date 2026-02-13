@@ -2,7 +2,7 @@
 //  NowPlayingView.swift
 //  JellyAmp
 //
-//  Beautiful Now Playing screen with iOS 26 Liquid Glass + Cypherpunk styling
+//  Now Playing screen — redesigned to match PWA layout
 //
 
 import SwiftUI
@@ -19,82 +19,73 @@ struct NowPlayingView: View {
     @State private var isFavorite = false
     @State private var showSleepTimer = false
     @State private var dominantColor: Color?
+    @State private var artworkImage: Image?
     @ObservedObject var sleepTimer = SleepTimerManager.shared
     @State private var dragOffset: CGFloat = 0
     var namespace: Namespace.ID
     var onDismiss: (() -> Void)?
 
     var body: some View {
-        ZStack {
-            // Background with dynamic dominant color
-            Color.jellyAmpBackground
-                .ignoresSafeArea()
-            
-            LinearGradient(
-                colors: [
-                    (dominantColor ?? Color.jellyAmpMidBackground).opacity(0.6),
-                    Color.jellyAmpBackground,
-                    Color.jellyAmpBackground
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            .animation(.easeInOut(duration: 0.8), value: dominantColor != nil)
-            .matchedGeometryEffect(id: "playerBg", in: namespace)
+        GeometryReader { geo in
+            ZStack {
+                // Background: blurred album art (PWA style)
+                backgroundLayer
 
-            // Content
-            VStack(spacing: 0) {
-                // Top Bar
-                topBar
+                // Content in ScrollView for safety
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // Top Bar
+                        topBar
+                            .padding(.top, 8)
 
-                Spacer()
+                        // Album Artwork — responsive
+                        artworkSection(screenWidth: geo.size.width, screenHeight: geo.size.height)
+                            .padding(.top, 16)
 
-                // Album Artwork
-                artworkSection
+                        // Track Info + Favorite
+                        trackInfoSection
+                            .padding(.top, 20)
 
-                Spacer()
+                        // Progress Slider
+                        progressSection
+                            .padding(.top, 24)
 
-                // Track Info
-                trackInfoSection
+                        // Controls (PWA layout: shuffle | prev | play | next | repeat)
+                        controlsSection
+                            .padding(.top, 20)
 
-                // Progress Slider
-                progressSection
+                        // Secondary actions
+                        secondaryActionsSection
+                            .padding(.top, 16)
 
-                // Controls
-                controlsSection
+                        // Up Next preview
+                        upNextSection
+                            .padding(.top, 24)
 
-                // Bottom Actions
-                bottomActionsSection
-
-                // Up Next preview
-                upNextSection
-
-                Spacer()
+                        // Bottom padding
+                        Spacer().frame(height: 40)
+                    }
+                    .padding(.horizontal, 20)
+                }
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 40)
         }
         .offset(y: max(0, dragOffset))
         .opacity(1.0 - Double(max(0, dragOffset)) / 500.0)
         .gesture(
             DragGesture()
                 .onChanged { value in
-                    // Only allow downward drag
                     if value.translation.height > 0 {
                         dragOffset = value.translation.height
                     }
                 }
                 .onEnded { value in
                     if value.translation.height > 150 || value.velocity.height > 500 {
-                        // Dismiss
                         if let onDismiss = onDismiss {
                             onDismiss()
                         } else {
                             dismiss()
                         }
                     } else {
-                        // Snap back
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                             dragOffset = 0
                         }
@@ -102,16 +93,61 @@ struct NowPlayingView: View {
                 }
         )
         .onChange(of: playerManager.currentTrack) { _, newTrack in
-            // Update favorite status when track changes
             isFavorite = newTrack?.isFavorite ?? false
-            // Extract dominant color
             extractDominantColor(for: newTrack)
         }
         .onAppear {
-            // Set initial favorite status
             isFavorite = playerManager.currentTrack?.isFavorite ?? false
             extractDominantColor(for: playerManager.currentTrack)
         }
+    }
+
+    // MARK: - Background (blurred album art like PWA)
+    private var backgroundLayer: some View {
+        ZStack {
+            Color.jellyAmpBackground
+                .ignoresSafeArea()
+
+            // Blurred album art background
+            if let track = playerManager.currentTrack,
+               let artworkURLString = track.artworkURL,
+               let artworkURL = URL(string: artworkURLString) {
+                CachedAsyncImage(url: artworkURL) { phase in
+                    if case .success(let image) = phase {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .blur(radius: 80)
+                            .scaleEffect(1.3)
+                            .saturation(1.5)
+                            .opacity(0.35)
+                    }
+                }
+                .ignoresSafeArea()
+                .animation(.easeInOut(duration: 0.8), value: track.id)
+            }
+
+            // Gradient overlay for readability
+            LinearGradient(
+                colors: [
+                    Color.jellyAmpBackground.opacity(0.5),
+                    Color.jellyAmpBackground.opacity(0.7),
+                    Color.jellyAmpBackground.opacity(0.9)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
+            // Dominant color tint
+            if let dominantColor = dominantColor {
+                dominantColor
+                    .opacity(0.15)
+                    .ignoresSafeArea()
+                    .animation(.easeInOut(duration: 0.8), value: dominantColor != nil)
+            }
+        }
+        .matchedGeometryEffect(id: "playerBg", in: namespace)
     }
 
     // MARK: - Top Bar
@@ -125,8 +161,8 @@ struct NowPlayingView: View {
                 }
             } label: {
                 Image(systemName: "chevron.down")
-                    .font(.title3)
-                    .foregroundColor(Color.jellyAmpText)
+                    .font(.body.weight(.medium))
+                    .foregroundColor(.white.opacity(0.6))
                     .frame(width: 44, height: 44)
             }
             .accessibilityLabel("Close now playing")
@@ -134,8 +170,10 @@ struct NowPlayingView: View {
             Spacer()
 
             Text("Now Playing")
-                .font(.jellyAmpCaption)
-                .foregroundColor(.jellyAmpTextSecondary)
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .textCase(.uppercase)
+                .tracking(1.5)
+                .foregroundColor(.white.opacity(0.4))
 
             Spacer()
 
@@ -148,8 +186,8 @@ struct NowPlayingView: View {
                 showQueue = true
             } label: {
                 Image(systemName: "list.bullet")
-                    .font(.title3)
-                    .foregroundColor(Color.jellyAmpText)
+                    .font(.body.weight(.medium))
+                    .foregroundColor(.white.opacity(0.6))
                     .frame(width: 44, height: 44)
             }
             .accessibilityLabel("View queue")
@@ -159,124 +197,107 @@ struct NowPlayingView: View {
         }
     }
 
-    // MARK: - Artwork Section
-    private var artworkSection: some View {
-        ZStack {
+    // MARK: - Artwork Section (responsive)
+    private func artworkSection(screenWidth: CGFloat, screenHeight: CGFloat) -> some View {
+        let artSize = min(screenWidth * 0.65, 320.0)
+
+        return ZStack {
             if let track = playerManager.currentTrack,
                let artworkURLString = track.artworkURL,
                let artworkURL = URL(string: artworkURLString) {
                 CachedAsyncImage(url: artworkURL) { phase in
                     switch phase {
                     case .empty:
-                        placeholderArtwork
+                        placeholderArtwork(size: artSize)
                     case .success(let image):
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 320, height: 320)
-                            .clipShape(RoundedRectangle(cornerRadius: 24))
+                            .frame(width: artSize, height: artSize)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 24)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.jellyAmpAccent.opacity(0.8),
-                                                Color.jellyAmpSecondary.opacity(0.8)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 3
-                                    )
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
                             )
-                            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                            .shadow(color: .black.opacity(0.5), radius: 20, y: 10)
                     case .failure:
-                        placeholderArtwork
+                        placeholderArtwork(size: artSize)
                     @unknown default:
-                        placeholderArtwork
+                        placeholderArtwork(size: artSize)
                     }
                 }
-                .frame(width: 320, height: 320)
+                .frame(width: artSize, height: artSize)
                 .matchedGeometryEffect(id: "albumArt", in: namespace)
             } else {
-                placeholderArtwork
+                placeholderArtwork(size: artSize)
                     .matchedGeometryEffect(id: "albumArt", in: namespace)
             }
         }
     }
 
-    private var placeholderArtwork: some View {
+    private func placeholderArtwork(size: CGFloat) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 24)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color.jellyAmpAccent.opacity(0.6),
-                            Color.jellyAmpSecondary.opacity(0.6),
-                            Color.neonPurple.opacity(0.6)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 320, height: 320)
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.jellyAmpMidBackground)
+                .frame(width: size, height: size)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.jellyAmpAccent.opacity(0.8),
-                                    Color.jellyAmpSecondary.opacity(0.8)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 2
-                        )
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
                 )
-                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                .shadow(color: .black.opacity(0.5), radius: 20, y: 10)
 
-            // Album icon overlay
             Image(systemName: "music.note")
-                .font(.title)
-                .foregroundColor(.white.opacity(0.3))
+                .font(.largeTitle)
+                .foregroundColor(.white.opacity(0.2))
         }
     }
 
-    // MARK: - Track Info Section
+    // MARK: - Track Info Section (with inline favorite — matches PWA)
     private var trackInfoSection: some View {
-        VStack(spacing: 8) {
-            if let track = playerManager.currentTrack {
-                Text(track.name)
-                    .font(.jellyAmpDisplay)
-                    .foregroundColor(Color.jellyAmpText)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.7)
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                if let track = playerManager.currentTrack {
+                    Text(track.name)
+                        .font(.title3.weight(.bold))
+                        .foregroundColor(Color.jellyAmpText)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.7)
 
-                Button {
-                    navigateToArtist(track: track)
-                } label: {
-                    Text(track.artistName)
-                        .font(.jellyAmpSubheadline)
+                    Button {
+                        navigateToArtist(track: track)
+                    } label: {
+                        Text(track.artistName)
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+
+                    Button {
+                        navigateToAlbum(track: track)
+                    } label: {
+                        Text(track.albumName)
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.35))
+                    }
+                } else {
+                    Text("No Track Playing")
+                        .font(.title3.weight(.bold))
                         .foregroundColor(.jellyAmpTextSecondary)
                 }
-                .accessibilityLabel("Go to artist: \(track.artistName)")
-
-                Button {
-                    navigateToAlbum(track: track)
-                } label: {
-                    Text(track.albumName)
-                        .font(.jellyAmpCaption)
-                        .foregroundColor(.jellyAmpTextMuted)
-                }
-                .accessibilityLabel("Go to album: \(track.albumName)")
-            } else {
-                Text("No Track Playing")
-                    .font(.jellyAmpTitle)
-                    .foregroundColor(.jellyAmpTextSecondary)
             }
+
+            Spacer()
+
+            // Inline favorite button (PWA style)
+            Button {
+                toggleFavorite()
+            } label: {
+                Image(systemName: isFavorite ? "heart.fill" : "heart")
+                    .font(.title3)
+                    .foregroundColor(isFavorite ? .neonPink : .white.opacity(0.3))
+                    .frame(width: 44, height: 44)
+            }
+            .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
         }
-        .padding(.top, 30)
     }
 
     // MARK: - Progress Section
@@ -300,77 +321,67 @@ struct NowPlayingView: View {
             )
             .tint(Color.jellyAmpAccent)
             .accessibilityLabel("Track progress")
-            .accessibilityValue("\(formatTime(isDraggingSlider ? sliderValue : playerManager.currentTime)) of \(formatTime(playerManager.duration))")
 
-            // Time labels
             HStack {
                 Text(formatTime(isDraggingSlider ? sliderValue : playerManager.currentTime))
-                    .font(.jellyAmpMono)
-                    .foregroundColor(.neonCyan)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.4))
                 Spacer()
                 Text(formatTime(playerManager.duration))
-                    .font(.jellyAmpMono)
-                    .foregroundColor(.jellyAmpTextSecondary)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.4))
             }
         }
-        .padding(.top, 40)
     }
 
-    // MARK: - Controls Section
+    // MARK: - Controls (PWA layout: shuffle | prev | play | next | repeat)
     private var controlsSection: some View {
-        HStack(spacing: 20) {
+        HStack(spacing: 0) {
+            // Shuffle
+            Button {
+                playerManager.toggleShuffle()
+            } label: {
+                Image(systemName: "shuffle")
+                    .font(.body)
+                    .foregroundColor(playerManager.shuffleEnabled ? .neonCyan : .white.opacity(0.4))
+                    .frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("Shuffle")
+
+            Spacer()
+
             // Previous
             Button {
                 playerManager.playPrevious()
             } label: {
                 Image(systemName: "backward.fill")
                     .font(.title2)
-                    .foregroundColor(Color.jellyAmpText)
+                    .foregroundColor(.white.opacity(0.8))
+                    .frame(width: 44, height: 44)
             }
             .accessibilityLabel("Previous track")
 
-            // Skip back 15s
-            Button {
-                playerManager.seek(to: max(0, playerManager.currentTime - 15))
-            } label: {
-                Image(systemName: "gobackward.15")
-                    .font(.title3)
-                    .foregroundColor(.jellyAmpTextSecondary)
-            }
-            .accessibilityLabel("Skip back 15 seconds")
+            Spacer()
 
-            // Play/Pause (prominent)
+            // Play/Pause — white circle (PWA style)
             Button {
                 playerManager.togglePlayPause()
             } label: {
                 ZStack {
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.jellyAmpAccent, Color.jellyAmpSecondary],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 80, height: 80)
-                        .neonGlow(color: .neonCyan, radius: 8)
+                        .fill(.white)
+                        .frame(width: 68, height: 68)
+                        .shadow(color: .white.opacity(0.15), radius: 20)
 
                     Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.title)
+                        .font(.title2)
                         .foregroundColor(.black)
+                        .offset(x: playerManager.isPlaying ? 0 : 2)
                 }
             }
             .accessibilityLabel(playerManager.isPlaying ? "Pause" : "Play")
 
-            // Skip forward 15s
-            Button {
-                playerManager.seek(to: min(playerManager.duration, playerManager.currentTime + 15))
-            } label: {
-                Image(systemName: "goforward.15")
-                    .font(.title3)
-                    .foregroundColor(.jellyAmpTextSecondary)
-            }
-            .accessibilityLabel("Skip forward 15 seconds")
+            Spacer()
 
             // Next
             Button {
@@ -378,58 +389,61 @@ struct NowPlayingView: View {
             } label: {
                 Image(systemName: "forward.fill")
                     .font(.title2)
-                    .foregroundColor(Color.jellyAmpText)
+                    .foregroundColor(.white.opacity(0.8))
+                    .frame(width: 44, height: 44)
             }
             .accessibilityLabel("Next track")
+
+            Spacer()
+
+            // Repeat
+            Button {
+                playerManager.toggleRepeatMode()
+            } label: {
+                Image(systemName: repeatIcon)
+                    .font(.body)
+                    .foregroundColor(playerManager.repeatMode != .off ? .neonCyan : .white.opacity(0.4))
+                    .frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("Repeat")
         }
-        .padding(.top, 30)
     }
 
-    // MARK: - Bottom Actions
-    private var bottomActionsSection: some View {
-        HStack(spacing: 50) {
-            // Shuffle
-            Button {
-                playerManager.toggleShuffle()
-            } label: {
-                Image(systemName: "shuffle")
-                    .font(.title3)
-                    .foregroundColor(playerManager.shuffleEnabled ? .neonCyan : .secondary)
-                    .neonGlow(color: .neonCyan, radius: playerManager.shuffleEnabled ? 6 : 0)
-            }
-            .accessibilityLabel("Shuffle")
-            .accessibilityValue(playerManager.shuffleEnabled ? "On" : "Off")
+    var repeatIcon: String {
+        switch playerManager.repeatMode {
+        case .off: return "repeat"
+        case .all: return "repeat"
+        case .one: return "repeat.1"
+        }
+    }
 
-            // Favorite
-            Button {
-                toggleFavorite()
-            } label: {
-                Image(systemName: isFavorite ? "heart.fill" : "heart")
-                    .font(.title3)
-                    .foregroundColor(isFavorite ? .neonPink : .white)
-                    .neonGlow(color: .neonPink, radius: isFavorite ? 6 : 0)
-            }
-            .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
-
+    // MARK: - Secondary Actions (sleep timer)
+    private var secondaryActionsSection: some View {
+        HStack(spacing: 16) {
             // Sleep Timer
             Button {
                 showSleepTimer = true
             } label: {
-                ZStack(alignment: .topTrailing) {
+                HStack(spacing: 6) {
                     Image(systemName: "moon.zzz")
-                        .font(.title3)
-                        .foregroundColor(sleepTimer.isActive ? .jellyAmpAccent : .secondary)
-                        .neonGlow(color: .neonCyan, radius: sleepTimer.isActive ? 6 : 0)
-
+                        .font(.caption)
                     if sleepTimer.isActive {
-                        Circle()
-                            .fill(Color.jellyAmpAccent)
-                            .frame(width: 8, height: 8)
-                            .offset(x: 4, y: -4)
+                        Text(sleepTimer.formattedRemaining)
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
                     }
                 }
+                .foregroundColor(sleepTimer.isActive ? .jellyAmpAccent : .white.opacity(0.4))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(sleepTimer.isActive ? Color.jellyAmpAccent.opacity(0.15) : Color.white.opacity(0.1))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(sleepTimer.isActive ? Color.jellyAmpAccent.opacity(0.3) : Color.clear, lineWidth: 1)
+                )
             }
-            .accessibilityLabel("Sleep timer")
             .confirmationDialog("Sleep Timer", isPresented: $showSleepTimer, titleVisibility: .visible) {
                 ForEach(SleepTimerOption.allCases) { option in
                     Button(option.rawValue) {
@@ -448,30 +462,6 @@ struct NowPlayingView: View {
                     Text("Pause playback after...")
                 }
             }
-
-            // Repeat
-            Button {
-                playerManager.toggleRepeatMode()
-            } label: {
-                Image(systemName: repeatIcon)
-                    .font(.title3)
-                    .foregroundColor(playerManager.repeatMode != .off ? .neonCyan : .secondary)
-                    .neonGlow(color: .neonCyan, radius: playerManager.repeatMode != .off ? 6 : 0)
-            }
-            .accessibilityLabel("Repeat")
-            .accessibilityValue(playerManager.repeatMode == .off ? "Off" : playerManager.repeatMode == .all ? "All" : "One")
-        }
-        .padding(.top, 30)
-    }
-
-    var repeatIcon: String {
-        switch playerManager.repeatMode {
-        case .off:
-            return "repeat"
-        case .all:
-            return "repeat"
-        case .one:
-            return "repeat.1"
         }
     }
 
@@ -479,10 +469,12 @@ struct NowPlayingView: View {
     private var upNextSection: some View {
         Group {
             if playerManager.currentIndex < playerManager.queue.count - 1 {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 10) {
                     Text("Up Next")
-                        .font(.jellyAmpCaption)
-                        .foregroundColor(.jellyAmpTextSecondary)
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .textCase(.uppercase)
+                        .tracking(1.2)
+                        .foregroundColor(.white.opacity(0.3))
                         .padding(.horizontal, 4)
 
                     ForEach(nextTracks, id: \.id) { track in
@@ -493,20 +485,24 @@ struct NowPlayingView: View {
                                     image.resizable().aspectRatio(contentMode: .fill)
                                 default:
                                     Rectangle().fill(Color.jellyAmpMidBackground)
-                                        .overlay(Image(systemName: "music.note").font(.caption).foregroundColor(.jellyAmpTextSecondary))
+                                        .overlay(Image(systemName: "music.note").font(.caption).foregroundColor(.white.opacity(0.3)))
                                 }
                             }
-                            .frame(width: 36, height: 36)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .frame(width: 40, height: 40)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            )
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(track.name)
-                                    .font(.caption.weight(.medium))
-                                    .foregroundColor(Color.jellyAmpText)
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundColor(.white.opacity(0.7))
                                     .lineLimit(1)
                                 Text(track.artistName)
-                                    .font(.caption2)
-                                    .foregroundColor(.jellyAmpTextSecondary)
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.35))
                                     .lineLimit(1)
                             }
 
@@ -514,13 +510,12 @@ struct NowPlayingView: View {
 
                             Text(track.durationFormatted)
                                 .font(.system(.caption2, design: .monospaced))
-                                .foregroundColor(.jellyAmpTextSecondary)
+                                .foregroundColor(.white.opacity(0.3))
                         }
                         .padding(.horizontal, 8)
                         .padding(.vertical, 6)
                     }
                 }
-                .padding(.top, 16)
             }
         }
     }
@@ -542,7 +537,6 @@ struct NowPlayingView: View {
         }
 
         Task {
-            // Try to get from image cache first
             if let cachedImage = await ImageCache.shared.cachedImage(for: url) {
                 let color = await DominantColorExtractor.shared.dominantColor(from: cachedImage, trackId: track.id)
                 await MainActor.run {
@@ -563,18 +557,13 @@ struct NowPlayingView: View {
 
     // MARK: - Helpers
     private func formatTime(_ time: TimeInterval) -> String {
-        // Guard against NaN or infinite values
-        guard !time.isNaN && !time.isInfinite && time >= 0 else {
-            return "0:00"
-        }
-
+        guard !time.isNaN && !time.isInfinite && time >= 0 else { return "0:00" }
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return String(format: "%d:%02d", minutes, seconds)
     }
 
     private func navigateToArtist(track: Track) {
-        // Build an Artist from track data and request navigation
         let artist = Artist(
             id: track.artistId ?? "",
             name: track.artistName,
@@ -584,11 +573,7 @@ struct NowPlayingView: View {
         )
         guard !artist.id.isEmpty else { return }
         NavigationCoordinator.shared.pendingArtistNavigation = artist
-        if let onDismiss = onDismiss {
-            onDismiss()
-        } else {
-            dismiss()
-        }
+        if let onDismiss = onDismiss { onDismiss() } else { dismiss() }
     }
 
     private func navigateToAlbum(track: Track) {
@@ -602,26 +587,17 @@ struct NowPlayingView: View {
             artworkURL: track.artworkURL
         )
         NavigationCoordinator.shared.pendingAlbumNavigation = album
-        if let onDismiss = onDismiss {
-            onDismiss()
-        } else {
-            dismiss()
-        }
+        if let onDismiss = onDismiss { onDismiss() } else { dismiss() }
     }
 
     private func toggleFavorite() {
         guard let currentTrack = playerManager.currentTrack else { return }
-
-        // Haptic feedback
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
 
-        // Optimistic UI update
         withAnimation(.spring(response: 0.3)) {
             isFavorite.toggle()
         }
 
-        // Call API in background
         Task {
             do {
                 if isFavorite {
@@ -629,20 +605,16 @@ struct NowPlayingView: View {
                 } else {
                     try await jellyfinService.unmarkFavorite(itemId: currentTrack.id)
                 }
-
-                // Update the track in the queue
                 let currentIndex = playerManager.currentIndex
                 if currentIndex < playerManager.queue.count {
                     playerManager.queue[currentIndex].isFavorite = isFavorite
                 }
             } catch {
-                // Revert on failure
                 await MainActor.run {
                     withAnimation(.spring(response: 0.3)) {
                         isFavorite.toggle()
                     }
                 }
-                print("Error toggling favorite: \(error)")
             }
         }
     }
@@ -654,28 +626,21 @@ struct AirPlayButton: UIViewRepresentable {
         let routePickerView = AVRoutePickerView()
         routePickerView.backgroundColor = .clear
         routePickerView.activeTintColor = UIColor(Color.jellyAmpAccent)
-        routePickerView.tintColor = UIColor(.white)
-
-        // Make the button larger and centered
+        routePickerView.tintColor = UIColor(.white.opacity(0.6))
         routePickerView.prioritizesVideoDevices = false
-
         return routePickerView
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
-        // No updates needed
-    }
+    func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
 // MARK: - Preview
 #Preview {
     struct PreviewWrapper: View {
         @Namespace private var namespace
-        
         var body: some View {
             NowPlayingView(namespace: namespace)
         }
     }
-    
     return PreviewWrapper()
 }
