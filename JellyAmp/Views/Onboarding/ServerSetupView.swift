@@ -65,49 +65,20 @@ struct ServerSetupView: View {
 
     // MARK: - Logo Section
     private var logoSection: some View {
-        ZStack {
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color.jellyAmpAccent.opacity(0.3),
-                            Color.jellyAmpSecondary.opacity(0.3)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 120, height: 120)
-                .overlay(
-                    Circle()
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.jellyAmpAccent.opacity(0.8),
-                                    Color.jellyAmpSecondary.opacity(0.8)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 2
-                        )
-                )
-                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
-
-            Image(systemName: "waveform")
-                .font(.title)
-                .foregroundColor(Color.jellyAmpText)
-        }
-        .padding(.bottom, 40)
+        Image("JellyAmpLogo")
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(width: 100, height: 100)
+            .shadow(color: .jellyAmpAccent.opacity(0.3), radius: 20, y: 0)
+            .padding(.bottom, 40)
     }
 
     // MARK: - Title Section
     private var titleSection: some View {
         VStack(spacing: 12) {
             Text("Welcome to JellyAmp")
-                .font(.title2.weight(.bold))
+                .font(.system(size: 28, weight: .bold))
                 .foregroundColor(Color.jellyAmpText)
-                .neonGlow(color: .jellyAmpAccent, radius: 4)
 
             Text("Connect to your Jellyfin server")
                 .font(.jellyAmpBody)

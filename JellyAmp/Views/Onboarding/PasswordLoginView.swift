@@ -65,26 +65,13 @@ struct PasswordLoginView: View {
                         Spacer()
                             .frame(height: 40)
 
-                        // Icon
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.jellyAmpAccent.opacity(0.3),
-                                            Color.jellyAmpSecondary.opacity(0.3)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 100, height: 100)
-
-                            Image(systemName: "waveform")
-                                .font(.title)
-                                .foregroundColor(Color.jellyAmpText)
-                        }
-                        .padding(.bottom, 30)
+                        // Logo
+                        Image("JellyAmpLogo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 80, height: 80)
+                            .shadow(color: .jellyAmpAccent.opacity(0.3), radius: 20, y: 0)
+                            .padding(.bottom, 30)
 
                         // Title
                         VStack(spacing: 12) {
