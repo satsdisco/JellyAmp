@@ -135,7 +135,7 @@ struct NowPlayingView: View {
 
             Text("Now Playing")
                 .font(.jellyAmpCaption)
-                .foregroundColor(.secondary)
+                .foregroundColor(.jellyAmpTextSecondary)
 
             Spacer()
 
@@ -248,15 +248,17 @@ struct NowPlayingView: View {
         VStack(spacing: 8) {
             if let track = playerManager.currentTrack {
                 Text(track.name)
-                    .font(.jellyAmpTitle)
+                    .font(.jellyAmpDisplay)
                     .foregroundColor(Color.jellyAmpText)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.7)
 
                 Button {
                     navigateToArtist(track: track)
                 } label: {
                     Text(track.artistName)
-                        .font(.jellyAmpHeadline)
-                        .foregroundColor(.secondary)
+                        .font(.jellyAmpSubheadline)
+                        .foregroundColor(.jellyAmpTextSecondary)
                 }
                 .accessibilityLabel("Go to artist: \(track.artistName)")
 
@@ -265,13 +267,13 @@ struct NowPlayingView: View {
                 } label: {
                     Text(track.albumName)
                         .font(.jellyAmpCaption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.jellyAmpTextMuted)
                 }
                 .accessibilityLabel("Go to album: \(track.albumName)")
             } else {
                 Text("No Track Playing")
                     .font(.jellyAmpTitle)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.jellyAmpTextSecondary)
             }
         }
         .padding(.top, 30)
@@ -308,7 +310,7 @@ struct NowPlayingView: View {
                 Spacer()
                 Text(formatTime(playerManager.duration))
                     .font(.jellyAmpMono)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.jellyAmpTextSecondary)
             }
         }
         .padding(.top, 40)
@@ -333,7 +335,7 @@ struct NowPlayingView: View {
             } label: {
                 Image(systemName: "gobackward.15")
                     .font(.title3)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.jellyAmpTextSecondary)
             }
             .accessibilityLabel("Skip back 15 seconds")
 
@@ -366,7 +368,7 @@ struct NowPlayingView: View {
             } label: {
                 Image(systemName: "goforward.15")
                     .font(.title3)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.jellyAmpTextSecondary)
             }
             .accessibilityLabel("Skip forward 15 seconds")
 
@@ -480,7 +482,7 @@ struct NowPlayingView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Up Next")
                         .font(.jellyAmpCaption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                         .padding(.horizontal, 4)
 
                     ForEach(nextTracks, id: \.id) { track in
@@ -491,7 +493,7 @@ struct NowPlayingView: View {
                                     image.resizable().aspectRatio(contentMode: .fill)
                                 default:
                                     Rectangle().fill(Color.jellyAmpMidBackground)
-                                        .overlay(Image(systemName: "music.note").font(.caption).foregroundColor(.secondary))
+                                        .overlay(Image(systemName: "music.note").font(.caption).foregroundColor(.jellyAmpTextSecondary))
                                 }
                             }
                             .frame(width: 36, height: 36)
@@ -504,7 +506,7 @@ struct NowPlayingView: View {
                                     .lineLimit(1)
                                 Text(track.artistName)
                                     .font(.caption2)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.jellyAmpTextSecondary)
                                     .lineLimit(1)
                             }
 
@@ -512,7 +514,7 @@ struct NowPlayingView: View {
 
                             Text(track.durationFormatted)
                                 .font(.system(.caption2, design: .monospaced))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.jellyAmpTextSecondary)
                         }
                         .padding(.horizontal, 8)
                         .padding(.vertical, 6)

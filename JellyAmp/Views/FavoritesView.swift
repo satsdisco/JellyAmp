@@ -42,7 +42,7 @@ struct FavoritesView: View {
                         .scaleEffect(1.5)
                     Text("Loading favorites...")
                         .font(.jellyAmpBody)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                 }
             } else if let error = errorMessage {
                 // Error state
@@ -55,7 +55,7 @@ struct FavoritesView: View {
                         .foregroundColor(Color.jellyAmpText)
                     Text(error)
                         .font(.jellyAmpBody)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                     Button("Try Again") {
@@ -197,7 +197,7 @@ struct FavoritesView: View {
             if favoriteTracks.count > 10 {
                 Text("Showing 10 of \(favoriteTracks.count) tracks")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.jellyAmpTextSecondary)
                     .padding(.horizontal, 20)
             }
         }
@@ -369,7 +369,7 @@ struct FavoriteTrackRow: View {
                     HStack(spacing: 4) {
                         Text(track.artistName)
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.jellyAmpTextSecondary)
                         Text("•")
                             .foregroundColor(.secondary.opacity(0.5))
                         Text(track.albumName)
@@ -480,7 +480,7 @@ struct FavoriteAlbumCard: View {
 
                     Text(album.artistName)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                         .lineLimit(1)
                 }
                 .frame(width: 140)

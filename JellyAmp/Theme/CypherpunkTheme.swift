@@ -53,18 +53,18 @@ class ThemeManager: ObservableObject {
 
 // MARK: - Color Palette
 extension Color {
-    // Cypherpunk Theme - Neon Accents
-    static let neonCyan = Color(red: 0.0, green: 1.0, blue: 1.0)
-    static let neonPink = Color(red: 1.0, green: 0.0, blue: 0.43)
-    static let neonPurple = Color(red: 0.62, green: 0.0, blue: 1.0)
+    // Cypherpunk Theme - Neon Accents (matched to BRAND-GUIDE.md)
+    static let neonCyan = Color(hex: "00FFDD")       // Primary accent
+    static let neonPink = Color(hex: "FF2D78")       // Secondary accent
+    static let neonPurple = Color(hex: "8B5CF6")     // Tertiary
     static let neonGreen = Color(red: 0.0, green: 1.0, blue: 0.25)
     static let neonOrange = Color(red: 1.0, green: 0.6, blue: 0.0)
     static let neonBlue = Color(red: 0.0, green: 0.4, blue: 1.0)
 
-    // Cypherpunk Theme - Dark Backgrounds
-    static let darkBackground = Color(red: 0.05, green: 0.05, blue: 0.08)
-    static let darkMid = Color(red: 0.1, green: 0.1, blue: 0.13)
-    static let darkElevated = Color(red: 0.15, green: 0.15, blue: 0.18)
+    // Cypherpunk Theme - Dark Backgrounds (matched to BRAND-GUIDE.md)
+    static let darkBackground = Color(hex: "050508")  // Deep Black
+    static let darkMid = Color(hex: "0A0A10")         // Card
+    static let darkElevated = Color(hex: "111118")     // Surface
 
     // Bitcoin Theme - Backgrounds
     static let matteBlack = Color(hex: "181818")
@@ -155,9 +155,27 @@ extension Color {
     static var jellyAmpText: Color {
         switch ThemeManager.shared.currentTheme {
         case .cypherpunk:
-            return .white
+            return Color(hex: "F0F0F5")  // Brand primary text
         case .sleek:
             return lightGray
+        }
+    }
+
+    static var jellyAmpTextSecondary: Color {
+        switch ThemeManager.shared.currentTheme {
+        case .cypherpunk:
+            return Color(hex: "8888A0")  // Brand secondary text
+        case .sleek:
+            return Color(hex: "8888A0")
+        }
+    }
+
+    static var jellyAmpTextMuted: Color {
+        switch ThemeManager.shared.currentTheme {
+        case .cypherpunk:
+            return Color(hex: "555570")  // Brand muted text
+        case .sleek:
+            return Color(hex: "555570")
         }
     }
 
@@ -198,10 +216,19 @@ extension Color {
 
 // MARK: - Typography
 extension Font {
-    static let jellyAmpTitle = Font.largeTitle.weight(.bold)
-    static let jellyAmpHeadline = Font.title3.weight(.semibold)
-    static let jellyAmpBody = Font.body
-    static let jellyAmpCaption = Font.caption
+    // Display — large hero text (Now Playing track title, onboarding)
+    static let jellyAmpDisplay = Font.system(.largeTitle, design: .rounded).weight(.black)
+    // Title — section headers, screen titles
+    static let jellyAmpTitle = Font.system(.title2, design: .rounded).weight(.bold)
+    // Headline — card titles, artist/album names
+    static let jellyAmpHeadline = Font.system(.headline, design: .rounded).weight(.semibold)
+    // Subheadline — secondary info below headlines
+    static let jellyAmpSubheadline = Font.system(.subheadline, design: .rounded).weight(.medium)
+    // Body — general text
+    static let jellyAmpBody = Font.system(.body, design: .rounded)
+    // Caption — labels, timestamps, metadata
+    static let jellyAmpCaption = Font.system(.caption, design: .rounded)
+    // Mono — time codes, durations, badges
     static let jellyAmpMono = Font.system(.caption, design: .monospaced).weight(.medium)
 }
 

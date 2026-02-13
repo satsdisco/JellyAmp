@@ -485,7 +485,7 @@ struct AlbumDetailView: View {
                         .tint(.jellyAmpAccent)
                     Text("Loading tracks...")
                         .font(.jellyAmpCaption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                         .padding(.leading, 12)
                     Spacer()
                 }
@@ -495,7 +495,7 @@ struct AlbumDetailView: View {
                     Spacer()
                     Text("No tracks found")
                         .font(.jellyAmpBody)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                     Spacer()
                 }
                 .padding(.vertical, 40)
@@ -610,7 +610,7 @@ struct AlbumTrackRow: View {
 
                     Text(track.durationFormatted)
                         .font(.jellyAmpCaption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                 }
 
                 Spacer()

@@ -152,7 +152,7 @@ struct SearchView: View {
 
             Text("Searching...")
                 .font(.body)
-                .foregroundColor(.secondary)
+                .foregroundColor(.jellyAmpTextSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -289,14 +289,14 @@ struct SearchResultRow: View {
                             if let albumCount = item.AlbumCount {
                                 Text("\(albumCount) album\(albumCount == 1 ? "" : "s")")
                                     .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.jellyAmpTextSecondary)
                                     .lineLimit(1)
                             }
                         } else if let artist = item.artists?.first {
                             // Show artist name for albums/tracks
                             Text(artist)
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.jellyAmpTextSecondary)
                                 .lineLimit(1)
                         }
                     }
@@ -307,7 +307,7 @@ struct SearchResultRow: View {
                 // Chevron
                 Image(systemName: "chevron.right")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.jellyAmpTextSecondary)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)

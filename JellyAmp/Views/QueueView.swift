@@ -117,7 +117,7 @@ struct QueueView: View {
 
                     Text("\(playerManager.queue.count) track\(playerManager.queue.count == 1 ? "" : "s")")
                         .font(.subheadline.weight(.medium))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                 }
                 .padding(.leading, 20)
 
@@ -200,7 +200,7 @@ struct QueueView: View {
 
             Text("Play some music to see it here")
                 .font(.body)
-                .foregroundColor(.secondary)
+                .foregroundColor(.jellyAmpTextSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -228,7 +228,7 @@ struct QueueTrackRow: View {
                 } else {
                     Text("\(index + 1)")
                         .font(.body.weight(.medium))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                         .frame(width: 28)
                 }
 
@@ -241,7 +241,7 @@ struct QueueTrackRow: View {
 
                     Text(track.artistName)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                         .lineLimit(1)
                 }
 

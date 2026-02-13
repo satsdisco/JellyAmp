@@ -149,7 +149,7 @@ struct LibraryView: View {
                         .scaleEffect(1.5)
                     Text("Loading library...")
                         .font(.jellyAmpBody)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.jellyAmpTextSecondary)
                         .padding(.top, 20)
                     Spacer()
                 } else if let error = errorMessage {
@@ -280,7 +280,7 @@ struct LibraryView: View {
                                                 .scaleEffect(0.8)
                                             Text("Loading more artists...")
                                                 .font(.jellyAmpCaption)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(.jellyAmpTextSecondary)
                                         }
                                         .padding()
                                         .gridCellColumns(2)
@@ -320,7 +320,7 @@ struct LibraryView: View {
                                                 .scaleEffect(0.8)
                                             Text("Loading more artists...")
                                                 .font(.jellyAmpCaption)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(.jellyAmpTextSecondary)
                                         }
                                         .padding()
                                     }
@@ -399,7 +399,7 @@ struct LibraryView: View {
                                                 .scaleEffect(0.8)
                                             Text("Loading more albums...")
                                                 .font(.jellyAmpCaption)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(.jellyAmpTextSecondary)
                                         }
                                         .padding()
                                         .gridCellColumns(2)
@@ -439,7 +439,7 @@ struct LibraryView: View {
                                                 .scaleEffect(0.8)
                                             Text("Loading more albums...")
                                                 .font(.jellyAmpCaption)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(.jellyAmpTextSecondary)
                                         }
                                         .padding()
                                     }
@@ -727,7 +727,7 @@ struct LibraryView: View {
 
                 Text("\(albums.count) Albums · \(artists.count) Artists")
                     .font(.jellyAmpCaption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.jellyAmpTextSecondary)
             }
 
             Spacer()

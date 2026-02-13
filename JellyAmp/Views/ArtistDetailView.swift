@@ -272,7 +272,7 @@ struct ArtistDetailView: View {
                             .foregroundColor(.neonCyan)
                         Text("\(artist.albumCount) album\(artist.albumCount == 1 ? "" : "s")")
                             .font(.subheadline.weight(.medium))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.jellyAmpTextSecondary)
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
@@ -305,7 +305,7 @@ struct ArtistDetailView: View {
 
             Text(bio)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(.jellyAmpTextSecondary)
                 .lineSpacing(8)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -357,7 +357,7 @@ struct ArtistDetailView: View {
                     if !albums.isEmpty {
                         Text("\(albums.count) album\(albums.count == 1 ? "" : "s")")
                             .font(.jellyAmpCaption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.jellyAmpTextSecondary)
                     }
                 }
 
@@ -417,7 +417,7 @@ struct ArtistDetailView: View {
                             .tint(.jellyAmpAccent)
                         Text("Loading albums...")
                             .font(.jellyAmpCaption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.jellyAmpTextSecondary)
                     }
                     Spacer()
                 }
@@ -431,7 +431,7 @@ struct ArtistDetailView: View {
                             .foregroundColor(.secondary.opacity(0.5))
                         Text("No albums found")
                             .font(.jellyAmpBody)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.jellyAmpTextSecondary)
                     }
                     Spacer()
                 }
@@ -550,7 +550,7 @@ struct StatBadge: View {
 
             Text(label)
                 .font(.jellyAmpCaption)
-                .foregroundColor(.secondary)
+                .foregroundColor(.jellyAmpTextSecondary)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
