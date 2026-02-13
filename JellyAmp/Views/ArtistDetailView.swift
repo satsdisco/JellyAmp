@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 // MARK: - View Mode Enum
 enum ArtistViewMode {
@@ -29,6 +30,9 @@ struct ArtistDetailView: View {
     @State private var isShuffling = false
     @State private var showNowPlaying = false
     @State private var wikiImageURL: String?
+    @State private var showPhotoPicker = false
+    @State private var isUploadingImage = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
 
     private var effectiveArtworkURL: String? {
         artist.artworkURL ?? wikiImageURL
@@ -96,6 +100,20 @@ struct ArtistDetailView: View {
         }
         .fullScreenCover(isPresented: $showNowPlaying) {
             NowPlayingView(namespace: playerAnimation)
+        }
+        .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
+        .onChange(of: selectedPhotoItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                isUploadingImage = true
+                defer { isUploadingImage = false }
+                guard let data = try? await newItem.loadTransferable(type: Data.self) else { return }
+                // Compress to JPEG
+                guard let uiImage = UIImage(data: data),
+                      let jpegData = uiImage.jpegData(compressionQuality: 0.85) else { return }
+                try? await jellyfinService.uploadImage(itemId: artist.id, imageData: jpegData)
+                selectedPhotoItem = nil
+            }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -203,6 +221,20 @@ struct ArtistDetailView: View {
                     endPoint: .bottom
                 )
             )
+            .overlay(alignment: .topTrailing) {
+                if isUploadingImage {
+                    ProgressView()
+                        .tint(.white)
+                        .padding(12)
+                }
+            }
+            .contextMenu {
+                Button {
+                    showPhotoPicker = true
+                } label: {
+                    Label("Set Artist Photo", systemImage: "photo.on.rectangle")
+                }
+            }
 
             // Artist Name & Stats
             VStack(spacing: 20) {
