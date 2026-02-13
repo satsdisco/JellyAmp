@@ -2,11 +2,16 @@ import SwiftUI
 
 struct ArtistListRow: View {
     let artist: Artist
+    @State private var wikiImageURL: String?
+
+    private var effectiveArtworkURL: String? {
+        artist.artworkURL ?? wikiImageURL
+    }
 
     var body: some View {
         HStack(spacing: 16) {
             // Artist artwork (square with rounded corners — matches PWA)
-            if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
+            if let artworkURL = effectiveArtworkURL, let url = URL(string: artworkURL) {
                 CachedAsyncImage(url: url) { phase in
                     switch phase {
                     case .empty:
@@ -46,6 +51,11 @@ struct ArtistListRow: View {
                 .foregroundColor(.neonPurple.opacity(0.6))
         }
         .padding(.vertical, 14)
+        .task {
+            if artist.artworkURL == nil {
+                wikiImageURL = await ArtistImageService.shared.getImageURL(for: artist.name)
+            }
+        }
     }
 
     private var placeholderArtistArt: some View {

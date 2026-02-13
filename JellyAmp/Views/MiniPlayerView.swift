@@ -159,7 +159,8 @@ struct MiniPlayerView: View {
         }
         .frame(height: 64)
         }
-        .background(.regularMaterial)
+        .background(Color.jellyAmpMidBackground.opacity(0.95))
+        .background(.ultraThinMaterial)
         .matchedGeometryEffect(id: "playerBg", in: namespace)
     }
 
@@ -195,10 +196,10 @@ struct MiniPlayerView: View {
         } label: {
             Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
                 .font(.body.weight(.semibold))
-                .foregroundColor(.neonPink)
+                .foregroundColor(.white)
                 .frame(width: 40, height: 40)
-                .background(Circle().fill(.ultraThinMaterial))
-                .overlay(Circle().stroke(Color.neonPink.opacity(0.3), lineWidth: 1))
+                .background(Circle().fill(Color.white.opacity(0.12)))
+                .overlay(Circle().stroke(Color.white.opacity(0.1), lineWidth: 1))
         }
         .accessibilityLabel(playerManager.isPlaying ? "Pause" : "Play")
         .padding(.trailing, 12)

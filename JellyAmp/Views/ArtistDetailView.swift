@@ -28,6 +28,11 @@ struct ArtistDetailView: View {
     @State private var selectedYear: Int?
     @State private var isShuffling = false
     @State private var showNowPlaying = false
+    @State private var wikiImageURL: String?
+
+    private var effectiveArtworkURL: String? {
+        artist.artworkURL ?? wikiImageURL
+    }
     @State private var isFavorite: Bool
     @Namespace private var playerAnimation
 
@@ -79,6 +84,11 @@ struct ArtistDetailView: View {
         .onAppear {
             Task {
                 await fetchArtistAlbums()
+            }
+        }
+        .task {
+            if artist.artworkURL == nil {
+                wikiImageURL = await ArtistImageService.shared.getImageURL(for: artist.name)
             }
         }
         .navigationDestination(for: Album.self) { album in
@@ -156,7 +166,7 @@ struct ArtistDetailView: View {
         VStack(spacing: 0) {
             // Large artist artwork/gradient
             ZStack {
-                if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
+                if let artworkURL = effectiveArtworkURL, let url = URL(string: artworkURL) {
                     GeometryReader { geo in
                         CachedAsyncImage(url: url) { phase in
                             switch phase {
