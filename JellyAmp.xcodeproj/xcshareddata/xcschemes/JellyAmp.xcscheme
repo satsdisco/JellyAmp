@@ -21,6 +21,20 @@
                ReferencedContainer = "container:JellyAmp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "4BEDE7C32EA2BEC6001E8050"
+               BuildableName = "JellyAmp Watch Watch App.app"
+               BlueprintName = "JellyAmp Watch Watch App"
+               ReferencedContainer = "container:JellyAmp.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
