@@ -142,22 +142,22 @@ extension Color {
     }
 }
 
-// MARK: - Typography (Outfit + Space Mono — matches PWA)
+// MARK: - Typography (Brand Kit: Chakra Petch + Sora + JetBrains Mono)
 extension Font {
     // Display — large hero text (Now Playing track title, onboarding)
-    static let jellyAmpDisplay = Font.custom("Outfit-Bold", size: 28, relativeTo: .largeTitle)
+    static let jellyAmpDisplay = Font.custom("ChakraPetch-Bold", size: 28, relativeTo: .largeTitle)
     // Title — section headers, screen titles
-    static let jellyAmpTitle = Font.custom("Outfit-Bold", size: 22, relativeTo: .title2)
+    static let jellyAmpTitle = Font.custom("ChakraPetch-Bold", size: 22, relativeTo: .title2)
     // Headline — card titles, artist/album names
-    static let jellyAmpHeadline = Font.custom("Outfit-SemiBold", size: 17, relativeTo: .headline)
+    static let jellyAmpHeadline = Font.custom("ChakraPetch-SemiBold", size: 17, relativeTo: .headline)
     // Subheadline — secondary info below headlines
-    static let jellyAmpSubheadline = Font.custom("Outfit-Medium", size: 15, relativeTo: .subheadline)
+    static let jellyAmpSubheadline = Font.custom("Sora-Medium", size: 15, relativeTo: .subheadline)
     // Body — general text
-    static let jellyAmpBody = Font.custom("Outfit-Regular", size: 16, relativeTo: .body)
+    static let jellyAmpBody = Font.custom("Sora-Regular", size: 16, relativeTo: .body)
     // Caption — labels, timestamps, metadata
-    static let jellyAmpCaption = Font.custom("Outfit-Regular", size: 13, relativeTo: .caption)
-    // Mono — time codes, durations, badges (Space Mono)
-    static let jellyAmpMono = Font.custom("SpaceMono-Regular", size: 12, relativeTo: .caption)
+    static let jellyAmpCaption = Font.custom("Sora-Regular", size: 13, relativeTo: .caption)
+    // Mono — time codes, durations, badges (JetBrains Mono)
+    static let jellyAmpMono = Font.custom("JetBrainsMono-Regular", size: 12, relativeTo: .caption)
 }
 
 // MARK: - Glass Effect Styles
