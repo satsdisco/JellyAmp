@@ -827,6 +827,28 @@ class JellyfinService: ObservableObject {
         return itemsResponse.Items
     }
 
+    // MARK: - Image Upload
+
+    /// Upload an image to a Jellyfin item (artist, album, etc.)
+    func uploadImage(itemId: String, imageData: Data, contentType: String = "image/jpeg") async throws {
+        guard let token = KeychainService.shared.getAccessToken() else {
+            throw JellyfinError.notAuthenticated
+        }
+
+        let url = URL(string: "\(baseURL)/Items/\(itemId)/Images/Primary")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(generateAuthorizationHeader(token: token), forHTTPHeaderField: "X-Emby-Authorization")
+        request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+        request.httpBody = imageData
+
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw JellyfinError.invalidResponse
+        }
+    }
+
     // MARK: - Helper Methods
 
     private func buildURLComponents(path: String) throws -> URLComponents {

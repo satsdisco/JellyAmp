@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 // MARK: - View Mode Enum
 enum ArtistViewMode {
@@ -28,6 +29,14 @@ struct ArtistDetailView: View {
     @State private var selectedYear: Int?
     @State private var isShuffling = false
     @State private var showNowPlaying = false
+    @State private var wikiImageURL: String?
+    @State private var showPhotoPicker = false
+    @State private var isUploadingImage = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+
+    private var effectiveArtworkURL: String? {
+        artist.artworkURL ?? wikiImageURL
+    }
     @State private var isFavorite: Bool
     @Namespace private var playerAnimation
 
@@ -40,17 +49,36 @@ struct ArtistDetailView: View {
         VStack(spacing: 0) {
             // Main Content
             ZStack {
-                // Background
-                LinearGradient(
-                    colors: [
-                        Color.jellyAmpBackground,
-                        Color.jellyAmpMidBackground,
-                        Color.jellyAmpBackground
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // Background: blurred artist art
+                ZStack {
+                    Color.jellyAmpBackground.ignoresSafeArea()
+
+                    if let artworkURL = effectiveArtworkURL, let url = URL(string: artworkURL) {
+                        CachedAsyncImage(url: url) { phase in
+                            if case .success(let image) = phase {
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .blur(radius: 80)
+                                    .scaleEffect(1.3)
+                                    .saturation(1.5)
+                                    .opacity(0.3)
+                            }
+                        }
+                        .ignoresSafeArea()
+                    }
+
+                    LinearGradient(
+                        colors: [
+                            Color.jellyAmpBackground.opacity(0.4),
+                            Color.jellyAmpBackground.opacity(0.7),
+                            Color.jellyAmpBackground.opacity(0.95)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea()
+                }
 
                 ScrollView {
                     VStack(spacing: 0) {
@@ -81,11 +109,30 @@ struct ArtistDetailView: View {
                 await fetchArtistAlbums()
             }
         }
+        .task {
+            if artist.artworkURL == nil {
+                wikiImageURL = await ArtistImageService.shared.getImageURL(for: artist.name)
+            }
+        }
         .navigationDestination(for: Album.self) { album in
             AlbumDetailView(album: album)
         }
         .fullScreenCover(isPresented: $showNowPlaying) {
             NowPlayingView(namespace: playerAnimation)
+        }
+        .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
+        .onChange(of: selectedPhotoItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                isUploadingImage = true
+                defer { isUploadingImage = false }
+                guard let data = try? await newItem.loadTransferable(type: Data.self) else { return }
+                // Compress to JPEG
+                guard let uiImage = UIImage(data: data),
+                      let jpegData = uiImage.jpegData(compressionQuality: 0.85) else { return }
+                try? await jellyfinService.uploadImage(itemId: artist.id, imageData: jpegData)
+                selectedPhotoItem = nil
+            }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -156,7 +203,7 @@ struct ArtistDetailView: View {
         VStack(spacing: 0) {
             // Large artist artwork/gradient
             ZStack {
-                if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
+                if let artworkURL = effectiveArtworkURL, let url = URL(string: artworkURL) {
                     GeometryReader { geo in
                         CachedAsyncImage(url: url) { phase in
                             switch phase {
@@ -193,6 +240,20 @@ struct ArtistDetailView: View {
                     endPoint: .bottom
                 )
             )
+            .overlay(alignment: .topTrailing) {
+                if isUploadingImage {
+                    ProgressView()
+                        .tint(.white)
+                        .padding(12)
+                }
+            }
+            .contextMenu {
+                Button {
+                    showPhotoPicker = true
+                } label: {
+                    Label("Set Artist Photo", systemImage: "photo.on.rectangle")
+                }
+            }
 
             // Artist Name & Stats
             VStack(spacing: 20) {
@@ -200,7 +261,7 @@ struct ArtistDetailView: View {
                     .font(.title.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
                     .multilineTextAlignment(.center)
-                    .neonGlow(color: .jellyAmpAccent, radius: 6)
+
                     .padding(.top, -40)
                     .padding(.horizontal, 20)
 
@@ -227,19 +288,8 @@ struct ArtistDetailView: View {
                         .padding(.vertical, 14)
                         .background(
                             Capsule()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color.jellyAmpAccent, Color.jellyAmpTertiary],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
+                                .fill(Color.white)
                         )
-                        .overlay(
-                            Capsule()
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        )
-                        .neonGlow(color: .jellyAmpAccent, radius: 6)
                     }
                     .disabled(isShuffling)
                     .accessibilityLabel("Shuffle all songs by artist")
@@ -260,7 +310,7 @@ struct ArtistDetailView: View {
                                             .stroke(Color.jellyAmpSecondary.opacity(isFavorite ? 0.8 : 0.5), lineWidth: 1)
                                     )
                             )
-                            .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 6 : 4)
+
                     }
                     .accessibilityLabel(isFavorite ? "Remove artist from favorites" : "Add artist to favorites")
                 }

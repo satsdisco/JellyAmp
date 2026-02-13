@@ -2,11 +2,16 @@ import SwiftUI
 
 struct ArtistCard: View {
     let artist: Artist
+    @State private var wikiImageURL: String?
+
+    private var effectiveArtworkURL: String? {
+        artist.artworkURL ?? wikiImageURL
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Artist artwork (square with rounded corners — matches PWA)
-            if let artworkURL = artist.artworkURL, let url = URL(string: artworkURL) {
+            if let artworkURL = effectiveArtworkURL, let url = URL(string: artworkURL) {
                 CachedAsyncImage(url: url) { phase in
                     switch phase {
                     case .empty:
@@ -42,6 +47,11 @@ struct ArtistCard: View {
                     .font(.jellyAmpBody)
                     .foregroundColor(Color.jellyAmpText)
                     .lineLimit(1)
+            }
+        }
+        .task {
+            if artist.artworkURL == nil {
+                wikiImageURL = await ArtistImageService.shared.getImageURL(for: artist.name)
             }
         }
     }

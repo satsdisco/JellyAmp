@@ -8,13 +8,18 @@
 	</array>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Outfit-Light.ttf</string>
-		<string>Outfit-Regular.ttf</string>
-		<string>Outfit-Medium.ttf</string>
-		<string>Outfit-SemiBold.ttf</string>
-		<string>Outfit-Bold.ttf</string>
-		<string>SpaceMono-Regular.ttf</string>
-		<string>SpaceMono-Bold.ttf</string>
+		<string>ChakraPetch-Regular.ttf</string>
+		<string>ChakraPetch-Medium.ttf</string>
+		<string>ChakraPetch-SemiBold.ttf</string>
+		<string>ChakraPetch-Bold.ttf</string>
+		<string>Sora-Light.ttf</string>
+		<string>Sora-Regular.ttf</string>
+		<string>Sora-Medium.ttf</string>
+		<string>Sora-SemiBold.ttf</string>
+		<string>Sora-Bold.ttf</string>
+		<string>JetBrainsMono-Regular.ttf</string>
+		<string>JetBrainsMono-Medium.ttf</string>
+		<string>JetBrainsMono-SemiBold.ttf</string>
 	</array>
 </dict>
 </plist>
