@@ -49,17 +49,36 @@ struct ArtistDetailView: View {
         VStack(spacing: 0) {
             // Main Content
             ZStack {
-                // Background
-                LinearGradient(
-                    colors: [
-                        Color.jellyAmpBackground,
-                        Color.jellyAmpMidBackground,
-                        Color.jellyAmpBackground
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // Background: blurred artist art
+                ZStack {
+                    Color.jellyAmpBackground.ignoresSafeArea()
+
+                    if let artworkURL = effectiveArtworkURL, let url = URL(string: artworkURL) {
+                        CachedAsyncImage(url: url) { phase in
+                            if case .success(let image) = phase {
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .blur(radius: 80)
+                                    .scaleEffect(1.3)
+                                    .saturation(1.5)
+                                    .opacity(0.3)
+                            }
+                        }
+                        .ignoresSafeArea()
+                    }
+
+                    LinearGradient(
+                        colors: [
+                            Color.jellyAmpBackground.opacity(0.4),
+                            Color.jellyAmpBackground.opacity(0.7),
+                            Color.jellyAmpBackground.opacity(0.95)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea()
+                }
 
                 ScrollView {
                     VStack(spacing: 0) {
@@ -242,7 +261,7 @@ struct ArtistDetailView: View {
                     .font(.title.weight(.bold))
                     .foregroundColor(Color.jellyAmpText)
                     .multilineTextAlignment(.center)
-                    .neonGlow(color: .jellyAmpAccent, radius: 6)
+
                     .padding(.top, -40)
                     .padding(.horizontal, 20)
 
@@ -269,19 +288,8 @@ struct ArtistDetailView: View {
                         .padding(.vertical, 14)
                         .background(
                             Capsule()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color.jellyAmpAccent, Color.jellyAmpTertiary],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
+                                .fill(Color.white)
                         )
-                        .overlay(
-                            Capsule()
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        )
-                        .neonGlow(color: .jellyAmpAccent, radius: 6)
                     }
                     .disabled(isShuffling)
                     .accessibilityLabel("Shuffle all songs by artist")
@@ -302,7 +310,7 @@ struct ArtistDetailView: View {
                                             .stroke(Color.jellyAmpSecondary.opacity(isFavorite ? 0.8 : 0.5), lineWidth: 1)
                                     )
                             )
-                            .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 6 : 4)
+
                     }
                     .accessibilityLabel(isFavorite ? "Remove artist from favorites" : "Add artist to favorites")
                 }
