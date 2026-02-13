@@ -58,18 +58,9 @@ struct AlbumDetailView: View {
         VStack(spacing: 0) {
             // Main Content
             ZStack {
-                // Background
-                LinearGradient(
-                    colors: [
-                        Color.jellyAmpBackground,
-                        Color.jellyAmpMidBackground,
-                        Color.jellyAmpBackground
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
-
+                // Background: blurred album art (like Now Playing / PWA)
+                albumBackground
+                
                 ScrollView {
                     VStack(spacing: 0) {
                         // Album Hero Section (extends behind status bar)
@@ -229,60 +220,73 @@ struct AlbumDetailView: View {
         }
     }
 
+    // MARK: - Background (blurred album art, like Now Playing / PWA)
+    private var albumBackground: some View {
+        ZStack {
+            Color.jellyAmpBackground
+                .ignoresSafeArea()
+
+            // Blurred album art
+            if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
+                CachedAsyncImage(url: url) { phase in
+                    if case .success(let image) = phase {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .blur(radius: 80)
+                            .scaleEffect(1.3)
+                            .saturation(1.5)
+                            .opacity(0.35)
+                    }
+                }
+                .ignoresSafeArea()
+            }
+
+            // Gradient overlay for readability
+            LinearGradient(
+                colors: [
+                    Color.jellyAmpBackground.opacity(0.4),
+                    Color.jellyAmpBackground.opacity(0.7),
+                    Color.jellyAmpBackground.opacity(0.95)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        }
+    }
+
     // MARK: - Album Hero Section
     private var albumHeroSection: some View {
         VStack(spacing: 0) {
-            // Album Artwork
-            ZStack {
-                // Gradient background
-                LinearGradient(
-                    colors: [
-                        Color.jellyAmpAccent.opacity(0.6),
-                        Color.jellyAmpSecondary.opacity(0.6),
-                        Color.jellyAmpTertiary.opacity(0.7)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .frame(maxWidth: .infinity, maxHeight: 380)
-
-                // Album artwork
-                if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
-                    CachedAsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            placeholderArtwork
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 260, height: 260)
-                                .clipped()
-                                .clipShape(RoundedRectangle(cornerRadius: 20))
-                                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
-                        case .failure:
-                            placeholderArtwork
-                        @unknown default:
-                            placeholderArtwork
-                        }
+            // Album Artwork — clean, no gradient behind it
+            if let artworkURL = album.artworkURL, let url = URL(string: artworkURL) {
+                CachedAsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        placeholderArtwork
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 260, height: 260)
+                            .clipped()
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                            )
+                            .shadow(color: .black.opacity(0.4), radius: 20, y: 8)
+                    case .failure:
+                        placeholderArtwork
+                    @unknown default:
+                        placeholderArtwork
                     }
-                    .frame(width: 260, height: 260)
-                } else {
-                    placeholderArtwork
                 }
+                .frame(width: 260, height: 260)
+            } else {
+                placeholderArtwork
             }
-            .frame(height: 380)
-            .clipped()
-            .overlay(
-                LinearGradient(
-                    colors: [
-                        Color.clear,
-                        Color.jellyAmpBackground.opacity(0.9)
-                    ],
-                    startPoint: .center,
-                    endPoint: .bottom
-                )
-            )
 
             // Album Title & Artist
             VStack(spacing: 8) {
@@ -296,19 +300,23 @@ struct AlbumDetailView: View {
                     .font(.jellyAmpHeadline)
                     .foregroundColor(.neonPink)
             }
-            .padding(.top, -40)
+            .padding(.top, 20)
             .padding(.bottom, 20)
         }
+        .padding(.top, 40)
     }
 
-    // MARK: - Placeholder Artwork
+    // MARK: - Placeholder Artwork (#77 — hash-to-color like PWA)
     private var placeholderArtwork: some View {
-        RoundedRectangle(cornerRadius: 20)
+        let hue = AlbumPlaceholderHelper.hue(for: album.name)
+        let hue2 = (hue + 40.0).truncatingRemainder(dividingBy: 360.0)
+
+        return RoundedRectangle(cornerRadius: 16)
             .fill(
                 LinearGradient(
                     colors: [
-                        Color.jellyAmpSecondary.opacity(0.5),
-                        Color.jellyAmpTertiary.opacity(0.5)
+                        Color(hue: hue / 360.0, saturation: 0.45, brightness: 0.25),
+                        Color(hue: hue2 / 360.0, saturation: 0.55, brightness: 0.18)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -316,24 +324,23 @@ struct AlbumDetailView: View {
             )
             .frame(width: 260, height: 260)
             .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.jellyAmpAccent.opacity(0.8),
-                                Color.jellyAmpSecondary.opacity(0.8)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 2
-                    )
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+            .shadow(color: .black.opacity(0.4), radius: 20, y: 8)
             .overlay(
-                Image(systemName: "music.note")
-                    .font(.title)
-                    .foregroundColor(.white.opacity(0.3))
+                VStack(spacing: 6) {
+                    Text(album.name)
+                        .font(.system(.headline, weight: .bold))
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                    Text(album.artistName)
+                        .font(.system(.caption))
+                        .foregroundColor(.white.opacity(0.5))
+                        .lineLimit(1)
+                }
+                .padding(20)
             )
     }
 
@@ -360,7 +367,7 @@ struct AlbumDetailView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(albumTracks.isEmpty ? Color.gray : Color.jellyAmpAccent)
                 )
-                .neonGlow(color: albumTracks.isEmpty ? .clear : .neonCyan, radius: 6)
+
             }
             .accessibilityLabel("Play all tracks")
             .disabled(albumTracks.isEmpty)
@@ -384,7 +391,7 @@ struct AlbumDetailView: View {
                                     .stroke(Color.jellyAmpTertiary.opacity(0.5), lineWidth: 1)
                             )
                     )
-                    .neonGlow(color: .jellyAmpTertiary, radius: 4)
+
             }
             .accessibilityLabel("Shuffle album")
             .disabled(albumTracks.isEmpty)
@@ -405,7 +412,7 @@ struct AlbumDetailView: View {
                                     .stroke(Color.jellyAmpSecondary.opacity(isFavorite ? 0.8 : 0.5), lineWidth: 1)
                             )
                     )
-                    .neonGlow(color: .jellyAmpSecondary, radius: isFavorite ? 6 : 4)
+
             }
             .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
 
@@ -446,7 +453,7 @@ struct AlbumDetailView: View {
                             .foregroundColor(downloadIconColor)
                     }
                 }
-                .neonGlow(color: downloadIconColor, radius: albumDownloadState.isDownloaded ? 6 : 4)
+
             }
             .accessibilityLabel(albumDownloadState.isDownloaded ? "Delete download" : "Download album")
             .disabled(albumTracks.isEmpty)

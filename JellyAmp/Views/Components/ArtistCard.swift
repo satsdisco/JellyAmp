@@ -47,14 +47,16 @@ struct ArtistCard: View {
     }
 
     private var placeholderArtwork: some View {
-        ZStack {
+        let hue = ArtistPlaceholderHelper.hue(for: artist.name)
+        let hue2 = (hue + 30.0).truncatingRemainder(dividingBy: 360.0)
+
+        return ZStack {
             RoundedRectangle(cornerRadius: 12)
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.jellyAmpTertiary.opacity(0.5),
-                            Color.jellyAmpSecondary.opacity(0.5),
-                            Color.jellyAmpAccent.opacity(0.5)
+                            Color(hue: hue / 360.0, saturation: 0.4, brightness: 0.28),
+                            Color(hue: hue2 / 360.0, saturation: 0.5, brightness: 0.18)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -66,12 +68,10 @@ struct ArtistCard: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(Color.white.opacity(0.05), lineWidth: 1)
                 )
-                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
 
-            // Artist icon
-            Image(systemName: "music.mic")
-                .font(.title)
-                .foregroundColor(.white.opacity(0.4))
+            Text(ArtistPlaceholderHelper.initials(for: artist.name))
+                .font(.system(.title, weight: .bold))
+                .foregroundColor(.white.opacity(0.6))
         }
     }
 }

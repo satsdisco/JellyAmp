@@ -89,14 +89,16 @@ struct AlbumListRow: View {
     }
 
     private var placeholderArtwork: some View {
-        ZStack {
+        let hue = AlbumPlaceholderHelper.hue(for: album.name)
+        let hue2 = (hue + 40.0).truncatingRemainder(dividingBy: 360.0)
+
+        return ZStack {
             RoundedRectangle(cornerRadius: 10)
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.jellyAmpAccent.opacity(0.5),
-                            Color.jellyAmpSecondary.opacity(0.5),
-                            Color.jellyAmpTertiary.opacity(0.5)
+                            Color(hue: hue / 360.0, saturation: 0.45, brightness: 0.25),
+                            Color(hue: hue2 / 360.0, saturation: 0.55, brightness: 0.18)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -104,9 +106,9 @@ struct AlbumListRow: View {
                 )
                 .frame(width: 80, height: 80)
 
-            Image(systemName: "music.note")
-                .font(.title2)
-                .foregroundColor(.white.opacity(0.4))
+            Text(AlbumPlaceholderHelper.hue(for: album.name) > 0 ? String(album.name.prefix(1)).uppercased() : "♪")
+                .font(.system(.title2, weight: .bold))
+                .foregroundColor(.white.opacity(0.6))
         }
     }
 }
