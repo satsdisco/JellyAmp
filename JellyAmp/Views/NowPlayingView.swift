@@ -13,8 +13,7 @@ struct NowPlayingView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
     @ObservedObject var themeManager = ThemeManager.shared
     @Environment(\.dismiss) var dismiss
-    @State private var isDraggingSlider = false
-    @State private var sliderValue: Double = 0
+    // Slider state removed — using WaveformView now
     @State private var showQueue = false
     @State private var isFavorite = false
     @State private var showSleepTimer = false
@@ -300,35 +299,27 @@ struct NowPlayingView: View {
         }
     }
 
-    // MARK: - Progress Section
+    // MARK: - Progress Section (Waveform)
     private var progressSection: some View {
-        VStack(spacing: 8) {
-            Slider(
-                value: Binding(
-                    get: { isDraggingSlider ? sliderValue : playerManager.currentTime },
-                    set: { newValue in
-                        isDraggingSlider = true
-                        sliderValue = newValue
-                    }
-                ),
-                in: 0...max(playerManager.duration, 1),
-                onEditingChanged: { editing in
-                    if !editing {
-                        playerManager.seek(to: sliderValue)
-                        isDraggingSlider = false
-                    }
+        VStack(spacing: 6) {
+            WaveformView(
+                currentTime: playerManager.currentTime,
+                duration: playerManager.duration,
+                trackId: playerManager.currentTrack?.id ?? "none",
+                onSeek: { time in
+                    playerManager.seek(to: time)
                 }
             )
-            .tint(Color.jellyAmpAccent)
+            .frame(height: 32)
             .accessibilityLabel("Track progress")
 
             HStack {
-                Text(formatTime(isDraggingSlider ? sliderValue : playerManager.currentTime))
-                    .font(.system(size: 11, design: .monospaced))
+                Text(formatTime(playerManager.currentTime))
+                    .font(.jellyAmpMono)
                     .foregroundColor(.white.opacity(0.4))
                 Spacer()
                 Text(formatTime(playerManager.duration))
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.jellyAmpMono)
                     .foregroundColor(.white.opacity(0.4))
             }
         }

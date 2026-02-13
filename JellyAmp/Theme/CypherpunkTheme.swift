@@ -214,22 +214,22 @@ extension Color {
     }
 }
 
-// MARK: - Typography
+// MARK: - Typography (Outfit + Space Mono — matches PWA)
 extension Font {
     // Display — large hero text (Now Playing track title, onboarding)
-    static let jellyAmpDisplay = Font.system(.largeTitle, design: .rounded).weight(.black)
+    static let jellyAmpDisplay = Font.custom("Outfit-Bold", size: 28, relativeTo: .largeTitle)
     // Title — section headers, screen titles
-    static let jellyAmpTitle = Font.system(.title2, design: .rounded).weight(.bold)
+    static let jellyAmpTitle = Font.custom("Outfit-Bold", size: 22, relativeTo: .title2)
     // Headline — card titles, artist/album names
-    static let jellyAmpHeadline = Font.system(.headline, design: .rounded).weight(.semibold)
+    static let jellyAmpHeadline = Font.custom("Outfit-SemiBold", size: 17, relativeTo: .headline)
     // Subheadline — secondary info below headlines
-    static let jellyAmpSubheadline = Font.system(.subheadline, design: .rounded).weight(.medium)
+    static let jellyAmpSubheadline = Font.custom("Outfit-Medium", size: 15, relativeTo: .subheadline)
     // Body — general text
-    static let jellyAmpBody = Font.system(.body, design: .rounded)
+    static let jellyAmpBody = Font.custom("Outfit-Regular", size: 16, relativeTo: .body)
     // Caption — labels, timestamps, metadata
-    static let jellyAmpCaption = Font.system(.caption, design: .rounded)
-    // Mono — time codes, durations, badges
-    static let jellyAmpMono = Font.system(.caption, design: .monospaced).weight(.medium)
+    static let jellyAmpCaption = Font.custom("Outfit-Regular", size: 13, relativeTo: .caption)
+    // Mono — time codes, durations, badges (Space Mono)
+    static let jellyAmpMono = Font.custom("SpaceMono-Regular", size: 12, relativeTo: .caption)
 }
 
 // MARK: - Glass Effect Styles

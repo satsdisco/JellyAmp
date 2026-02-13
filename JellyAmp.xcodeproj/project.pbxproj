@@ -14,6 +14,15 @@
 		6D1D0D062F3A7AA100995579 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1D0D052F3A7AA100995579 /* SwiftUI.framework */; };
 		6D1D0D112F3A7AA200995579 /* JellyAmpComplicationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6D1D0D012F3A7AA100995579 /* JellyAmpComplicationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3606C286A2EC6A9873717694 /* JellyAmp Watch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 4BEDE7C42EA2BEC6001E8050 /* JellyAmp Watch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D5E52BA3CE65469E77837BA4 /* Outfit-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3A71EF1023B49C85F9D8EA1B /* Outfit-Light.ttf */; };
+		A846330B6FD35B079ED2C199 /* Outfit-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B597C14174460B6288A4C5B8 /* Outfit-Regular.ttf */; };
+		C5660B881687C8BE2037DC69 /* Outfit-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 45C4F6ACE9A33EE382F6AEED /* Outfit-Medium.ttf */; };
+		D8ADBA0AD7898348C118EA96 /* Outfit-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D9F8DF4C6DF6E7FCE67919F3 /* Outfit-SemiBold.ttf */; };
+		A44FAA7E1B3ED35004914FCA /* Outfit-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 57573969ACFA6BF7E8D564F8 /* Outfit-Bold.ttf */; };
+		F1564FB962708F0AA104F734 /* SpaceMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E592D7EFC3B148BF2A26EE32 /* SpaceMono-Regular.ttf */; };
+		FC284C573FF9CC9A08F85906 /* SpaceMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 454E68C5B04D1532B5B2F9F1 /* SpaceMono-Bold.ttf */; };
+		16007407EB1072DDCD5F09E4 /* WaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7566AC912DAADC8107078FB5 /* WaveformView.swift */; };
+		81783F63DFF8832CB429FAF4 /* ShowDateParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5DAB69B53B4AA24B769735 /* ShowDateParser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -131,6 +140,15 @@
 		6D1D0D032F3A7AA100995579 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		6D1D0D052F3A7AA100995579 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		6D1D0D172F3A7E7D00995579 /* JellyAmpComplicationExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JellyAmpComplicationExtension.entitlements; sourceTree = "<group>"; };
+		3A71EF1023B49C85F9D8EA1B /* Outfit-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Outfit-Light.ttf"; sourceTree = "<group>"; };
+		B597C14174460B6288A4C5B8 /* Outfit-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Outfit-Regular.ttf"; sourceTree = "<group>"; };
+		45C4F6ACE9A33EE382F6AEED /* Outfit-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Outfit-Medium.ttf"; sourceTree = "<group>"; };
+		D9F8DF4C6DF6E7FCE67919F3 /* Outfit-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Outfit-SemiBold.ttf"; sourceTree = "<group>"; };
+		57573969ACFA6BF7E8D564F8 /* Outfit-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Outfit-Bold.ttf"; sourceTree = "<group>"; };
+		E592D7EFC3B148BF2A26EE32 /* SpaceMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Regular.ttf"; sourceTree = "<group>"; };
+		454E68C5B04D1532B5B2F9F1 /* SpaceMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Bold.ttf"; sourceTree = "<group>"; };
+		7566AC912DAADC8107078FB5 /* WaveformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WaveformView.swift"; sourceTree = "<group>"; };
+		4A5DAB69B53B4AA24B769735 /* ShowDateParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ShowDateParser.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -316,6 +334,20 @@
 				6D1D0D052F3A7AA100995579 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		1C2CA28B71F8812E40EEE7EB /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				3A71EF1023B49C85F9D8EA1B /* Outfit-Light.ttf */,
+				B597C14174460B6288A4C5B8 /* Outfit-Regular.ttf */,
+				45C4F6ACE9A33EE382F6AEED /* Outfit-Medium.ttf */,
+				D9F8DF4C6DF6E7FCE67919F3 /* Outfit-SemiBold.ttf */,
+				57573969ACFA6BF7E8D564F8 /* Outfit-Bold.ttf */,
+				E592D7EFC3B148BF2A26EE32 /* SpaceMono-Regular.ttf */,
+				454E68C5B04D1532B5B2F9F1 /* SpaceMono-Bold.ttf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
