@@ -33,6 +33,7 @@ struct ArtistDetailView: View {
     @State private var showPhotoPicker = false
     @State private var isUploadingImage = false
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var uploadError: String?
 
     private var effectiveArtworkURL: String? {
         artist.artworkURL ?? wikiImageURL
@@ -129,25 +130,35 @@ struct ArtistDetailView: View {
                 do {
                     guard let data = try await newItem.loadTransferable(type: Data.self) else {
                         print("❌ Failed to load photo data from picker")
+                        uploadError = "Could not load the selected photo"
+                        selectedPhotoItem = nil
                         return
                     }
                     guard let uiImage = UIImage(data: data),
                           let jpegData = uiImage.jpegData(compressionQuality: 0.85) else {
                         print("❌ Failed to convert photo to JPEG")
+                        uploadError = "Could not process the photo"
+                        selectedPhotoItem = nil
                         return
                     }
                     print("📸 Uploading artist image (\(jpegData.count / 1024)KB) for \(artist.name)")
                     try await jellyfinService.uploadImage(itemId: artist.id, imageData: jpegData)
                     print("✅ Artist image uploaded successfully")
-                    // After upload, Jellyfin now has a Primary image for this artist
-                    // Set wikiImageURL to the Jellyfin image URL so it shows immediately
-                    let serverImageURL = "\(jellyfinService.baseURL)/Items/\(artist.id)/Images/Primary"
+                    // Cache-bust: append timestamp so the image reloads
+                    let ts = Int(Date().timeIntervalSince1970)
+                    let serverImageURL = "\(jellyfinService.baseURL)/Items/\(artist.id)/Images/Primary?t=\(ts)"
                     wikiImageURL = serverImageURL
                 } catch {
                     print("❌ Artist image upload failed: \(error)")
+                    uploadError = "Upload failed — make sure you're logged in as admin"
                 }
                 selectedPhotoItem = nil
             }
+        }
+        .alert("Photo Upload", isPresented: Binding(get: { uploadError != nil }, set: { if !$0 { uploadError = nil } })) {
+            Button("OK") { uploadError = nil }
+        } message: {
+            Text(uploadError ?? "")
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
