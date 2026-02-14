@@ -126,11 +126,26 @@ struct ArtistDetailView: View {
             Task {
                 isUploadingImage = true
                 defer { isUploadingImage = false }
-                guard let data = try? await newItem.loadTransferable(type: Data.self) else { return }
-                // Compress to JPEG
-                guard let uiImage = UIImage(data: data),
-                      let jpegData = uiImage.jpegData(compressionQuality: 0.85) else { return }
-                try? await jellyfinService.uploadImage(itemId: artist.id, imageData: jpegData)
+                do {
+                    guard let data = try await newItem.loadTransferable(type: Data.self) else {
+                        print("❌ Failed to load photo data from picker")
+                        return
+                    }
+                    guard let uiImage = UIImage(data: data),
+                          let jpegData = uiImage.jpegData(compressionQuality: 0.85) else {
+                        print("❌ Failed to convert photo to JPEG")
+                        return
+                    }
+                    print("📸 Uploading artist image (\(jpegData.count / 1024)KB) for \(artist.name)")
+                    try await jellyfinService.uploadImage(itemId: artist.id, imageData: jpegData)
+                    print("✅ Artist image uploaded successfully")
+                    // After upload, Jellyfin now has a Primary image for this artist
+                    // Set wikiImageURL to the Jellyfin image URL so it shows immediately
+                    let serverImageURL = "\(jellyfinService.baseURL)/Items/\(artist.id)/Images/Primary"
+                    wikiImageURL = serverImageURL
+                } catch {
+                    print("❌ Artist image upload failed: \(error)")
+                }
                 selectedPhotoItem = nil
             }
         }

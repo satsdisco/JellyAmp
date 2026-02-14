@@ -842,9 +842,13 @@ class JellyfinService: ObservableObject {
         request.setValue(contentType, forHTTPHeaderField: "Content-Type")
         request.httpBody = imageData
 
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+        let (responseData, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw JellyfinError.invalidResponse
+        }
+        guard (200...299).contains(httpResponse.statusCode) else {
+            let body = String(data: responseData, encoding: .utf8) ?? "no body"
+            logger.error("Image upload failed: HTTP \(httpResponse.statusCode) - \(body)")
             throw JellyfinError.invalidResponse
         }
     }
