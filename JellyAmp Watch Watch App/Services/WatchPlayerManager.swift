@@ -135,8 +135,9 @@ class WatchPlayerManager: NSObject, ObservableObject {
         // CRITICAL: Start extended runtime session for background playback
         startExtendedRuntimeSession()
 
-        // Create new player
+        // Create new player with cellular-friendly settings
         let playerItem = AVPlayerItem(url: streamURL)
+        playerItem.preferredForwardBufferDuration = 30 // Buffer 30s ahead (important for cellular)
         player = AVPlayer(playerItem: playerItem)
         player?.automaticallyWaitsToMinimizeStalling = true
 
@@ -151,6 +152,22 @@ class WatchPlayerManager: NSObject, ObservableObject {
             self,
             selector: #selector(trackEnded),
             name: .AVPlayerItemDidPlayToEndTime,
+            object: playerItem
+        )
+
+        // Observe playback errors (critical for cellular debugging)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(playerItemFailed),
+            name: .AVPlayerItemFailedToPlayToEndTime,
+            object: playerItem
+        )
+
+        // Observe stalls — log but don't restart (AVPlayer handles rebuffering)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(playerItemStalled),
+            name: .AVPlayerItemPlaybackStalled,
             object: playerItem
         )
 
@@ -212,6 +229,18 @@ class WatchPlayerManager: NSObject, ObservableObject {
             isPlaying = false
             stopExtendedRuntimeSession()
         }
+    }
+
+    @objc private func playerItemFailed(_ notification: Notification) {
+        if let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error {
+            print("❌ Watch playback error: \(error.localizedDescription)")
+        }
+    }
+
+    @objc private func playerItemStalled(_ notification: Notification) {
+        print("⚠️ Watch playback stalled — waiting for buffer (cellular)")
+        // AVPlayer will handle rebuffering automatically
+        // Don't restart or seek — that causes the reset-to-beginning bug
     }
 
     // MARK: - Now Playing
