@@ -321,18 +321,14 @@ class WatchJellyfinService: ObservableObject {
     func getStreamingURL(for trackId: String) -> URL? {
         guard let token = accessToken else { return nil }
 
-        let endpoint = "\(baseURL)/Audio/\(trackId)/universal"
+        // Use /stream?static=true (direct file streaming) instead of /universal (transcoding)
+        // The /universal endpoint causes playback restarts on cellular due to transcoding session resets
+        // Static streaming is more reliable, especially on watchOS cellular connections
+        let endpoint = "\(baseURL)/Audio/\(trackId)/stream"
         let params = [
-            "UserId": userId ?? "",
-            "DeviceId": deviceId,
-            "MaxStreamingBitrate": "320000",
-            "Container": "opus,mp3,aac,m4a,flac,webma,webm,wav,ogg",
-            "TranscodingContainer": "aac",
-            "TranscodingProtocol": "http",
-            "AudioCodec": "aac",
-            "api_key": token,
-            "PlaySessionId": UUID().uuidString,
-            "StartTimeTicks": "0"
+            "static": "true",
+            "mediaSourceId": trackId,
+            "api_key": token
         ]
 
         return buildURL(endpoint: endpoint, params: params)
