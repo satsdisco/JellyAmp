@@ -108,6 +108,8 @@ struct PlaylistDetailView: View {
 
     // MARK: - Toggle Favorite
     private func toggleFavorite() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
         // Optimistic UI update
         withAnimation(.spring(response: 0.3)) {
             isFavorite.toggle()
