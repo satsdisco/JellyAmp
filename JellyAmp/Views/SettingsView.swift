@@ -7,6 +7,25 @@
 
 import SwiftUI
 
+struct AppVersionInfo {
+    let version: String
+    let build: String
+
+    var displayText: String {
+        "Version \(version) (\(build))"
+    }
+
+    static func from(infoDictionary: [String: Any]?) -> AppVersionInfo {
+        let version = infoDictionary?["CFBundleShortVersionString"] as? String
+        let build = infoDictionary?["CFBundleVersion"] as? String
+
+        return AppVersionInfo(
+            version: version?.isEmpty == false ? version! : "?",
+            build: build?.isEmpty == false ? build! : "?"
+        )
+    }
+}
+
 enum StreamingQuality: String, CaseIterable, Identifiable {
     case low = "low"
     case medium = "medium"
@@ -114,7 +133,7 @@ struct SettingsView: View {
                 .font(.jellyAmpTitle)
                 .foregroundColor(Color.jellyAmpText)
 
-            Text("Version 1.1 (8)")
+            Text(AppVersionInfo.from(infoDictionary: Bundle.main.infoDictionary).displayText)
                 .font(.jellyAmpMono)
                 .foregroundColor(.secondary)
         }

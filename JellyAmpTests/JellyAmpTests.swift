@@ -10,8 +10,19 @@ import Testing
 
 struct JellyAmpTests {
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+    @Test func appVersionInfoUsesBundleVersionAndBuild() async throws {
+        let info = AppVersionInfo.from(infoDictionary: [
+            "CFBundleShortVersionString": "1.2.3",
+            "CFBundleVersion": "42"
+        ])
+
+        #expect(info.displayText == "Version 1.2.3 (42)")
+    }
+
+    @Test func appVersionInfoFallsBackWhenBundleValuesAreMissing() async throws {
+        let info = AppVersionInfo.from(infoDictionary: nil)
+
+        #expect(info.displayText == "Version ? (?)")
     }
 
 }
