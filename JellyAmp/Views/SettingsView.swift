@@ -64,7 +64,6 @@ enum StreamingQuality: String, CaseIterable, Identifiable {
 
 struct SettingsView: View {
     @ObservedObject var jellyfinService = JellyfinService.shared
-    @ObservedObject var themeManager = ThemeManager.shared
     @State private var showSignOutConfirmation = false
     @AppStorage("preferredAppearance") private var preferredAppearance = "always_dark"
     @AppStorage("streamingQuality") private var selectedQualityRaw = StreamingQuality.medium.rawValue
@@ -87,8 +86,8 @@ struct SettingsView: View {
                         // Header with app icon/logo
                         headerSection
 
-                        // Theme Selector
-                        themeSection
+                        // Appearance
+                        appearanceSection
 
                         // Streaming Quality
                         streamingQualitySection
@@ -141,88 +140,19 @@ struct SettingsView: View {
         .padding(.vertical, 20)
     }
 
-    // MARK: - Theme Section
+    // MARK: - Appearance Section
 
-    private var themeSection: some View {
+    private var appearanceSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Appearance")
                 .font(.jellyAmpHeadline)
                 .foregroundColor(.jellyAmpAccent)
 
-            VStack(spacing: 12) {
-                ForEach(AppTheme.allCases) { theme in
-                    Button {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            themeManager.currentTheme = theme
-                        }
-                    } label: {
-                        HStack(spacing: 16) {
-                            // Theme icon
-                            ZStack {
-                                Circle()
-                                    .fill(themeIconBackground(for: theme))
-                                    .frame(width: 44, height: 44)
+            Text("Choose whether JellyAmp always uses its dark stage-friendly look or follows your system setting.")
+                .font(.jellyAmpCaption)
+                .foregroundColor(.secondary)
 
-                                Image(systemName: themeIcon(for: theme))
-                                    .font(.title3.weight(.semibold))
-                                    .foregroundColor(themeIconColor(for: theme))
-                            }
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(theme.displayName)
-                                    .font(.jellyAmpBody)
-                                    .foregroundColor(Color.jellyAmpText)
-
-                                Text(theme.description)
-                                    .font(.jellyAmpCaption)
-                                    .foregroundColor(.secondary)
-                            }
-
-                            Spacer()
-
-                            // Checkmark if selected
-                            if themeManager.currentTheme == theme {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.jellyAmpAccent)
-                            }
-                        }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(themeManager.currentTheme == theme ? Color.jellyAmpMidBackground : Color.clear)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .stroke(
-                                            themeManager.currentTheme == theme ?
-                                            LinearGradient(
-                                                colors: [Color.jellyAmpAccent.opacity(0.5), Color.jellyAmpSecondary.opacity(0.5)],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            ) :
-                                            LinearGradient(
-                                                colors: [Color.white.opacity(0.1), Color.white.opacity(0.05)],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            ),
-                                            lineWidth: themeManager.currentTheme == theme ? 2 : 1
-                                        )
-                                )
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Select \(theme.displayName) theme")
-                    .accessibilityAddTraits(themeManager.currentTheme == theme ? .isSelected : [])
-                }
-            }
-            
-            // Appearance Setting
             VStack(alignment: .leading, spacing: 12) {
-                Text("Color Scheme")
-                    .font(.jellyAmpBody)
-                    .foregroundColor(.secondary)
-                    .padding(.top, 16)
-                
                 ForEach(["always_dark", "system"], id: \.self) { appearance in
                     Button {
                         preferredAppearance = appearance
@@ -232,19 +162,19 @@ struct SettingsView: View {
                                 .font(.title3)
                                 .foregroundColor(.jellyAmpText)
                                 .frame(width: 24)
-                            
+
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(appearanceTitle(for: appearance))
                                     .font(.jellyAmpBody)
                                     .foregroundColor(.jellyAmpText)
-                                
+
                                 Text(appearanceDescription(for: appearance))
                                     .font(.jellyAmpCaption)
                                     .foregroundColor(.secondary)
                             }
-                            
+
                             Spacer()
-                            
+
                             if preferredAppearance == appearance {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.title2)
@@ -267,24 +197,14 @@ struct SettingsView: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(appearanceTitle(for: appearance))
+                    .accessibilityHint(appearanceDescription(for: appearance))
+                    .accessibilityAddTraits(preferredAppearance == appearance ? .isSelected : [])
                 }
             }
         }
     }
 
-    // Helper functions for theme icons
-    private func themeIcon(for theme: AppTheme) -> String {
-        return "bolt.fill"
-    }
-
-    private func themeIconColor(for theme: AppTheme) -> Color {
-        return .neonCyan
-    }
-
-    private func themeIconBackground(for theme: AppTheme) -> Color {
-        return .neonCyan.opacity(0.2)
-    }
-    
     // Helper functions for appearance setting
     private func appearanceIcon(for appearance: String) -> String {
         switch appearance {

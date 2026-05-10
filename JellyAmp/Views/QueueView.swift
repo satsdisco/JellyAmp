@@ -12,7 +12,7 @@ struct QueueView: View {
     @ObservedObject var themeManager = ThemeManager.shared
     @Environment(\.dismiss) var dismiss
 
-    @State private var editMode: EditMode = .active
+    @State private var editMode: EditMode = .inactive
 
     var body: some View {
         ZStack {
