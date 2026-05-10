@@ -78,7 +78,7 @@ JellyAmp uses a service-oriented architecture with singleton services:
 - **KeychainService** - Secure credential storage
 - **WatchConnectivityManager** - iPhone ↔ Watch communication
 
-See [CLAUDE.md](CLAUDE.md) for detailed development documentation.
+See [DEVELOPMENT.md](DEVELOPMENT.md) for local build/test commands and development notes.
 
 ## Privacy
 
