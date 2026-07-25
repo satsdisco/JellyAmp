@@ -17,6 +17,7 @@ struct FavoritesView: View {
     @State private var favoriteArtists: [Artist] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var hasLoadedFavorites = false
     @State private var selectedFilter = "All"
 
     private let filters = ["All", "Artists", "Albums", "Tracks"]
@@ -32,7 +33,7 @@ struct FavoritesView: View {
             Color.jellyAmpBackground
                 .ignoresSafeArea()
 
-            if isLoading {
+            if isLoading && !hasFavorites {
                 VStack(spacing: 16) {
                     ProgressView()
                         .tint(.neonPink)
@@ -41,7 +42,7 @@ struct FavoritesView: View {
                         .font(.jellyAmpBody)
                         .foregroundColor(.jellyAmpTextSecondary)
                 }
-            } else if let error = errorMessage {
+            } else if let error = errorMessage, !hasFavorites {
                 VStack(spacing: 16) {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.largeTitle)
@@ -55,18 +56,24 @@ struct FavoritesView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                     Button("Try Again") {
-                        Task { await fetchFavorites() }
+                        Task { await fetchFavorites(force: true) }
                     }
                     .foregroundColor(.black)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
                     .background(Capsule().fill(Color.neonPink))
                 }
-            } else if favoriteTracks.isEmpty && favoriteAlbums.isEmpty && favoriteArtists.isEmpty {
+            } else if !hasFavorites {
                 emptyStateView
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
+                        if let errorMessage {
+                            inlineErrorBanner(errorMessage)
+                                .padding(.horizontal, 20)
+                                .padding(.bottom, 16)
+                        }
+
                         // Header
                         headerSection
                             .padding(.horizontal, 20)
@@ -94,6 +101,9 @@ struct FavoritesView: View {
                         Color.clear.frame(height: 100)
                     }
                 }
+                .refreshable {
+                    await fetchFavorites(force: true)
+                }
             }
         }
         .navigationDestination(for: Album.self) { album in
@@ -105,13 +115,14 @@ struct FavoritesView: View {
         .navigationTitle("Favorites")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
-            if favoriteTracks.isEmpty && favoriteAlbums.isEmpty && favoriteArtists.isEmpty {
+            if !hasLoadedFavorites {
                 Task { await fetchFavorites() }
             }
         }
     }
 
     // MARK: - Computed
+    private var hasFavorites: Bool { !favoriteTracks.isEmpty || !favoriteAlbums.isEmpty || !favoriteArtists.isEmpty }
     private var showArtists: Bool { selectedFilter == "All" || selectedFilter == "Artists" }
     private var showAlbums: Bool { selectedFilter == "All" || selectedFilter == "Albums" }
     private var showTracks: Bool { selectedFilter == "All" || selectedFilter == "Tracks" }
@@ -125,6 +136,31 @@ struct FavoritesView: View {
                     .foregroundColor(.jellyAmpTextSecondary)
             }
         }
+    }
+
+    private func inlineErrorBanner(_ message: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "wifi.exclamationmark")
+                .foregroundColor(.orange)
+            Text(message)
+                .font(.jellyAmpCaption)
+                .foregroundColor(.secondary)
+                .lineLimit(2)
+            Spacer()
+            Button("Retry") {
+                Task { await fetchFavorites(force: true) }
+            }
+            .font(.jellyAmpCaption)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.orange.opacity(0.12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.orange.opacity(0.35), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Filter Pills
@@ -288,8 +324,10 @@ struct FavoritesView: View {
     }
 
     // MARK: - Fetch
-    private func fetchFavorites() async {
-        isLoading = true
+    private func fetchFavorites(force: Bool = false) async {
+        guard force || !hasLoadedFavorites else { return }
+
+        isLoading = !hasFavorites
         errorMessage = nil
 
         do {
@@ -317,6 +355,7 @@ struct FavoritesView: View {
                 self.favoriteTracks = tracks.sorted { $0.artistName < $1.artistName }
                 self.favoriteAlbums = albums.sorted { $0.artistName < $1.artistName }
                 self.favoriteArtists = artists.sorted { $0.name < $1.name }
+                self.hasLoadedFavorites = true
                 self.isLoading = false
             }
         } catch {

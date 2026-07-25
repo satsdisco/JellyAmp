@@ -18,6 +18,8 @@ struct AlbumDetailView: View {
     @State private var isFavorite: Bool
     @State private var albumTracks: [Track] = []
     @State private var isLoadingTracks = true
+    @State private var hasLoadedTracks = false
+    @State private var trackLoadError: String?
     @State private var showAddToPlaylist = false
     @State private var selectedTrackIds: [String] = []
 
@@ -38,19 +40,26 @@ struct AlbumDetailView: View {
 
         let downloadedCount = albumTracks.filter { downloadManager.isDownloaded(trackId: $0.id) }.count
         let totalCount = albumTracks.count
+        var hasActiveDownload = false
+        var hasFailedDownload = false
+
+        for track in albumTracks {
+            if case .downloading = downloadManager.downloadStates[track.id] {
+                hasActiveDownload = true
+            }
+            if case .failed = downloadManager.downloadStates[track.id] {
+                hasFailedDownload = true
+            }
+        }
 
         if downloadedCount == totalCount {
             return .downloaded
-        } else if downloadedCount > 0 {
+        } else if hasFailedDownload {
+            return .failed(error: "One or more tracks failed to download")
+        } else if downloadedCount > 0 || hasActiveDownload {
             let progress = Double(downloadedCount) / Double(totalCount)
             return .downloading(progress: progress)
         } else {
-            // Check if any are actively downloading
-            for track in albumTracks {
-                if case .downloading = downloadManager.downloadStates[track.id] {
-                    return .downloading(progress: 0)
-                }
-            }
             return .notDownloaded
         }
     }
@@ -94,6 +103,7 @@ struct AlbumDetailView: View {
         }
         .ignoresSafeArea(.keyboard)
         .onAppear {
+            guard !hasLoadedTracks else { return }
             Task {
                 await fetchAlbumTracks()
             }
@@ -127,8 +137,11 @@ struct AlbumDetailView: View {
     }
 
     // MARK: - Fetch Album Tracks
-    private func fetchAlbumTracks() async {
+    private func fetchAlbumTracks(force: Bool = false) async {
+        guard force || !hasLoadedTracks else { return }
+
         isLoadingTracks = true
+        trackLoadError = nil
 
         do {
             let tracks = try await jellyfinService.getAlbumTracks(albumId: album.id)
@@ -151,10 +164,32 @@ struct AlbumDetailView: View {
                 return index1 < index2
             }
 
+            hasLoadedTracks = true
             isLoadingTracks = false
         } catch {
             print("Error fetching album tracks: \(error)")
+            trackLoadError = userFriendlyTrackLoadError(error)
             isLoadingTracks = false
+        }
+    }
+
+    private func retryFetchAlbumTracks() {
+        Task {
+            await fetchAlbumTracks(force: true)
+        }
+    }
+
+    private func userFriendlyTrackLoadError(_ error: Error) -> String {
+        let nsError = error as NSError
+        switch nsError.code {
+        case NSURLErrorNotConnectedToInternet, NSURLErrorNetworkConnectionLost:
+            return "No internet connection. Check your network and try again."
+        case NSURLErrorTimedOut:
+            return "The album took too long to load. Try again."
+        case NSURLErrorCannotFindHost, NSURLErrorCannotConnectToHost:
+            return "Could not reach your Jellyfin server."
+        default:
+            return error.localizedDescription
         }
     }
 
@@ -203,7 +238,11 @@ struct AlbumDetailView: View {
                 let generator = UIImpactFeedbackGenerator(style: .medium)
                 generator.impactOccurred()
 
-                downloadManager.downloadAlbum(tracks: albumTracks)
+                if case .failed = albumDownloadState {
+                    downloadManager.retryFailedDownloads()
+                } else {
+                    downloadManager.downloadAlbum(tracks: albumTracks)
+                }
             }
         }
     }
@@ -577,17 +616,46 @@ struct AlbumDetailView: View {
                     Spacer()
                 }
                 .padding(.vertical, 40)
+            } else if let trackLoadError, albumTracks.isEmpty {
+                ContentUnavailableView {
+                    Label("Couldn’t Load Album", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(trackLoadError)
+                } actions: {
+                    Button("Try Again") {
+                        retryFetchAlbumTracks()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding(.vertical, 40)
             } else if albumTracks.isEmpty {
-                HStack {
-                    Spacer()
-                    Text("No tracks found")
-                        .font(.jellyAmpBody)
-                        .foregroundColor(.jellyAmpTextSecondary)
-                    Spacer()
+                ContentUnavailableView {
+                    Label("No Tracks", systemImage: "music.note.list")
+                } description: {
+                    Text("No tracks found for this album")
                 }
                 .padding(.vertical, 40)
             } else {
                 VStack(spacing: 0) {
+                    if let trackLoadError {
+                        HStack(spacing: 10) {
+                            Image(systemName: "wifi.exclamationmark")
+                                .foregroundColor(.orange)
+                            Text(trackLoadError)
+                                .font(.jellyAmpCaption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Button("Retry") { retryFetchAlbumTracks() }
+                                .font(.jellyAmpCaption)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+
+                        Divider()
+                            .background(Color.white.opacity(0.1))
+                            .padding(.horizontal, 20)
+                    }
+
                     ForEach(Array(albumTracks.enumerated()), id: \.element.id) { index, track in
                         AlbumTrackRow(track: track, trackNumber: index + 1) {
                             // Play from this track

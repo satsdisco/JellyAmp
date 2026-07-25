@@ -18,6 +18,8 @@ struct SearchView: View {
     @State private var isSearching = false
     @State private var selectedFilter: SearchFilter = .all
     @State private var searchTask: Task<Void, Never>?
+    @State private var searchError: String?
+    @State private var lastTappedResultId: String?
     // Navigation handled by NavigationStack
 
     enum SearchFilter: String, CaseIterable {
@@ -50,6 +52,8 @@ struct SearchView: View {
                     emptySearchView
                 } else if isSearching {
                     loadingView
+                } else if let searchError {
+                    searchErrorView(searchError)
                 } else if filteredResults.isEmpty {
                     noResultsView
                 } else {
@@ -105,31 +109,40 @@ struct SearchView: View {
 
     // MARK: - Results List
     private var searchResultsList: some View {
-        ScrollView {
-            VStack(spacing: 8) {
-                ForEach(filteredResults, id: \.id) { item in
-                    if item.type == "MusicArtist" {
-                        NavigationLink(value: Artist(from: item, baseURL: jellyfinService.baseURL)) {
-                            SearchResultRow(item: item, baseURL: jellyfinService.baseURL)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(filteredResults, id: \.id) { item in
+                        if item.type == "MusicArtist" {
+                            NavigationLink(value: Artist(from: item, baseURL: jellyfinService.baseURL)) {
+                                SearchResultRow(item: item, baseURL: jellyfinService.baseURL)
+                            }
+                            .id(item.id)
+                            .simultaneousGesture(TapGesture().onEnded { rememberResultTap(item) })
+                            .buttonStyle(.plain)
+                        } else if item.type == "MusicAlbum" {
+                            NavigationLink(value: Album(from: item, baseURL: jellyfinService.baseURL)) {
+                                SearchResultRow(item: item, baseURL: jellyfinService.baseURL)
+                            }
+                            .id(item.id)
+                            .simultaneousGesture(TapGesture().onEnded { rememberResultTap(item) })
+                            .buttonStyle(.plain)
+                        } else {
+                            Button { handleItemTap(item) } label: {
+                                SearchResultRow(item: item, baseURL: jellyfinService.baseURL)
+                            }
+                            .id(item.id)
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
-                    } else if item.type == "MusicAlbum" {
-                        NavigationLink(value: Album(from: item, baseURL: jellyfinService.baseURL)) {
-                            SearchResultRow(item: item, baseURL: jellyfinService.baseURL)
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        Button { handleItemTap(item) } label: {
-                            SearchResultRow(item: item, baseURL: jellyfinService.baseURL)
-                        }
-                        .buttonStyle(.plain)
                     }
-                }
 
-                // Bottom padding
-                Color.clear.frame(height: 100)
+                    // Bottom padding
+                    Color.clear.frame(height: 100)
+                }
+                .padding(.top, 8)
             }
-            .padding(.top, 8)
+            .onAppear { restoreSearchScroll(using: proxy) }
+            .onChange(of: filteredResults.map(\.id)) { _, _ in restoreSearchScroll(using: proxy) }
         }
     }
 
@@ -167,6 +180,20 @@ struct SearchView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    private func searchErrorView(_ message: String) -> some View {
+        ContentUnavailableView {
+            Label("Search Failed", systemImage: "wifi.exclamationmark")
+        } description: {
+            Text(message)
+        } actions: {
+            Button("Try Again") {
+                performSearch(query: searchText, immediate: true)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
     // MARK: - Computed Properties
     private var filteredResults: [BaseItemDto] {
         switch selectedFilter {
@@ -182,20 +209,24 @@ struct SearchView: View {
     }
 
     // MARK: - Actions
-    private func performSearch(query: String) {
+    private func performSearch(query: String, immediate: Bool = false) {
         guard !query.isEmpty else {
             searchResults = []
+            searchError = nil
             return
         }
 
         // Cancel previous search task to avoid race conditions
         searchTask?.cancel()
         searchTask = Task {
-            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+            if !immediate {
+                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+            }
             guard !Task.isCancelled else { return }
 
             await MainActor.run {
                 isSearching = true
+                searchError = nil
             }
 
             do {
@@ -205,6 +236,7 @@ struct SearchView: View {
                 await MainActor.run {
                     searchResults = results
                     isSearching = false
+                    searchError = nil
                 }
             } catch {
                 guard !Task.isCancelled else { return }
@@ -212,8 +244,36 @@ struct SearchView: View {
                 await MainActor.run {
                     searchResults = []
                     isSearching = false
+                    searchError = userFriendlySearchError(error)
                 }
             }
+        }
+    }
+
+    private func rememberResultTap(_ item: BaseItemDto) {
+        lastTappedResultId = item.id
+    }
+
+    private func restoreSearchScroll(using proxy: ScrollViewProxy) {
+        guard let id = lastTappedResultId, filteredResults.contains(where: { $0.id == id }) else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                proxy.scrollTo(id, anchor: .center)
+            }
+        }
+    }
+
+    private func userFriendlySearchError(_ error: Error) -> String {
+        let nsError = error as NSError
+        switch nsError.code {
+        case NSURLErrorNotConnectedToInternet, NSURLErrorNetworkConnectionLost:
+            return "No internet connection. Check your network and try again."
+        case NSURLErrorTimedOut:
+            return "Search timed out. Try again in a second."
+        case NSURLErrorCannotFindHost, NSURLErrorCannotConnectToHost:
+            return "Could not reach your Jellyfin server."
+        default:
+            return error.localizedDescription
         }
     }
 

@@ -16,6 +16,8 @@ struct PlaylistDetailView: View {
     @State private var isFavorite: Bool
     @State private var playlistTracks: [Track] = []
     @State private var isLoadingTracks = true
+    @State private var hasLoadedTracks = false
+    @State private var trackLoadError: String?
     @State private var showAddToPlaylist = false
     @State private var selectedTrackIds: [String] = []
 
@@ -71,6 +73,7 @@ struct PlaylistDetailView: View {
         }
         .ignoresSafeArea(.keyboard)
         .onAppear {
+            guard !hasLoadedTracks else { return }
             Task {
                 await fetchPlaylistTracks()
             }
@@ -84,8 +87,11 @@ struct PlaylistDetailView: View {
     }
 
     // MARK: - Fetch Playlist Tracks
-    private func fetchPlaylistTracks() async {
+    private func fetchPlaylistTracks(force: Bool = false) async {
+        guard force || !hasLoadedTracks else { return }
+
         isLoadingTracks = true
+        trackLoadError = nil
 
         do {
             let tracks = try await jellyfinService.fetchTracks(parentId: playlist.id)
@@ -99,10 +105,32 @@ struct PlaylistDetailView: View {
                 return index1 < index2
             }
 
+            hasLoadedTracks = true
             isLoadingTracks = false
         } catch {
             print("Error fetching playlist tracks: \(error)")
+            trackLoadError = userFriendlyTrackLoadError(error)
             isLoadingTracks = false
+        }
+    }
+
+    private func retryFetchPlaylistTracks() {
+        Task {
+            await fetchPlaylistTracks(force: true)
+        }
+    }
+
+    private func userFriendlyTrackLoadError(_ error: Error) -> String {
+        let nsError = error as NSError
+        switch nsError.code {
+        case NSURLErrorNotConnectedToInternet, NSURLErrorNetworkConnectionLost:
+            return "No internet connection. Check your network and try again."
+        case NSURLErrorTimedOut:
+            return "The playlist took too long to load. Try again."
+        case NSURLErrorCannotFindHost, NSURLErrorCannotConnectToHost:
+            return "Could not reach your Jellyfin server."
+        default:
+            return error.localizedDescription
         }
     }
 
@@ -363,6 +391,18 @@ struct PlaylistDetailView: View {
                     Spacer()
                 }
                 .padding(.vertical, 40)
+            } else if let trackLoadError, playlistTracks.isEmpty {
+                ContentUnavailableView {
+                    Label("Couldn’t Load Playlist", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(trackLoadError)
+                } actions: {
+                    Button("Try Again") {
+                        retryFetchPlaylistTracks()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding(.vertical, 40)
             } else if playlistTracks.isEmpty {
                 ContentUnavailableView {
                     Label("Empty Playlist", systemImage: "music.note.list")
@@ -372,6 +412,25 @@ struct PlaylistDetailView: View {
                 .padding(.vertical, 40)
             } else {
                 VStack(spacing: 0) {
+                    if let trackLoadError {
+                        HStack(spacing: 10) {
+                            Image(systemName: "wifi.exclamationmark")
+                                .foregroundColor(.orange)
+                            Text(trackLoadError)
+                                .font(.jellyAmpCaption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Button("Retry") { retryFetchPlaylistTracks() }
+                                .font(.jellyAmpCaption)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+
+                        Divider()
+                            .background(Color.white.opacity(0.1))
+                            .padding(.horizontal, 20)
+                    }
+
                     ForEach(Array(playlistTracks.enumerated()), id: \.element.id) { index, track in
                         PlaylistTrackRow(track: track, trackNumber: index + 1) {
                             // Play from this track

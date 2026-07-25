@@ -800,7 +800,7 @@ class JellyfinService: ObservableObject {
         }
 
         let decoded = try SafeJellyfinDecoder.decode(ItemsResponse.self, from: data)
-        return decoded.Items ?? []
+        return decoded.Items
     }
 
     func fetchAlbumsByGenre(genreId: String) async throws -> [BaseItemDto] {
@@ -832,7 +832,7 @@ class JellyfinService: ObservableObject {
         }
 
         let decoded = try SafeJellyfinDecoder.decode(ItemsResponse.self, from: data)
-        return decoded.Items ?? []
+        return decoded.Items
     }
 
     // MARK: - Favorites Management

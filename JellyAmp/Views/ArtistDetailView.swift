@@ -82,22 +82,30 @@ struct ArtistDetailView: View {
                     .ignoresSafeArea()
                 }
 
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Hero Header with Artist Image (extends behind status bar)
-                        artistHeaderSection
-                            .padding(.top, -60) // Pull up behind status bar
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            // Hero Header with Artist Image (extends behind status bar)
+                            artistHeaderSection
+                                .padding(.top, -60) // Pull up behind status bar
 
-                        // Bio Section
-                        if let bio = artist.bio {
-                            bioSection(bio: bio)
+                            // Bio Section
+                            if let bio = artist.bio {
+                                bioSection(bio: bio)
+                            }
+
+                            // Albums Section
+                            albumsSection
+
+                            // Bottom padding for mini player
+                            Color.clear.frame(height: 100)
                         }
-
-                        // Albums Section
-                        albumsSection
-
-                        // Bottom padding for mini player
-                        Color.clear.frame(height: 100)
+                    }
+                    .onAppear {
+                        restoreArtistScroll(using: proxy)
+                    }
+                    .onChange(of: albums.count) { _, _ in
+                        restoreArtistScroll(using: proxy)
                     }
                 }
 
@@ -107,8 +115,10 @@ struct ArtistDetailView: View {
         }
         .ignoresSafeArea(.keyboard)
         .onAppear {
-            Task {
-                await fetchArtistAlbums()
+            if albums.isEmpty {
+                Task {
+                    await fetchArtistAlbums()
+                }
             }
         }
         .task {
@@ -520,6 +530,8 @@ struct ArtistDetailView: View {
                 NavigationLink(value: album) {
                     AlbumListRow(album: album)
                 }
+                .id(album.id)
+                .simultaneousGesture(TapGesture().onEnded { rememberAlbumTap(album) })
                 .background(Color.jellyAmpMidBackground.opacity(0.3))
             }
         }
@@ -534,6 +546,8 @@ struct ArtistDetailView: View {
                 NavigationLink(value: album) {
                     AlbumCard(album: album)
                 }
+                .id(album.id)
+                .simultaneousGesture(TapGesture().onEnded { rememberAlbumTap(album) })
             }
         }
         .padding(.horizontal, 16)
@@ -554,8 +568,8 @@ struct ArtistDetailView: View {
                             selectedYear = (selectedYear == year) ? nil : year
                         }
                     },
-                    onAlbumTap: { _ in
-                        // Navigation now handled by NavigationLink
+                    onAlbumTap: { album in
+                        rememberAlbumTap(album)
                     }
                 )
             }
@@ -567,6 +581,26 @@ struct ArtistDetailView: View {
     private var albumsByYear: [Int: [Album]] {
         Dictionary(grouping: albums) { album in
             album.year ?? 0
+        }
+    }
+
+    private func rememberAlbumTap(_ album: Album) {
+        LibraryState.shared.lastTappedArtistAlbumIds[artist.id] = album.id
+    }
+
+    private func restoreArtistScroll(using proxy: ScrollViewProxy) {
+        guard let albumId = LibraryState.shared.lastTappedArtistAlbumIds[artist.id],
+              let album = albums.first(where: { $0.id == albumId }) else { return }
+
+        // In By Year mode the album row only exists while its year section is expanded.
+        if viewMode == .byYear, selectedYear != (album.year ?? 0) {
+            selectedYear = album.year ?? 0
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                proxy.scrollTo(albumId, anchor: .center)
+            }
         }
     }
 
@@ -717,6 +751,8 @@ struct YearSection: View {
                         NavigationLink(value: album) {
                             AlbumListRow(album: album)
                         }
+                        .id(album.id)
+                        .simultaneousGesture(TapGesture().onEnded { onAlbumTap(album) })
                         .background(Color.jellyAmpMidBackground.opacity(0.2))
                     }
                 }

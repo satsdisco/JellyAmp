@@ -815,8 +815,8 @@ struct LibraryView: View {
             isLoadingMore = false
         }
 
-        // Fetch fresh data
-        await fetchAndCache()
+        // Fetch fresh data without blanking the existing library while syncing
+        await fetchAndCache(showLoading: albums.isEmpty && artists.isEmpty, keepExistingOnError: true)
 
         await MainActor.run {
             isSyncing = false
@@ -843,18 +843,18 @@ struct LibraryView: View {
 
             // Then fetch fresh data in background to update cache
             Task {
-                await fetchAndCache()
+                await fetchAndCache(showLoading: false, keepExistingOnError: true)
             }
             return
         }
 
         // No cache - fetch with loading indicator
-        await fetchAndCache()
+        await fetchAndCache(showLoading: true, keepExistingOnError: false)
     }
 
-    private func fetchAndCache() async {
+    private func fetchAndCache(showLoading: Bool = true, keepExistingOnError: Bool = false) async {
         await MainActor.run {
-            isLoading = true
+            if showLoading { isLoading = true }
             errorMessage = nil
             albumsHasMore = true
             artistsHasMore = true
@@ -863,9 +863,15 @@ struct LibraryView: View {
         do {
             // Fetch albums, artists, and playlists in parallel with smart limits
             // Initial load: 300 albums, 200 artists, and all playlists (loads in ~1-2 seconds)
-            async let albumsResult = jellyfinService.fetchMusicItems(includeItemTypes: "MusicAlbum", limit: 300, startIndex: 0)
-            async let artistsResult = jellyfinService.fetchArtists(limit: 200, startIndex: 0)
-            async let playlistsResult = jellyfinService.fetchPlaylists()
+            async let albumsResult = retryingFetch("albums") {
+                try await jellyfinService.fetchMusicItems(includeItemTypes: "MusicAlbum", limit: 300, startIndex: 0)
+            }
+            async let artistsResult = retryingFetch("artists") {
+                try await jellyfinService.fetchArtists(limit: 200, startIndex: 0)
+            }
+            async let playlistsResult = retryingFetch("playlists") {
+                try await jellyfinService.fetchPlaylists()
+            }
 
             let (fetchedAlbums, fetchedArtists, fetchedPlaylists) = try await (albumsResult, artistsResult, playlistsResult)
 
@@ -896,9 +902,44 @@ struct LibraryView: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = userFriendlyError(error)
+                if !keepExistingOnError || (albums.isEmpty && artists.isEmpty && playlists.isEmpty) {
+                    errorMessage = userFriendlyError(error)
+                }
                 isLoading = false
             }
+        }
+    }
+
+    private func retryingFetch<T>(_ label: String, attempts: Int = 3, operation: @escaping () async throws -> T) async throws -> T {
+        var lastError: Error?
+
+        for attempt in 1...attempts {
+            do {
+                return try await operation()
+            } catch {
+                lastError = error
+                guard attempt < attempts, shouldRetry(error) else { throw error }
+
+                let delay = UInt64(350_000_000 * UInt64(attempt))
+                print("⚠️ Library fetch failed for \(label), retrying attempt \(attempt + 1)/\(attempts): \(error.localizedDescription)")
+                try await Task.sleep(nanoseconds: delay)
+            }
+        }
+
+        throw lastError ?? URLError(.unknown)
+    }
+
+    private func shouldRetry(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        switch nsError.code {
+        case NSURLErrorTimedOut,
+             NSURLErrorNetworkConnectionLost,
+             NSURLErrorCannotConnectToHost,
+             NSURLErrorCannotFindHost,
+             NSURLErrorDNSLookupFailed:
+            return true
+        default:
+            return false
         }
     }
 

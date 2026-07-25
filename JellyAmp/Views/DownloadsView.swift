@@ -19,19 +19,29 @@ struct DownloadsView: View {
                 // Background
                 Color.jellyAmpBackground.ignoresSafeArea()
 
-                if downloadManager.downloadedTracks.isEmpty {
+                if downloadManager.downloadedTracks.isEmpty && downloadManager.activeDownloads == 0 && downloadManager.failedDownloadCount == 0 {
                     emptyStateView
                 } else {
                     ScrollView {
                         VStack(spacing: 24) {
+                            if downloadManager.activeDownloads > 0 || downloadManager.failedDownloadCount > 0 {
+                                downloadStatusCard
+                            }
+
                             // Storage Usage Card
-                            storageUsageCard
+                            if !downloadManager.downloadedTracks.isEmpty {
+                                storageUsageCard
+                            }
 
                             // Downloaded Albums List
-                            downloadedAlbumsList
+                            if !downloadManager.downloadedTracks.isEmpty {
+                                downloadedAlbumsList
+                            }
 
                             // Delete All Button
-                            deleteAllButton
+                            if !downloadManager.downloadedTracks.isEmpty {
+                                deleteAllButton
+                            }
 
                             // Bottom padding
                             Color.clear.frame(height: 100)
@@ -51,6 +61,81 @@ struct DownloadsView: View {
                 Text("Are you sure you want to delete all \(downloadManager.downloadedTracks.count) tracks from \(downloadManager.downloadedAlbumCount) albums? This will free up \(downloadManager.formatBytes(downloadManager.totalStorageUsed)).")
             }
         }
+    }
+
+    // MARK: - Download Status Card
+    private var downloadStatusCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                Image(systemName: downloadManager.failedDownloadCount > 0 ? "exclamationmark.arrow.triangle.2.circlepath" : "arrow.down.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(downloadManager.failedDownloadCount > 0 ? .orange : .jellyAmpAccent)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(downloadStatusTitle)
+                        .font(.jellyAmpHeadline)
+                        .foregroundColor(Color.jellyAmpText)
+
+                    Text(downloadStatusSubtitle)
+                        .font(.jellyAmpCaption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+
+            if let progress = downloadManager.averageActiveDownloadProgress {
+                ProgressView(value: progress)
+                    .tint(.jellyAmpAccent)
+            }
+
+            if downloadManager.failedDownloadCount > 0 {
+                Button {
+                    downloadManager.retryFailedDownloads()
+                } label: {
+                    Label("Retry Failed Downloads", systemImage: "arrow.clockwise")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.jellyAmpMidBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(statusCardBorderColor.opacity(0.5), lineWidth: 1)
+                )
+        )
+    }
+
+    private var downloadStatusTitle: String {
+        if downloadManager.failedDownloadCount > 0 && downloadManager.activeDownloads > 0 {
+            return "Downloads Need Attention"
+        } else if downloadManager.failedDownloadCount > 0 {
+            return "Download Failed"
+        } else if downloadManager.activeDownloads == 1 {
+            return "Downloading 1 Track"
+        } else {
+            return "Downloading \(downloadManager.activeDownloads) Tracks"
+        }
+    }
+
+    private var downloadStatusSubtitle: String {
+        if downloadManager.failedDownloadCount > 0 && downloadManager.activeDownloads > 0 {
+            return "\(downloadManager.failedDownloadCount) failed, \(downloadManager.activeDownloads) still downloading."
+        } else if downloadManager.failedDownloadCount == 1 {
+            return "One track failed. Tap retry to try again."
+        } else if downloadManager.failedDownloadCount > 1 {
+            return "\(downloadManager.failedDownloadCount) tracks failed. Tap retry to try again."
+        } else {
+            return "Keep JellyAmp open until the download finishes."
+        }
+    }
+
+    private var statusCardBorderColor: Color {
+        downloadManager.failedDownloadCount > 0 ? .orange : .jellyAmpAccent
     }
 
     // MARK: - Empty State

@@ -26,6 +26,7 @@ class LibraryState: ObservableObject {
     var lastTappedArtistId: String = ""
     var lastTappedAlbumId: String = ""
     var lastTappedPlaylistId: String = ""
+    var lastTappedArtistAlbumIds: [String: String] = [:]
 
     // Cached data — keeps library loaded across navigation
     var albums: [Album] = []

@@ -114,6 +114,23 @@ class DownloadManager: NSObject, ObservableObject {
 
     // MARK: - Computed Properties for Organization
 
+    var failedDownloadCount: Int {
+        downloadStates.values.filter { state in
+            if case .failed = state { return true }
+            return false
+        }.count
+    }
+
+    var averageActiveDownloadProgress: Double? {
+        let activeProgressValues = downloadStates.values.compactMap { state -> Double? in
+            if case .downloading(let progress) = state { return progress }
+            return nil
+        }
+
+        guard !activeProgressValues.isEmpty else { return nil }
+        return activeProgressValues.reduce(0, +) / Double(activeProgressValues.count)
+    }
+
     /// Downloaded tracks grouped by album, sorted by track order
     var downloadedAlbums: [DownloadedAlbum] {
         let grouped = Dictionary(grouping: downloadedTracks) { $0.albumId }
@@ -262,7 +279,7 @@ class DownloadManager: NSObject, ObservableObject {
             return
         }
 
-        guard downloadStates[track.id] != .downloading(progress: 0) else {
+        if case .downloading = downloadStates[track.id] {
             logger.info("Track already downloading: \(track.name)")
             return
         }
@@ -308,6 +325,31 @@ class DownloadManager: NSObject, ObservableObject {
         // Download all tracks
         for track in tracks {
             downloadTrack(track)
+        }
+    }
+
+    /// Retry a failed download if we still have the original track metadata.
+    func retryDownload(trackId: String) {
+        guard case .failed = downloadStates[trackId] else { return }
+
+        guard let track = pendingDownloads[trackId] else {
+            logger.error("Cannot retry download — missing track metadata for \(trackId)")
+            downloadStates[trackId] = .notDownloaded
+            return
+        }
+
+        downloadTrack(track)
+    }
+
+    /// Retry all failed downloads that still have metadata available.
+    func retryFailedDownloads() {
+        let failedTrackIds = downloadStates.compactMap { trackId, state in
+            if case .failed = state { return trackId }
+            return nil
+        }
+
+        for trackId in failedTrackIds {
+            retryDownload(trackId: trackId)
         }
     }
 
@@ -660,7 +702,9 @@ extension DownloadManager: URLSessionDownloadDelegate {
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         guard let trackId = downloadTask.taskDescription else { return }
 
-        let progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
+        let progress = totalBytesExpectedToWrite > 0
+            ? Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
+            : 0
 
         DispatchQueue.main.async {
             self.downloadStates[trackId] = .downloading(progress: progress)
@@ -672,9 +716,6 @@ extension DownloadManager: URLSessionDownloadDelegate {
               let trackId = task.taskDescription else { return }
 
         logger.error("Download failed for track \(trackId): \(error.localizedDescription)")
-
-        // Clean up pending downloads
-        pendingDownloads.removeValue(forKey: trackId)
 
         DispatchQueue.main.async {
             self.downloadStates[trackId] = .failed(error: error.localizedDescription)

@@ -143,7 +143,7 @@ struct NowPlayingView: View {
                 dominantColor
                     .opacity(0.15)
                     .ignoresSafeArea()
-                    .animation(.easeInOut(duration: 0.8), value: dominantColor != nil)
+                    .animation(.easeInOut(duration: 0.8), value: playerManager.currentTrack?.id)
             }
         }
         .matchedGeometryEffect(id: "playerBg", in: namespace)

@@ -160,6 +160,8 @@ class PlayerManager: NSObject, ObservableObject {
 
     /// Pending seek time — applied when playback starts after state restore
     private var pendingSeekTime: Double = 0
+    private var pendingSeekRetryWorkItem: DispatchWorkItem?
+    private let maxPendingSeekAttempts = 20
 
     private static func loadRecentTracks() -> [Track] {
         guard let data = UserDefaults.standard.data(forKey: StateKey.recentTracks),
@@ -223,6 +225,7 @@ class PlayerManager: NSObject, ObservableObject {
             return
         }
 
+        cancelPendingSeek()
         pendingSeekTime = 0  // Fresh tap — always start from beginning
         queue = [track]
         currentIndex = 0
@@ -252,6 +255,7 @@ class PlayerManager: NSObject, ObservableObject {
             return
         }
 
+        cancelPendingSeek()
         pendingSeekTime = 0  // Fresh tap — always start from beginning
         originalQueue = validTracks
         originalIndex = min(index, validTracks.count - 1)
@@ -401,6 +405,56 @@ class PlayerManager: NSObject, ObservableObject {
     }
 
     /// Seeks to specific time
+    private func cancelPendingSeek() {
+        pendingSeekRetryWorkItem?.cancel()
+        pendingSeekRetryWorkItem = nil
+    }
+
+    private func schedulePendingSeek(to time: Double, attemptsRemaining: Int? = nil) {
+        cancelPendingSeek()
+
+        let attemptsRemaining = attemptsRemaining ?? maxPendingSeekAttempts
+        guard time > 1.0, attemptsRemaining > 0 else {
+            if attemptsRemaining <= 0 {
+                logger.error("❌ Pending seek gave up after retries: \(time)s")
+            }
+            pendingSeekTime = 0
+            return
+        }
+
+        pendingSeekTime = time
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            guard self.pendingSeekTime > 1.0 else { return }
+
+            guard let currentItem = self.player?.currentItem else {
+                self.logger.warning("⏳ Pending seek waiting for player item: \(time)s")
+                self.schedulePendingSeek(to: time, attemptsRemaining: attemptsRemaining - 1)
+                return
+            }
+
+            guard currentItem.status == .readyToPlay else {
+                self.logger.warning("⏳ Pending seek waiting for ready item (status: \(currentItem.status.rawValue)): \(time)s")
+                self.schedulePendingSeek(to: time, attemptsRemaining: attemptsRemaining - 1)
+                return
+            }
+
+            guard self.duration > 0 else {
+                self.logger.warning("⏳ Pending seek waiting for duration metadata: \(time)s")
+                self.schedulePendingSeek(to: time, attemptsRemaining: attemptsRemaining - 1)
+                return
+            }
+
+            self.pendingSeekTime = 0
+            self.pendingSeekRetryWorkItem = nil
+            self.seek(to: time)
+        }
+
+        pendingSeekRetryWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: workItem)
+    }
+
     func seek(to time: Double) {
         guard let player = player else {
             logger.error("❌ Cannot seek - player is nil")
@@ -733,11 +787,7 @@ class PlayerManager: NSObject, ObservableObject {
         // Apply pending seek ONLY for state-restore resume (pendingSeekTime is set by restorePlaybackState).
         // play(_ track:) and play(tracks:) clear this to 0 so fresh taps always start from beginning.
         if pendingSeekTime > 1.0 {
-            let seekTo = pendingSeekTime
-            pendingSeekTime = 0
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.seek(to: seekTo)
-            }
+            schedulePendingSeek(to: pendingSeekTime)
         }
 
         // Update Now Playing
@@ -790,6 +840,69 @@ class PlayerManager: NSObject, ObservableObject {
         logger.info("✅ Gapless queue setup complete with \(self.playerItems.count) tracks loaded")
     }
 
+    /// Return a stable playback time for a specific AVPlayerItem.
+    ///
+    /// AVQueuePlayer advances `currentItem` before `AVPlayerItemDidPlayToEndTime`
+    /// is delivered, so reading `player.currentTime()` / `currentTime` inside the
+    /// end notification can accidentally read the *next* track. That makes long
+    /// streams look like they ended early or, worse, lets a false end notification
+    /// advance the queue. Always validate endings against the notification item.
+    private func playbackTime(for item: AVPlayerItem) -> Double? {
+        let time = item.currentTime()
+        guard time.isValid, time.isNumeric else { return nil }
+        return time.seconds.isFinite ? time.seconds : nil
+    }
+
+    private func isFinishedItemActuallyNearEnd(_ item: AVPlayerItem, track: Track) -> Bool {
+        guard track.duration > 0 else {
+            logger.warning("⚠️ Cannot validate finish for '\(track.name)' because track duration is 0")
+            return false
+        }
+
+        let itemTime = playbackTime(for: item) ?? currentTime
+        let timeRemaining = track.duration - itemTime
+
+        // Long live recordings and Jellyfin-transcoded streams can have slightly
+        // different API vs stream durations. Use a small percentage tolerance for
+        // long tracks, capped so mid-song false endings still get rejected.
+        let finishTolerance = min(max(track.duration * 0.01, 10.0), 60.0)
+
+        if timeRemaining > finishTolerance {
+            logger.warning("⚠️ IGNORING false 'track finished' notification - still \(timeRemaining)s remaining in '\(track.name)'")
+            logger.warning("   Item time: \(itemTime)s, UI time: \(self.currentTime)s, Duration: \(track.duration)s, Tolerance: \(finishTolerance)s")
+            return false
+        }
+
+        return true
+    }
+
+    private func recoverFromFalseTrackFinish(_ item: AVPlayerItem, track: Track) {
+        let itemTime = playbackTime(for: item) ?? currentTime
+        let recoveryTime = max(itemTime, lastValidPlaybackTime, currentTime)
+
+        logger.warning("🔧 Recovering false finish for '\(track.name)' at \(recoveryTime)s — rebuilding queue without advancing")
+
+        // Rebuild from the same queue index. AVQueuePlayer may already have moved
+        // to the next item after the bogus finish notification, so merely ignoring
+        // the notification can leave audible playback on the wrong track.
+        cleanupPlayer(reportStopped: false)
+        currentTrack = track
+        duration = track.duration
+        currentTime = recoveryTime
+        lastValidPlaybackTime = recoveryTime
+        errorMessage = nil
+
+        setupGaplessQueue(startingAt: currentIndex)
+        player?.play()
+        isPlaying = true
+        startProgressReporting(for: track)
+        updateNowPlayingInfo()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.seek(to: recoveryTime)
+        }
+    }
+
     /// Handle track finishing in gapless mode
     private func handleTrackFinishedGapless(_ notification: Notification) {
         // Verify this is one of our player items
@@ -819,17 +932,15 @@ class PlayerManager: NSObject, ObservableObject {
             return
         }
 
-        // Use a wider window (10s) to account for time observer lag and metadata inaccuracies.
-        // Jellyfin duration metadata can be off by several seconds vs actual stream length.
-        let timeRemaining = currentTrack.duration - self.currentTime
-        if timeRemaining > 10.0 {
-            // More than 10s from the end — almost certainly a false notification
-            logger.warning("⚠️ IGNORING false 'track finished' notification - still \(timeRemaining)s remaining in '\(currentTrack.name)'")
-            logger.warning("   Current time: \(self.currentTime)s, Duration: \(currentTrack.duration)s")
+        // Validate against the finished item, not player.currentTime/currentTime.
+        // AVQueuePlayer may already be pointing at the next track by now.
+        guard isFinishedItemActuallyNearEnd(finishedItem, track: currentTrack) else {
+            recoverFromFalseTrackFinish(finishedItem, track: currentTrack)
             return
         }
 
-        logger.info("✅ Current track finished playing: \(currentTrack.name) (time: \(self.currentTime)s, duration: \(currentTrack.duration)s)")
+        let finishedTime = playbackTime(for: finishedItem) ?? self.currentTime
+        logger.info("✅ Current track finished playing: \(currentTrack.name) (item time: \(finishedTime)s, UI time: \(self.currentTime)s, duration: \(currentTrack.duration)s)")
 
         // Report stopped for the track that just finished
         stopProgressReporting(reportStopped: true)
@@ -1007,6 +1118,9 @@ class PlayerManager: NSObject, ObservableObject {
                         if playerItem == self.player?.currentItem {
                             self.logger.info("✅ Player item ready to play (duration from track metadata: \(self.duration)s)")
                             self.isBuffering = false
+                            if self.pendingSeekTime > 1.0 {
+                                self.schedulePendingSeek(to: self.pendingSeekTime)
+                            }
                         } else {
                             self.logger.info("✅ Preloaded item \(index) ready")
                         }
@@ -1066,15 +1180,16 @@ class PlayerManager: NSObject, ObservableObject {
         }
     }
 
-    private func cleanupPlayer() {
+    private func cleanupPlayer(reportStopped: Bool = true) {
         if let timeObserver = timeObserver {
             player?.removeTimeObserver(timeObserver)
             self.timeObserver = nil
         }
 
         // Stop progress reporting (don't double-report if handleTrackFinished already did)
-        stopProgressReporting(reportStopped: lastReportedItemId != nil)
+        stopProgressReporting(reportStopped: reportStopped && lastReportedItemId != nil)
 
+        cancelPendingSeek()
         player?.pause()
         player = nil
         playerItemCancellables.removeAll()
@@ -1120,14 +1235,21 @@ class PlayerManager: NSObject, ObservableObject {
         commandCenter.nextTrackCommand.removeTarget(nil)
         commandCenter.previousTrackCommand.removeTarget(nil)
         commandCenter.changePlaybackPositionCommand.removeTarget(nil)
+        commandCenter.skipForwardCommand.removeTarget(nil)
+        commandCenter.skipBackwardCommand.removeTarget(nil)
 
         // Enable commands
         commandCenter.playCommand.isEnabled = true
         commandCenter.pauseCommand.isEnabled = true
         commandCenter.togglePlayPauseCommand.isEnabled = true
-        commandCenter.nextTrackCommand.isEnabled = true
-        commandCenter.previousTrackCommand.isEnabled = true
         commandCenter.changePlaybackPositionCommand.isEnabled = true
+
+        // iOS lock screen only has room for one pair of transport controls.
+        // If next/previous track is enabled, Music-style controls win and the
+        // ±15s buttons never appear. JellyAmp is built around long live tracks,
+        // so prefer seek buttons on the lock screen / Control Center.
+        commandCenter.nextTrackCommand.isEnabled = false
+        commandCenter.previousTrackCommand.isEnabled = false
 
         // Play/Pause
         commandCenter.playCommand.addTarget { [weak self] _ in
@@ -1145,17 +1267,6 @@ class PlayerManager: NSObject, ObservableObject {
             return .success
         }
 
-        // Skip controls
-        commandCenter.nextTrackCommand.addTarget { [weak self] _ in
-            self?.playNext()
-            return .success
-        }
-
-        commandCenter.previousTrackCommand.addTarget { [weak self] _ in
-            self?.playPrevious()
-            return .success
-        }
-
         // Seek controls
         commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
             if let positionEvent = event as? MPChangePlaybackPositionCommandEvent {
@@ -1166,8 +1277,6 @@ class PlayerManager: NSObject, ObservableObject {
         }
 
         // Skip forward/backward 15s (lock screen & Control Center)
-        commandCenter.skipForwardCommand.removeTarget(nil)
-        commandCenter.skipBackwardCommand.removeTarget(nil)
         commandCenter.skipForwardCommand.isEnabled = true
         commandCenter.skipBackwardCommand.isEnabled = true
         commandCenter.skipForwardCommand.preferredIntervals = [15]
@@ -1278,6 +1387,32 @@ class PlayerManager: NSObject, ObservableObject {
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
             .sink { [weak self] notification in
                 self?.handleTrackFinishedGapless(notification)
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .AVPlayerItemFailedToPlayToEndTime)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                guard let failedItem = notification.object as? AVPlayerItem else { return }
+                guard failedItem == self.player?.currentItem || failedItem == self.playerItems.first else {
+                    self.logger.warning("⚠️ Non-current player item failed to play to end; ignoring")
+                    return
+                }
+
+                let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
+                self.logger.error("❌ Current track failed before end at \(self.currentTime)s / \(self.duration)s: \(error?.localizedDescription ?? "unknown error")")
+                self.handlePlaybackError(error)
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .AVPlayerItemPlaybackStalled)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                guard let stalledItem = notification.object as? AVPlayerItem else { return }
+                guard stalledItem == self.player?.currentItem || stalledItem == self.playerItems.first else { return }
+
+                self.isBuffering = true
+                self.logger.warning("⏸️ Playback stalled at \(self.currentTime)s / \(self.duration)s — waiting for AVPlayer to rebuffer, not advancing queue")
             }
             .store(in: &cancellables)
 

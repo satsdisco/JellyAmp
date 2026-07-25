@@ -20,7 +20,12 @@ actor ArtistImageService {
     }
 
     private init() {
-        loadCache()
+        let docs = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let cacheURL = docs.appendingPathComponent("artist-image-cache.json")
+        if let data = try? Data(contentsOf: cacheURL),
+           let decoded = try? JSONDecoder().decode([String: CachedImage].self, from: data) {
+            cache = decoded
+        }
     }
 
     /// Get an artist image URL, checking Jellyfin first, then Wikipedia
